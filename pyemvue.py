@@ -4,16 +4,21 @@ from enum import Enum
 import json
 import sys
 
+# These provide AWS cognito authentication support
+import boto3
+import botocore
+from warrant.aws_srp import AWSSRP
+
 API_ROOT = "https://api.emporiaenergy.com"
 API_CUSTOMER_DEVICES = "/customers/{customerGid}/devices?detailed=true&hierarchy=true"
 API_USAGE_DEVICES = "/usage/devices?start={startTime}&end={endTime}&scale={scale}&unit={unit}&customerGid={customerGid}"
 API_USAGE_TIME = "/usage/time?start={startTime}&end={endTime}&type={type}}&deviceGid={deviceGid}&scale={scale}&unit={unit}&channels={channels}"
 
 class PyEmVue(object):
-    def __init__(self, customerGid, authtoken):
-        self.customer_gid = customerGid
-        self.auth_token = authtoken
-    
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+
     def get_devices(self):
         url = API_ROOT + API_CUSTOMER_DEVICES.format(customerGid = self.customer_gid)
         response = self._get_request(url)
@@ -42,6 +47,14 @@ class PyEmVue(object):
         headers = {'authtoken': self.auth_token}
         return requests.get(full_endpoint, headers=headers)
 
+    def login(self):
+        # Use warrant to go through the SRP authentication to get an auth token and refresh token
+        client = boto3.client('cognito-idp', region_name="us-east-2", config=botocore.client.Config(signature_version=botocore.UNSIGNED)) #region might actually be closest, not static as this
+        aws = AWSSRP(username=self.username, password=self.password, pool_id='us-east-2_ghlOXVLi1',
+                    client_id='4qte47jbstod8apnfic0bunmrq', client=client)
+        tokens = aws.authenticate_user()
+        print(tokens)
+
 class VueDevice(object):
     def __init__(self, gid=0, manId='', modelNum='', firmwareVersion=''):
         self.device_gid = gid
@@ -49,7 +62,7 @@ class VueDevice(object):
         self.model = modelNum
         self.firmware = firmwareVersion
         self.channels = []
-    
+
     def from_json_dictionary(self, js):
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'manufacturerDeviceId' in js: self.manufacturer_id = js['manufacturerDeviceId']
@@ -103,24 +116,25 @@ def _format_time(time):
 
 if __name__ == "__main__":
     data = {}
-    cgid = 0
-    auth = None
+    email = 0
+    passw = None
     try:
         with open('keys.json') as f:
             data = json.load(f)
     except:
-        print('Please create a "keys.json" file containing the "customerGid" and "authtoken"')
+        print('Please create a "keys.json" file containing the "email" and "password"')
         sys.exit(1)
-    if not 'customerGid' in data or not 'authtoken' in data:
-        print('Please create a "keys.json" file containing the "customerGid" and "authtoken"')
+    if not 'email' in data or not 'password' in data:
+        print('Please create a "keys.json" file containing the "email" and "password"')
         sys.exit(1)
-    cgid = data['customerGid']
-    auth = data['authtoken']
-    if cgid <= 0:
-        print('customerGid invalid')
+    email = data['email']
+    passw = data['password']
+    if not email:
+        print('email invalid')
         sys.exit(1)
-    if len(auth) <= 0:
-        print('authtoken invalid')
+    if not passw:
+        print('password invalid')
         sys.exit(1)
-    vue = PyEmVue(cgid, auth)
-    print(vue.get_devices())
+    vue = PyEmVue(email, passw)
+    vue.login()
+    #print(vue.get_devices())
