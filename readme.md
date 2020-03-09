@@ -6,7 +6,6 @@ Currently a WIP in the API documenting phase. Authtoken and customer/device data
 
 ```json
 {
-    "deviceGid": 1234,
     "customerGid": 1234,
     "authtoken": "your_authtoken"
 }
