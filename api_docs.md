@@ -2,7 +2,7 @@
 
 ## Authorization through AWS idp
 
-Emporia uses the AWS cognito idp for authentication, getting an auth token and refresh token from there. The auth token is provided to calls to the Emporia api via the `authtoken` header and expires after some time, at which point the refresh token is passed to the cognito idp to get a new set of auth and refresh tokens.
+Emporia uses the AWS cognito idp for authentication, getting an access token, refresh token, and most importantly an id token from there. The id token is provided to calls to the Emporia api via the `authtoken` header and expires after some time, at which point the refresh token is passed to the cognito idp to get a new set of access, refresh, and id tokens.
 
 ## Detection of maintenance
 
@@ -16,9 +16,25 @@ The check for if the servers are down for maintenance is rather simple in that i
 
 # Emporia Specific API
 
-Root url for the api server is https://api.emporiaenergy.com
+Root url for the api server is `https://api.emporiaenergy.com`
 
-Authorization is provided through "authtoken" key in the header, not by a standard bearer token, using the auth token provided in keys.json (currently gotten by sniffing).
+Authorization is provided through "authtoken" key in the header, not by a standard bearer token. The authtoken and corresponding refresh and id tokens are gotten from authenticating with AWS, currently done through the [Warrant](https://github.com/capless/warrant) library in this library.
+
+## Get customer details
+
+GET `/customers?email=you%40email.com`
+
+### Response
+
+```json
+{
+    "customerGid": 1234,
+    "email": "you@email.com",
+    "firstName": "First",
+    "lastName": "Last",
+    "createdAt": "2020-01-01T12:34:56.789Z"
+}
+```
 
 ## Get all devices for an account
 
