@@ -96,7 +96,7 @@ GET `/devices/{deviceGid}/locationProperties`
 
 ## Get total usage for a time frame
 
-GET `/total?deviceGid={deviceGid}&timeframe=ALLTODATE&unit=WATTHOURS&channels=1%2C2%2C3`
+GET `/usage/total?deviceGid={deviceGid}&timeframe=ALLTODATE&unit=WATTHOURS&channels=1%2C2%2C3`
 
 ### Response
 
@@ -141,6 +141,8 @@ Supported units: `[USD, WATTS, TREES, GALLONSGAS, MILESDRIVEN, MILESFLOWN]`
 ## Get total device usage over a time range
 
 GET `/usage/devices?start=2020-03-08T22%3A17%3A56.000Z&end=2020-03-08T22%3A17%3A57.000Z&scale=1S&unit=WATTS&customerGid={customerGid}`
+
+Note: I'm a little unsure about this one since the start and end times passed in are different from the ones that come out.
 
 ### Response
 

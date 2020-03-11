@@ -2,11 +2,13 @@
 
 A Python Library for reading data from the Emporia Vue energy monitoring system.
 
-Currently a WIP in the API documenting phase. Authtoken and customer/device data must be added to a file called keys.json (or likely can be provided during initialization). At a later point the api calls should be made by the app and you will only need to enter credentials.
+Currently a WIP in the API documenting and initial implementation phase. The library can be invoked directly to pull back some basic info but requires your email and password to be added to a keys.json file.
+
+API documentation can be [accessed here](api_docs.md)
 
 ```json
 {
-    "customerGid": 1234,
-    "authtoken": "your_authtoken"
+    "email": "you@email.com",
+    "password": "password"
 }
 ```
