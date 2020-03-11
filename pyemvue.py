@@ -13,7 +13,7 @@ API_ROOT = 'https://api.emporiaenergy.com'
 API_CUSTOMER = '/customers?email={email}'
 API_CUSTOMER_DEVICES = '/customers/{customerGid}/devices?detailed=true&hierarchy=true'
 API_USAGE_DEVICES = '/usage/devices?start={startTime}&end={endTime}&scale={scale}&unit={unit}&customerGid={customerGid}'
-API_USAGE_TIME = '/usage/time?start={startTime}&end={endTime}&type={type}}&deviceGid={deviceGid}&scale={scale}&unit={unit}&channels={channels}'
+API_USAGE_TIME = '/usage/time?start={startTime}&end={endTime}&type=INSTANT&deviceGid={deviceGid}&scale={scale}&unit={unit}&channels={channels}'
 API_USAGE_TOTAL = '/usage/total?deviceGid={deviceGid}&timeframe={timeFrame}&unit={unit}&channels={channels}'
 
 CLIENT_ID = '4qte47jbstod8apnfic0bunmrq'
@@ -82,7 +82,18 @@ class PyEmVue(object):
         if response.text:
             j = response.json()
             if 'usage' in j: return j['usage']
-        return None
+        return 0
+    
+    def get_usage_over_time(self, channel, start, end, scale=Scale.SECOND.value, unit=Unit.WATTS.value):
+        """Get usage over the given time range. Used for primarily for plotting history."""
+        url = API_ROOT + API_USAGE_TIME.format(deviceGid=channel.device_gid, startTime=_format_time(start), endTime=_format_time(end),
+            scale=scale, unit=unit, channels=channel.channel_num)
+        response = self._get_request(url)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            if 'usage' in j: return j['usage']
+        return []
 
     def login(self, tokenStorageFile=None):
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.
@@ -238,3 +249,6 @@ if __name__ == '__main__':
             print('\t', chan.device_gid, chan.name, chan.channel_num, chan.channel_multiplier)
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.MONTH.value) / 1000, 'kwh used month to date')
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.ALL.value) / 1000, 'kwh used total')
+    now = datetime.datetime.utcnow()
+    minAgo = now - datetime.timedelta(minutes=1)
+    print('Usage over the last minute in watts: ', vue.get_usage_over_time(devices[0].channels[0], minAgo, now))
