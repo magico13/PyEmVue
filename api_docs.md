@@ -138,11 +138,13 @@ Supported units: `[USD, WATTS, TREES, GALLONSGAS, MILESDRIVEN, MILESFLOWN]`
 }
 ```
 
-## Get total device usage over a time range
+## Get recent total device usage
 
 GET `/usage/devices?start=2020-03-08T22%3A17%3A56.000Z&end=2020-03-08T22%3A17%3A57.000Z&scale=1S&unit=WATTS&customerGid={customerGid}`
 
-Note: I'm a little unsure about this one since the start and end times passed in are different from the ones that come out.
+Note: Start and end time don't matter at all, just set them to a random date/time one second apart. Instead this will give the usage over the last `scale` time.
+
+Valid Scales: `[1S, 1MIN, 15MIN, 1H, 1D, 1MON, 1W, 1Y]`
 
 ### Response
 

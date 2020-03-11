@@ -25,6 +25,11 @@ class Scale(Enum):
     MINUTE = '1MIN'
     MINUTES_15 = '15MIN'
     HOUR = '1H'
+    # These higher times are only valid for /usage/devices calls
+    DAY = '1D'
+    WEEK = '1W'
+    MONTH = '1MON'
+    YEAR = '1Y'
 
 class Unit(Enum):
     WATTS = 'WATTS'
@@ -94,6 +99,22 @@ class PyEmVue(object):
             j = response.json()
             if 'usage' in j: return j['usage']
         return []
+    
+    def get_recent_usage(self, scale=Scale.HOUR.value, unit=Unit.WATTS.value):
+        """Get usage over the last 'scale' timeframe."""
+        now = datetime.datetime.utcnow()
+        soon = now + datetime.timedelta(seconds=1)
+        url = API_ROOT + API_USAGE_DEVICES.format(customerGid=self.customer.customer_gid, 
+            scale=scale, unit=unit, startTime=_format_time(now), endTime=_format_time(soon))
+        response = self._get_request(url)
+        response.raise_for_status()
+        channels = []
+        if response.text:
+            j = response.json()
+            if 'channels' in j:
+                for channel in j['channels']:
+                    channels.append(VuewDeviceChannelUsage().from_json_dictionary(channel))
+        return channels
 
     def login(self, tokenStorageFile=None):
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.
@@ -187,6 +208,19 @@ class VueDeviceChannel(object):
         if 'channelMultiplier' in js: self.channel_multiplier = js['channelMultiplier']
         return self
 
+class VuewDeviceChannelUsage(object):
+    def __init__(self, gid=0, usage=0, channelNum='1,2,3'):
+        self.device_gid = gid
+        self.usage = usage
+        self.channel_num = channelNum
+
+    def from_json_dictionary(self, js):
+        """Populate device channel usage data from a dictionary extracted from the response json."""
+        if 'deviceGid' in js: self.device_gid = js['deviceGid']
+        if 'usage' in js: self.usage = js['usage']
+        if 'channelNum' in js: self.channel_num = js['channelNum']
+        return self
+
 class Customer(object):
     def __init__(self, gid=0, email='', firstName='', lastName='', createdAt=datetime.datetime(1970, 1, 1)):
         self.customer_gid = gid
@@ -251,4 +285,13 @@ if __name__ == '__main__':
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.ALL.value) / 1000, 'kwh used total')
     now = datetime.datetime.utcnow()
     minAgo = now - datetime.timedelta(minutes=1)
+    print('Total usage over the last day in kwh: ')
+    use = vue.get_recent_usage(Scale.DAY.value)
+    for chan in use:
+        print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
+    print('Average usage over the last minute in watts: ')
+    use = vue.get_recent_usage(Scale.MINUTE.value)
+    for chan in use:
+        print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage} W')
+    
     print('Usage over the last minute in watts: ', vue.get_usage_over_time(devices[0].channels[0], minAgo, now))
