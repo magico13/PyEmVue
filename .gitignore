@@ -1,3 +1,4 @@
 /Canary
 /keys.json
 .vscode
+*.pyc
