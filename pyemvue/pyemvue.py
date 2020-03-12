@@ -8,9 +8,9 @@ import botocore
 from warrant import Cognito
 
 # Our files
-from enums import Scale, Unit, TotalTimeFrame, TotalUnit
-from customer import Customer
-from device import VueDevice, VueDeviceChannel, VuewDeviceChannelUsage
+from pyemvue.enums import Scale, Unit, TotalTimeFrame, TotalUnit
+from pyemvue.customer import Customer
+from pyemvue.device import VueDevice, VueDeviceChannel, VuewDeviceChannelUsage
 
 API_ROOT = 'https://api.emporiaenergy.com'
 API_CUSTOMER = '/customers?email={email}'

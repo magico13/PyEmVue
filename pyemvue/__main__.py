@@ -3,10 +3,10 @@ import datetime
 import json
 
 # Our files
-from enums import Scale, Unit, TotalTimeFrame, TotalUnit
-from customer import Customer
-from device import VueDevice, VueDeviceChannel, VuewDeviceChannelUsage
-from pyemvue import PyEmVue
+from pyemvue.enums import Scale, Unit, TotalTimeFrame, TotalUnit
+from pyemvue.customer import Customer
+from pyemvue.device import VueDevice, VueDeviceChannel, VuewDeviceChannelUsage
+from pyemvue.pyemvue import PyEmVue
 
 def main():
     errorMsg = 'Please pass a file containing the "email" and "password" as json.'
