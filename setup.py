@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pyemvue",
-    version="0.0.1",
+    version="0.9.0",
     author="magico13",
     description="Library for interacting with the Emporia Vue energy monitor.",
     long_description=long_description,
