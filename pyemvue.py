@@ -48,12 +48,11 @@ class TotalTimeFrame(Enum):
 
 
 class PyEmVue(object):
-    def __init__(self, username=None, password=None, idToken=None, accessToken=None, refreshToken=None):
-        self.username = username
-        self.password = password
-        self.id_token = idToken
-        self.access_token = accessToken
-        self.refresh_token = refreshToken
+    def __init__(self):
+        self.username = None
+        self.token_storage_file = None
+        self.customer = None
+        self.cognito = None
 
     def get_devices(self):
         """Get all devices under the current customer account."""
@@ -116,7 +115,7 @@ class PyEmVue(object):
                     channels.append(VuewDeviceChannelUsage().from_json_dictionary(channel))
         return channels
 
-    def login(self, tokenStorageFile=None):
+    def login(self, username=None, password=None, id_token=None, access_token=None, refresh_token=None, token_storage_file=None):
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.
             Provide a path for storing the token data that can be used to reauthenticate without providing the password.
             Tokens stored in the file are updated when they expire.
@@ -124,28 +123,28 @@ class PyEmVue(object):
         # Use warrant to go through the SRP authentication to get an auth token and refresh token
         client = boto3.client('cognito-idp', region_name='us-east-2', 
             config=botocore.client.Config(signature_version=botocore.UNSIGNED))
-        if self.id_token is not None and self.access_token is not None and self.refresh_token is not None:
+        if id_token is not None and access_token is not None and refresh_token is not None:
             # use existing tokens
-            #print('Logging in with auth tokens')
             self.cognito = Cognito(USER_POOL, CLIENT_ID,
                 user_pool_region='us-east-2', 
-                id_token=self.id_token, 
-                access_token=self.access_token, 
-                refresh_token=self.refresh_token)
+                id_token=id_token, 
+                access_token=access_token, 
+                refresh_token=refresh_token)
             self.cognito.client = client
-        elif self.username is not None and self.password is not None:
+        elif username is not None and password is not None:
             #log in with username and password
-            #print('Logging in with username and password')
             self.cognito = Cognito(USER_POOL, CLIENT_ID, 
-                user_pool_region='us-east-2', username=self.username)
+                user_pool_region='us-east-2', username=username)
             self.cognito.client = client
-            self.cognito.authenticate(password=self.password)
+            self.cognito.authenticate(password=password)
         else:
             raise Exception('No authentication method found. Must supply username/password or id/auth/refresh tokens.')
         if self.cognito.access_token is not None:
-            if tokenStorageFile is not None: self.token_storage_file = tokenStorageFile
+            if token_storage_file is not None: self.token_storage_file = token_storage_file
+            self._check_token()
+            user = self.cognito.get_user()
+            self.username = user._data['email']
             self.customer = self.get_customer_details()
-            self.username = self.customer.email
             self._store_tokens()
         return self.customer is not None
         
@@ -157,11 +156,12 @@ class PyEmVue(object):
     def _store_tokens(self):
         if not self.token_storage_file: return
         data = {
-            'email': self.username,
             'idToken': self.cognito.id_token,
             'accessToken': self.cognito.access_token,
             'refreshToken': self.cognito.refresh_token
         }
+        if self.username:
+            data['email'] = self.username
         with open(self.token_storage_file, 'w') as f:
             json.dump(data, f, indent=2)
 
@@ -271,8 +271,8 @@ if __name__ == '__main__':
     if not canLogIn:
         print('Please create a "keys.json" file containing the "email" and "password"')
         sys.exit(1)
-    vue = PyEmVue(email, passw, idToken, accessToken, refreshToken)
-    vue.login(tokenStorageFile='keys.json')
+    vue = PyEmVue()
+    vue.login(email, passw, idToken, accessToken, refreshToken, token_storage_file='keys.json')
     print('Logged in. Authtoken follows:')
     print(vue.cognito.id_token)
     print()
