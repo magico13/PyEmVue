@@ -1,11 +1,14 @@
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
+try:
+    with open("README.md", "r") as fh:
+        long_description = fh.read()
+except:
+    long_description = ""
+    
 setuptools.setup(
     name="pyemvue",
-    version="0.9.3",
+    version="0.9.4",
     author="magico13",
     description="Library for interacting with the Emporia Vue energy monitor.",
     long_description=long_description,
