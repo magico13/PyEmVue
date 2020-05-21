@@ -6,6 +6,20 @@ class VueDevice(object):
         self.firmware = firmwareVersion
         self.channels = []
 
+        #extra info
+        self.device_name = ''
+        self.zip_code = '00000'
+        self.time_zone = ''
+        self.usage_cent_per_kw_hour = 0.0
+        self.peak_demand_dollar_per_kw = 0.0
+        self.solar = False
+        self.air_conditioning = 'false'
+        self.heat_source = ''
+        self.num_electric_cars = 0
+        self.location_type = ''
+        self.num_people = ''
+
+
     def from_json_dictionary(self, js):
         """Populate device data from a dictionary extracted from the response json."""
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
@@ -19,6 +33,22 @@ class VueDevice(object):
             for chnl in js['channels']:
                 self.channels.append(VueDeviceChannel().from_json_dictionary(chnl))
         return self
+    
+    def populate_location_properties_from_json(self, js):
+        """Adds the values from the get_device_properties method."""
+        if 'deviceName' in js: self.device_name = js['deviceName']
+        if 'zipCode' in js: self.zip_code = js['zipCode']
+        if 'timeZone' in js: self.time_zone = js['timeZone']
+        if 'usageCentPerKwHour' in js: self.usage_cent_per_kw_hour = js['usageCentPerKwHour']
+        if 'peakDemandDollarPerKw' in js: self.peak_demand_dollar_per_kw = js['peakDemandDollarPerKw']
+        if 'solar' in js: self.solar = js['solar']
+        if 'locationInformation' in js:
+            li = js['locationInformation']
+            if 'airConditioning' in li: self.air_conditioning = li['airConditioning']
+            if 'heatSource' in li: self.heat_source = li['heatSource']
+            if 'numElectricCars' in li: self.num_electric_cars = li['numElectricCars']
+            if 'locationType' in li: self.location_type = li['locationType']
+            if 'numPeople' in li: self.num_people = li['numPeople']
 
 class VueDeviceChannel(object):
     def __init__(self, gid=0, name='', channelNum='1,2,3', channelMultiplier=1.0):

@@ -65,6 +65,26 @@ vue.get_devices()
 
 Returns a list of VueDevices with device information, including device_gid and list of VueDeviceChannels associated with the device. VueDeviceChannels are passed to other methods to get information for the specific channel.
 
+### Get additional device properties
+
+```python
+vue = PyEmVue()
+vue.login(id_token='id_token',
+    access_token='access_token',
+    refresh_token='refresh_token')
+
+device1 = vue.get_devices()[0]
+print(device1.device_name) # prints ""
+device1 = vue.populate_device_properties(device1)
+print(device1.device_name) # prints "Home"
+```
+
+Updates and returns the passed VueDevice with additional information about the device such as the device name (as set in the app), zip code, timezone, electricity costs, etc.
+
+#### Arguments
+
+- **device**: A VueDevice as returned by `get_devices`. Will be updated and returned.
+
 ### Get total usage
 
 ```python

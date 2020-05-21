@@ -18,6 +18,7 @@ API_CUSTOMER_DEVICES = '/customers/{customerGid}/devices?detailed=true&hierarchy
 API_USAGE_DEVICES = '/usage/devices?start={startTime}&end={endTime}&scale={scale}&unit={unit}&customerGid={customerGid}'
 API_USAGE_TIME = '/usage/time?start={startTime}&end={endTime}&type=INSTANT&deviceGid={deviceGid}&scale={scale}&unit={unit}&channels={channels}'
 API_USAGE_TOTAL = '/usage/total?deviceGid={deviceGid}&timeframe={timeFrame}&unit={unit}&channels={channels}'
+API_DEVICE_PROPERTIES = '/devices/{deviceGid}/locationProperties'
 
 CLIENT_ID = '4qte47jbstod8apnfic0bunmrq'
 USER_POOL = 'us-east-2_ghlOXVLi1'
@@ -41,6 +42,16 @@ class PyEmVue(object):
                 for dev in j['devices']:
                     devices.append(VueDevice().from_json_dictionary(dev))
         return devices
+
+    def populate_device_properties(self, device):
+        """Get details about a specific device"""
+        url = API_ROOT + API_DEVICE_PROPERTIES.format(deviceGid=device.device_gid)
+        response = self._get_request(url)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            device.populate_location_properties_from_json(j)
+        return device
 
     def get_customer_details(self):
         """Get details for the current customer."""
