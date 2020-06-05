@@ -41,6 +41,9 @@ class PyEmVue(object):
             if 'devices' in j:
                 for dev in j['devices']:
                     devices.append(VueDevice().from_json_dictionary(dev))
+                    if 'devices' in dev:
+                        for subdev in dev['devices']:
+                            devices.append(VueDevice().from_json_dictionary(subdev))
         return devices
 
     def populate_device_properties(self, device):

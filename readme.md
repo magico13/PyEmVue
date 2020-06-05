@@ -146,3 +146,7 @@ Returns the energy used by the VueDeviceChannel between the `start` and `end` da
 - **end**: Ending `datetime` given in UTC.
 - **scale**: Any value of `Scale` enum at HOUR or finer, DAY and higher is not supported. For 1 hour between `start` and `end` you'd get 3600 data points at SECOND, 60 at MINUTE, or 4 at MINUTE_15.
 - **unit**: Any value of `Unit` enum, generally watts.
+
+### Disclaimer
+
+This project is not affiliated with or endorsed by Emporia Energy.

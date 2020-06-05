@@ -57,11 +57,12 @@ class VueDevice(object):
             if 'hotTub' in li: self.hot_tub = li['hotTub']
 
 class VueDeviceChannel(object):
-    def __init__(self, gid=0, name='', channelNum='1,2,3', channelMultiplier=1.0):
+    def __init__(self, gid=0, name='', channelNum='1,2,3', channelMultiplier=1.0, channelTypeGid=0):
         self.device_gid = gid
         self.name = name
         self.channel_num = channelNum
         self.channel_multiplier = channelMultiplier
+        self.channel_type_gid = channelTypeGid
 
     def from_json_dictionary(self, js):
         """Populate device channel data from a dictionary extracted from the response json."""
@@ -69,6 +70,7 @@ class VueDeviceChannel(object):
         if 'name' in js: self.name = js['name']
         if 'channelNum' in js: self.channel_num = js['channelNum']
         if 'channelMultiplier' in js: self.channel_multiplier = js['channelMultiplier']
+        if 'channelTypeGid' in js: self.channel_type_gid = js['channelTypeGid']
         return self
 
 class VuewDeviceChannelUsage(object):
