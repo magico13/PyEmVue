@@ -91,18 +91,30 @@ class PyEmVue(object):
     def get_recent_usage(self, scale=Scale.HOUR.value, unit=Unit.WATTS.value):
         """Get usage over the last 'scale' timeframe."""
         now = datetime.datetime.utcnow()
-        soon = now + datetime.timedelta(seconds=1)
+        return self.get_usage_for_time_scale(now, scale, unit)[0]
+
+    def get_usage_for_time_scale(self, time, scale=Scale.HOUR.value, unit=Unit.WATTS.value):
+        """Get usage for the 'scale' timeframe ending at the given time."""
+        start = time - datetime.timedelta(seconds=1)
+        end = time
         url = API_ROOT + API_USAGE_DEVICES.format(customerGid=self.customer.customer_gid, 
-            scale=scale, unit=unit, startTime=_format_time(now), endTime=_format_time(soon))
+            scale=scale, unit=unit, startTime=_format_time(start), endTime=_format_time(end))
         response = self._get_request(url)
         response.raise_for_status()
         channels = []
+        realStart = None
+        realEnd = None
         if response.text:
             j = response.json()
+            if 'start' in j: 
+                realStart = datetime.datetime.strptime(j['start'], '%Y-%m-%dT%H:%M:%SZ')
+            if 'end' in j: 
+                realEnd = datetime.datetime.strptime(j['end'], '%Y-%m-%dT%H:%M:%SZ')
             if 'channels' in j:
                 for channel in j['channels']:
                     channels.append(VuewDeviceChannelUsage().from_json_dictionary(channel))
-        return channels
+        return channels, realStart, realEnd
+
 
     def login(self, username=None, password=None, id_token=None, access_token=None, refresh_token=None, token_storage_file=None):
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.

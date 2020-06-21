@@ -124,6 +124,28 @@ Returns list of `ViewDeviceChannelUsage` objects giving usage over the `scale` t
 - **scale**: Any value from the `Scale` enum. From 1 second to 1 year.
 - **unit**: Any value from the `Unit` enum. Generally watts but there are options for dollars or trees or miles driven, etc.
 
+### Get usage over a time scale
+
+```python
+vue = PyEmVue()
+vue.login(id_token='id_token',
+    access_token='access_token',
+    refresh_token='refresh_token')
+
+channel_usage_list = vue.get_usage_for_time_scale(time=datetime.datetime(2020, 6, 21, 18, 0, 0) scale=Scale.HOUR.value, unit=Unit.WATTS.value)
+for channel in channel_usage_list:
+    print(channel.usage)
+```
+
+Returns list of `ViewDeviceChannelUsage` objects giving usage over the `scale` timeframe in the `unit` specified for the "bucket" containing the time provided. For a scale of under 1 hour this will give the average usage over the time frame (ie kW), for an hour or more it gives the total usage (ie kWh). The start and end times for the bucket will be returned although is not always consistent (month will give only the start of the month but minute gives start/end times one minute apart for instance).
+
+#### Arguments
+
+- **time**: A datetime value to use as the end time.
+- **scale**: Any value from the `Scale` enum. From 1 second to 1 year.
+- **unit**: Any value from the `Unit` enum. Generally watts but there are options for dollars or trees or miles driven, etc.
+
+
 ### Get usage over time
 
 ```python

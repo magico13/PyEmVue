@@ -59,8 +59,13 @@ def main():
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.ALL.value) / 1000, 'kwh used total')
     now = datetime.datetime.utcnow()
     minAgo = now - datetime.timedelta(minutes=1)
-    print('Total usage over the last day in kwh: ')
+    print('Total usage for today in kwh: ')
     use = vue.get_recent_usage(Scale.DAY.value)
+    for chan in use:
+        print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
+    print('Total usage for yesterday in kwh: ')
+    use, realStart, realEnd = vue.get_usage_for_time_scale(datetime.datetime.utcnow()-datetime.timedelta(days=1), Scale.DAY.value)
+    print(f'Time range: {realStart} to {realEnd}')
     for chan in use:
         print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
     print('Average usage over the last minute in watts: ')
@@ -69,7 +74,6 @@ def main():
         print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage} W')
     
     print('Usage over the last minute in watts: ', vue.get_usage_over_time(devices[0].channels[0], minAgo, now))
-    
 
 if __name__ == '__main__':
     main()

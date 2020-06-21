@@ -142,7 +142,8 @@ Supported units: `[USD, WATTS, TREES, GALLONSGAS, MILESDRIVEN, MILESFLOWN]`
 
 GET `/usage/devices?start=2020-03-08T22%3A17%3A56.000Z&end=2020-03-08T22%3A17%3A57.000Z&scale=1S&unit=WATTS&customerGid={customerGid}`
 
-Note: Start and end time don't matter at all, just set them to a random date/time one second apart. Instead this will give the usage over the last `scale` time.
+~~Note: Start and end time don't matter at all, just set them to a random date/time one second apart. Instead this will give the usage over the last `scale` time.~~
+Note: Further testing has proven that the start time does not matter but the end time does. Specify the end time to get the usage for the "bucket" that includes that time, with the bounds of that bucket returned.
 
 Valid Scales: `[1S, 1MIN, 15MIN, 1H, 1D, 1MON, 1W, 1Y]`
 
