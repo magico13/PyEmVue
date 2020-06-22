@@ -145,6 +145,8 @@ GET `/usage/devices?start=2020-03-08T22%3A17%3A56.000Z&end=2020-03-08T22%3A17%3A
 ~~Note: Start and end time don't matter at all, just set them to a random date/time one second apart. Instead this will give the usage over the last `scale` time.~~
 Note: Further testing has proven that the start time does not matter but the end time does. Specify the end time to get the usage for the "bucket" that includes that time, with the bounds of that bucket returned.
 
+Ok, this endpoint is giving me some additional uncertainty about the times. Changing the end time does appear to affect the total energy usage returned even though the start and end times remain fixed in the return. To get data lining up perfectly with the app, I (at UTC-4 at the moment) have to request data for the day after at 3AM to get data that matches. In other words, to get the data for June 10th, I pass June 11 at 03:00:00.
+
 Valid Scales: `[1S, 1MIN, 15MIN, 1H, 1D, 1MON, 1W, 1Y]`
 
 ### Response
