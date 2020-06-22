@@ -1,6 +1,7 @@
 import sys
 import datetime
 import json
+import pytz
 
 # Our files
 from pyemvue.enums import Scale, Unit, TotalTimeFrame, TotalUnit
@@ -53,18 +54,23 @@ def main():
     devices = vue.get_devices()
     for device in devices:
         print(device.device_gid, device.manufacturer_id, device.model, device.firmware)
+        vue.populate_device_properties(device)
         for chan in device.channels:
             print('\t', chan.device_gid, chan.name, chan.channel_num, chan.channel_multiplier)
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.MONTH.value) / 1000, 'kwh used month to date')
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.ALL.value) / 1000, 'kwh used total')
     now = datetime.datetime.utcnow()
+    yesterday = datetime.datetime.now(pytz.timezone(devices[0].time_zone))
+    yesterday = yesterday.replace(hour=23, minute=59, second=59) - datetime.timedelta(days=1)
+    yesterday = yesterday.astimezone(pytz.utc).replace(tzinfo=None)
+    print(yesterday.isoformat())
     minAgo = now - datetime.timedelta(minutes=1)
     print('Total usage for today in kwh: ')
     use = vue.get_recent_usage(Scale.DAY.value)
     for chan in use:
         print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
     print('Total usage for yesterday in kwh: ')
-    use, realStart, realEnd = vue.get_usage_for_time_scale(datetime.datetime.utcnow()-datetime.timedelta(days=1), Scale.DAY.value)
+    use, realStart, realEnd = vue.get_usage_for_time_scale(yesterday, Scale.DAY.value)
     print(f'Time range: {realStart} to {realEnd}')
     for chan in use:
         print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
