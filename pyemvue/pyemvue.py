@@ -1,6 +1,7 @@
 import requests
 import datetime
 import json
+from dateutil.parser import parse
 
 # These provide AWS cognito authentication support
 import boto3
@@ -107,9 +108,9 @@ class PyEmVue(object):
         if response.text:
             j = response.json()
             if 'start' in j: 
-                realStart = datetime.datetime.strptime(j['start'], '%Y-%m-%dT%H:%M:%SZ')
+                realStart = parse(j['start'])
             if 'end' in j: 
-                realEnd = datetime.datetime.strptime(j['end'], '%Y-%m-%dT%H:%M:%SZ')
+                realEnd = parse(j['end'])
             if 'channels' in j:
                 for channel in j['channels']:
                     channels.append(VuewDeviceChannelUsage().from_json_dictionary(channel))

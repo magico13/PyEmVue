@@ -8,9 +8,9 @@ except:
     
 setuptools.setup(
     name="pyemvue",
-    version="0.9.8",
+    version="0.9.9",
     author="magico13",
-    description="Library for interacting with the Emporia Vue energy monitor.",
+    description="Unofficial library for interacting with the Emporia Vue energy monitor.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/magico13/PyEmVue",
@@ -23,5 +23,5 @@ setuptools.setup(
 
     ],
     python_requires='>=2.7',
-    install_requires=['warrant', 'requests'],
+    install_requires=['warrant', 'requests', 'python-dateutil'],
 )

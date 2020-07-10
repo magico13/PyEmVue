@@ -1,7 +1,7 @@
 import sys
 import datetime
 import json
-import pytz
+import dateutil
 
 # Our files
 from pyemvue.enums import Scale, Unit, TotalTimeFrame, TotalUnit
@@ -60,9 +60,9 @@ def main():
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.MONTH.value) / 1000, 'kwh used month to date')
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.ALL.value) / 1000, 'kwh used total')
     now = datetime.datetime.utcnow()
-    yesterday = datetime.datetime.now(pytz.timezone(devices[0].time_zone))
+    yesterday = datetime.datetime.now(dateutil.tz.gettz(devices[0].time_zone))
     yesterday = yesterday.replace(hour=23, minute=59, second=59) - datetime.timedelta(days=1)
-    yesterday = yesterday.astimezone(pytz.utc).replace(tzinfo=None)
+    yesterday = yesterday.astimezone(dateutil.tz.UTC).replace(tzinfo=None)
     print(yesterday.isoformat())
     minAgo = now - datetime.timedelta(minutes=1)
     print('Total usage for today in kwh: ')
