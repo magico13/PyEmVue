@@ -73,7 +73,7 @@ class VueDeviceChannel(object):
         if 'channelTypeGid' in js: self.channel_type_gid = js['channelTypeGid']
         return self
 
-class VuewDeviceChannelUsage(object):
+class VuewDeviceChannelUsage(VueDeviceChannel):
     def __init__(self, gid=0, usage=0, channelNum='1,2,3'):
         self.device_gid = gid
         self.usage = usage

@@ -138,6 +138,33 @@ Supported units: `[USD, WATTS, TREES, GALLONSGAS, MILESDRIVEN, MILESFLOWN]`
 }
 ```
 
+## Get usage for a date range
+
+GET `/usage/date?start=2020-07-08&end=2020-07-10&type=INSTANT&deviceGid={deviceGid}&scale=1D&unit=WATTS&channels=1%2C2%2C3`
+
+Returns usage data for the date range provided. Using the time scales provided can return daily, weekly, monthly, or yearly results.
+
+Valid Time Scales: `[1D, 1MON, 1W, 1Y]`
+Supported units: `[USD, WATTS, TREES, GALLONSGAS, MILESDRIVEN, MILESFLOWN]`
+
+### Response
+
+```json
+{
+    "start": "2020-07-07T04:00:00Z",
+    "end": "2020-07-09T04:00:00Z",
+    "type": "INSTANT",
+    "scale": "1D",
+    "unit": "WATTS",
+    "deviceGid": 1234,
+    "usage": [
+        52640.359240884514,
+        54803.46804568436,
+        51411.2134282075
+    ]
+}
+```
+
 ## Get recent total device usage
 
 GET `/usage/devices?start=2020-03-08T22%3A17%3A56.000Z&end=2020-03-08T22%3A17%3A57.000Z&scale=1S&unit=WATTS&customerGid={customerGid}`
@@ -146,6 +173,8 @@ GET `/usage/devices?start=2020-03-08T22%3A17%3A56.000Z&end=2020-03-08T22%3A17%3A
 Note: Further testing has proven that the start time does not matter but the end time does. Specify the end time to get the usage for the "bucket" that includes that time, with the bounds of that bucket returned.
 
 Ok, this endpoint is giving me some additional uncertainty about the times. Changing the end time does appear to affect the total energy usage returned even though the start and end times remain fixed in the return. To get data lining up perfectly with the app, I (at UTC-4 at the moment) have to request data for the day after at 3AM to get data that matches. In other words, to get the data for June 10th, I pass June 11 at 03:00:00.
+
+Another update, they appear to have disabled this for getting historical daily usage, just recent usage. See the `/date` api instead for getting daily/weekly/monthly/yearly data.
 
 Valid Scales: `[1S, 1MIN, 15MIN, 1H, 1D, 1MON, 1W, 1Y]`
 
@@ -166,4 +195,28 @@ Valid Scales: `[1S, 1MIN, 15MIN, 1H, 1D, 1MON, 1W, 1Y]`
         }
     ]
 }
+```
+
+## Get list of outlets
+
+GET `/customers/outlets?customerGid={customerGid}`
+
+Emporia Energy is going to be releasing their own line of smart outlets. Presumably this call will return the outlets owned by the customer.
+
+### Response
+
+```json
+[]
+```
+
+## Get partner data
+
+GET `/customers/partners?customerGid={customerGid}`
+
+As of right now I do not know what this call will be used for. Guesses include devices made by other companies that work with the Emporia ecosystem (smart switches, power monitors?) or partners of Emporia's that they sell data to?
+
+### Response
+
+```json
+[]
 ```

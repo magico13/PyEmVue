@@ -5,7 +5,7 @@ class Scale(Enum):
     MINUTE = '1MIN'
     MINUTES_15 = '15MIN'
     HOUR = '1H'
-    # These higher times are only valid for /usage/devices calls
+    # These higher times are only valid for /usage/date calls
     DAY = '1D'
     WEEK = '1W'
     MONTH = '1MON'

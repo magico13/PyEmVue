@@ -70,10 +70,10 @@ def main():
     for chan in use:
         print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
     print('Total usage for yesterday in kwh: ')
-    use, realStart, realEnd = vue.get_usage_for_time_scale(yesterday, Scale.DAY.value)
-    print(f'Time range: {realStart} to {realEnd}')
     for chan in use:
-        print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
+        usage = vue.get_usage_over_date_range(chan, yesterday, yesterday)
+        if usage:
+            print(f'{chan.device_gid} ({chan.channel_num}): {usage[0]/1000} kwh')
     print('Average usage over the last minute in watts: ')
     use = vue.get_recent_usage(Scale.MINUTE.value)
     for chan in use:
