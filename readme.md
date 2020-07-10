@@ -169,6 +169,31 @@ Returns the energy used by the VueDeviceChannel between the `start` and `end` da
 - **scale**: Any value of `Scale` enum at HOUR or finer, DAY and higher is not supported. For 1 hour between `start` and `end` you'd get 3600 data points at SECOND, 60 at MINUTE, or 4 at MINUTE_15.
 - **unit**: Any value of `Unit` enum, generally watts.
 
+### Get usage over a date range
+
+```python
+vue = PyEmVue()
+vue.login(id_token='id_token',
+    access_token='access_token',
+    refresh_token='refresh_token')
+
+usage_time = vue.get_usage_over_date_range(channel, start, end, scale=Scale.DAY.value, unit=Unit.WATTS.value)
+
+# Throw into matplotlib for plotting
+```
+
+Returns the energy used by the VueDeviceChannel between the `start` and `end` datetimes for each `scale` timeframe. In other words, if `scale` is days and there's a week between `start` and `end`, you'll get 7 data points in the output.
+
+**NOTE:** The actual start and end dates for this call are weird. For my timezone of UTC-4 if I pass in 2020-07-09 for the start the first datapoint is for 2020-07-08. Passing the same value for start and end will appear to work but will give incorrect data. To get correct data for a DAY pass the day you want for the start, two days later for the end, and take the second value. I would recommend doing the same with weeks, months, years, etc.
+
+#### Arguments
+
+- **channel**: A VueDeviceChannel from the `get_devices` call. Key parts are the `device_gid` and `channel_num`.
+- **start**: Starting `datetime` given in UTC.
+- **end**: Ending `datetime` given in UTC.
+- **scale**: Any value of `Scale` enum at DAY or higher, HOUR and lower are not supported.
+- **unit**: Any value of `Unit` enum, generally watts.
+
 ### Disclaimer
 
 This project is not affiliated with or endorsed by Emporia Energy.

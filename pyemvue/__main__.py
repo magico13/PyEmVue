@@ -60,10 +60,11 @@ def main():
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.MONTH.value) / 1000, 'kwh used month to date')
     print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.ALL.value) / 1000, 'kwh used total')
     now = datetime.datetime.utcnow()
-    yesterday = datetime.datetime.now(dateutil.tz.gettz(devices[0].time_zone))
-    yesterday = yesterday.replace(hour=23, minute=59, second=59) - datetime.timedelta(days=1)
-    yesterday = yesterday.astimezone(dateutil.tz.UTC).replace(tzinfo=None)
-    print(yesterday.isoformat())
+    yesterday = datetime.datetime.now(dateutil.tz.gettz(devices[0].time_zone)) - datetime.timedelta(days=1)
+    tomorrow = datetime.datetime.now(dateutil.tz.gettz(devices[0].time_zone)) + datetime.timedelta(days=1)
+    # yesterday = yesterday.replace(hour=23, minute=59, second=59) - datetime.timedelta(days=1)
+    # yesterday = yesterday.astimezone(dateutil.tz.UTC).replace(tzinfo=None)
+    #print(yesterday.isoformat())
     minAgo = now - datetime.timedelta(minutes=1)
     print('Total usage for today in kwh: ')
     use = vue.get_recent_usage(Scale.DAY.value)
@@ -71,9 +72,9 @@ def main():
         print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
     print('Total usage for yesterday in kwh: ')
     for chan in use:
-        usage = vue.get_usage_over_date_range(chan, yesterday, yesterday)
+        usage = vue.get_usage_over_date_range(chan, yesterday, tomorrow)
         if usage:
-            print(f'{chan.device_gid} ({chan.channel_num}): {usage[0]/1000} kwh')
+            print(f'{chan.device_gid} ({chan.channel_num}): {usage[1]/1000} kwh')
     print('Average usage over the last minute in watts: ')
     use = vue.get_recent_usage(Scale.MINUTE.value)
     for chan in use:

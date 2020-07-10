@@ -93,7 +93,11 @@ class PyEmVue(object):
         return []
 
     def get_usage_over_date_range(self, channel, start, end, scale=Scale.DAY.value, unit=Unit.WATTS.value):
-        """Get usage over the given date range. Used for primarily for plotting history. Supports time scales of DAY or larger"""
+        """
+            Get usage over the given date range. Used for primarily for plotting history. Supports time scales of DAY or larger.
+            Note strange behavior with what day is which, first value is for day before start, last value is for day before end, for test timezone of UTC-4.
+            Advise getting a range of days around the desired day and manual verification.
+        """
         if scale != Scale.DAY.value and scale != Scale.WEEK.value and scale != Scale.MONTH.value and scale != Scale.YEAR.value:
             raise ValueError(f'Scale of {scale} is invalid, must be 1D, 1W, 1MON, or 1Y.')
         url = API_ROOT + API_USAGE_DATE.format(deviceGid=channel.device_gid, startDate=_format_date(start), endDate=_format_date(end),

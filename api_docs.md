@@ -144,6 +144,8 @@ GET `/usage/date?start=2020-07-08&end=2020-07-10&type=INSTANT&deviceGid={deviceG
 
 Returns usage data for the date range provided. Using the time scales provided can return daily, weekly, monthly, or yearly results.
 
+Note that the date ranges for this have strange behavior so I recommend requesting at least a few days range. If you request the same start and end date you'll get basically useless data that won't include all of the day's usage. The start date also appears to be an entire day before the requested start date (at least for my Z-4 timezone), ie requesting a start of 2020-07-08 returns a real start of 2020-07-07T04:00:00Z which is the start of the 7th at midnight. The same problem is true for the end date (requesting the 10th gives midnight of the 9th). I haven't tested with Z+ timezones but I fear they might have the opposite effect.
+
 Valid Time Scales: `[1D, 1MON, 1W, 1Y]`
 Supported units: `[USD, WATTS, TREES, GALLONSGAS, MILESDRIVEN, MILESFLOWN]`
 
