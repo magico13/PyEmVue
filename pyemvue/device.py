@@ -5,6 +5,7 @@ class VueDevice(object):
         self.model = modelNum
         self.firmware = firmwareVersion
         self.channels = []
+        self.outlet = None
 
         #extra info
         self.device_name = ''
@@ -35,6 +36,9 @@ class VueDevice(object):
             self.channels = []
             for chnl in js['channels']:
                 self.channels.append(VueDeviceChannel().from_json_dictionary(chnl))
+        # outlets are a special type
+        if 'outlet' in js and js['outlet']:
+            self.outlet = OutletDevice().from_json_dictionary(js['outlet'])
         return self
     
     def populate_location_properties_from_json(self, js):
@@ -85,3 +89,27 @@ class VuewDeviceChannelUsage(VueDeviceChannel):
         if 'usage' in js: self.usage = js['usage'] or 0
         if 'channelNum' in js: self.channel_num = js['channelNum']
         return self
+
+class OutletDevice(object):
+    def __init__(self, gid=0, on=False, parentGid=0, parentChannel=0):
+        self.device_gid = gid
+        self.outlet_on = on
+        self.parent_device_gid = parentGid
+        self.parent_channel_num = parentChannel
+        self.schedules = []
+
+    def from_json_dictionary(self, js):
+        if 'deviceGid' in js: self.device_gid = js['deviceGid']
+        if 'outletOn' in js: self.outlet_on = js['outletOn']
+        if 'parentDeviceGid' in js: self.parent_device_gid = js['parentDeviceGid']
+        if 'parentChannelNum' in js: self.parent_channel_num = js['parentChannelNum']
+        # don't have support for schedules yet
+        return self
+    
+    def as_dictionary(self):
+        j = {}
+        j['deviceGid'] = self.device_gid
+        j['outletOn'] = self.outlet_on
+        j['parentDeviceGid'] = self.parent_device_gid
+        j['parentChannelNum'] = self.parent_channel_num
+        return j

@@ -54,14 +54,39 @@ GET `/customers/{customerGid}/devices?detailed=true&hierarchy=true`
             "deviceGid": 2345,
             "manufacturerDeviceId": "{hex_device_id}",
             "model": "VUE001",
-            "firmware": "1578351378",
+            "firmware": "Vue-1587661391",
+            "outlet": null,
             "devices": [],
             "channels": [
                 {
                     "deviceGid": 2345,
                     "name": null,
                     "channelNum": "1,2,3",
-                    "channelMultiplier": 1.0
+                    "channelMultiplier": 1.0,
+                    "channelTypeGid": null
+                }
+            ]
+        },
+        {
+            "deviceGid": 3456,
+            "manufacturerDeviceId": "{hex_device_id}",
+            "model": "SSO001",
+            "firmware": "Outlet-1594685591",
+            "outlet": {
+                "deviceGid": 3456,
+                "outletOn": false,
+                "parentDeviceGid": null,
+                "parentChannelNum": null,
+                "schedules": []
+            },
+            "devices": [],
+            "channels": [
+                {
+                    "deviceGid": 3456,
+                    "name": null,
+                    "channelNum": "1,2,3",
+                    "channelMultiplier": 1.0,
+                    "channelTypeGid": 23
                 }
             ]
         }
@@ -203,12 +228,45 @@ Valid Scales: `[1S, 1MIN, 15MIN, 1H, 1D, 1MON, 1W, 1Y]`
 
 GET `/customers/outlets?customerGid={customerGid}`
 
-Emporia Energy is going to be releasing their own line of smart outlets. Presumably this call will return the outlets owned by the customer.
+Emporia Energy has released their own line of wifi-controlled outlets. This returns the list of outlets owned by the user.
 
 ### Response
 
 ```json
-[]
+[
+    {
+        "deviceGid": 1234,
+        "outletOn": false,
+        "parentDeviceGid": null,
+        "parentChannelNum": null
+    }
+]
+```
+
+## Activate/Deactivate an outlet
+
+Turns an outlet on or off. Presumably can be used to nest an outlet under another device/channel but I haven't tested that yet.
+
+PUT `/devices/outlet`
+
+```json
+{
+    "deviceGid": 1234,
+    "outletOn": true,
+    "parentDeviceGid": null,
+    "parentChannelNum": null
+}
+```
+
+### Response
+
+```json
+{
+    "deviceGid": 1234,
+    "outletOn": true,
+    "parentDeviceGid": null,
+    "parentChannelNum": null
+}
 ```
 
 ## Get partner data
@@ -222,3 +280,35 @@ As of right now I do not know what this call will be used for. Guesses include d
 ```json
 []
 ```
+
+
+## Setting up an outlet
+
+This is a WIP but I'd like to be able to set up an outlet without requiring a phone. I have yet to fully sniff the traffic since the setup fails while I'm listening to the traffic. Some basic info though: the outlet appears to also be using an ESP-32 or similar device like the Vue does. When you use hotspot mode the IP is 192.168.4.1 which corresponds to what I've seen with WiFi libraries for the ESP series of microcontrollers. The setup has a few back and forth requests and then presumably makes a call to the main API to register. I actually had it tell me it failed but finished registration.
+
+Known calls:
+POST `http://192.168.4.1/prov-config`
+BODY (hex characters)
+
+```text
+08 02 62 24 0A 0F SSID 12 11 PWD
+```
+
+08 is backspace, 02 is "start of text" so I don't know how necessary those are. Then there's "b$" followed by linefeed and "shift in". The second line is the SSID followed by "device control 2" and "device control 1", then the password for the network. Again, I'm not sure how many of these extra characters are necessary.
+Reponse:
+
+```text
+08 03 6A 00
+```
+
+The response is basically just the letter `j`. Technically it's `backspace "end of text" j null`.
+
+I have yet to see a response to the next request:
+POST `http://192.168.4.1/prov-config`
+BODY
+
+```text
+08 04 72 00
+```
+
+In this case the request is `backspace "end of transmission" r null`. The app basically hangs at this point waiting for a response that doesn't come while I am listening to the traffic. Since this section is all plain http and not https it might be possible to capture this traffic another way that doesn't prevent it from succeeding.

@@ -21,6 +21,7 @@ API_USAGE_TIME = '/usage/time?start={startTime}&end={endTime}&type=INSTANT&devic
 API_USAGE_DATE = '/usage/date?start={startDate}&end={endDate}&type=INSTANT&deviceGid={deviceGid}&scale={scale}&unit={unit}&channels={channels}'
 API_USAGE_TOTAL = '/usage/total?deviceGid={deviceGid}&timeframe={timeFrame}&unit={unit}&channels={channels}'
 API_DEVICE_PROPERTIES = '/devices/{deviceGid}/locationProperties'
+API_OUTLET = '/devices/outlet'
 
 CLIENT_ID = '4qte47jbstod8apnfic0bunmrq'
 USER_POOL = 'us-east-2_ghlOXVLi1'
@@ -138,6 +139,17 @@ class PyEmVue(object):
                     channels.append(VuewDeviceChannelUsage().from_json_dictionary(channel))
         return channels, realStart, realEnd
 
+    def update_outlet(self, outlet, on=None):
+        """ Primarily to turn an outlet on or off. If the on parameter is not provided then uses the value in the outlet object.
+            If on parameter provided uses the provided value."""
+        url = API_ROOT + API_OUTLET
+        if on is not None:
+            outlet.outlet_on = on
+
+        response = self._put_request(url, outlet.as_dictionary())
+        response.raise_for_status()
+        outlet.from_json_dictionary(response.json())
+        return outlet
 
     def login(self, username=None, password=None, id_token=None, access_token=None, refresh_token=None, token_storage_file=None):
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.
@@ -194,6 +206,12 @@ class PyEmVue(object):
         self._check_token() # ensure our token hasn't expired, refresh if it has
         headers = {'authtoken': self.cognito.id_token}
         return requests.get(full_endpoint, headers=headers)
+
+    def _put_request(self, full_endpoint, body):
+        if not self.cognito: raise Exception('Must call "login" before calling any API methods.')
+        self._check_token() # ensure our token hasn't expired, refresh if it has
+        headers = {'authtoken': self.cognito.id_token}
+        return requests.put(full_endpoint, headers=headers, data=body)
 
 def _format_time(time):
     return time.isoformat()+'Z'
