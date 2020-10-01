@@ -4,7 +4,7 @@ A Python Library for reading data from the Emporia Vue energy monitoring system.
 
 The library can be invoked directly to pull back some basic info but requires your email and password to be added to a keys.json file, which is then replaced with the access tokens.
 
-API documentation can be [accessed here](api_docs.md)
+API documentation can be [accessed here](https://github.com/magico13/PyEmVue/blob/master/api_docs.md)
 
 keys.json
 
@@ -33,9 +33,9 @@ with open('keys.json') as f:
     data = json.load(f)
 
 vue = PyEmVue()
-vue.login(id_token=data['id_token'],
-    access_token=data['access_token'],
-    refresh_token=data['refresh_token'],
+vue.login(id_token=data['idToken'],
+    access_token=data['accessToken'],
+    refresh_token=data['refreshToken'],
     token_storage_file='keys.json')
 ```
 
@@ -193,6 +193,24 @@ Returns the energy used by the VueDeviceChannel between the `start` and `end` da
 - **end**: Ending `datetime` given in UTC.
 - **scale**: Any value of `Scale` enum at DAY or higher, HOUR and lower are not supported.
 - **unit**: Any value of `Unit` enum, generally watts.
+
+### Toggle outlets
+
+```python
+vue = PyEmVue()
+vue.login(id_token='id_token',
+    access_token='access_token',
+    refresh_token='refresh_token')
+
+outlets = vue.get_outlets()
+for outlet in outlets:
+    vue.update_outlet(outlet, not outlet_on)
+    # alternatively it can be set on the outlet object first
+    outlet.outlet_on = not outlet.outlet_on
+    outlet = vue.update_outlet(outlet)
+```
+
+The `get_outlets` call returns a list of the basic outlet structure but it is also possible to get a full `VueDevice` for the outlet first through the `get_devices` call where the `OutletDevice` will be an object off of the `VueDevice` (ie `device.outlet`). The call to `update_outlet` can either take a full `OutletDevice` with updated values or for simplicity can also take a True/False to turn the outlet on/off without separately modifying the initial outlet object.
 
 ### Disclaimer
 
