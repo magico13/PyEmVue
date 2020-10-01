@@ -11,7 +11,7 @@ from warrant import Cognito
 # Our files
 from pyemvue.enums import Scale, Unit, TotalTimeFrame, TotalUnit
 from pyemvue.customer import Customer
-from pyemvue.device import VueDevice, VueDeviceChannel, VuewDeviceChannelUsage
+from pyemvue.device import VueDevice, VueDeviceChannel, VuewDeviceChannelUsage, OutletDevice
 
 API_ROOT = 'https://api.emporiaenergy.com'
 API_CUSTOMER = '/customers?email={email}'
@@ -22,6 +22,7 @@ API_USAGE_DATE = '/usage/date?start={startDate}&end={endDate}&type=INSTANT&devic
 API_USAGE_TOTAL = '/usage/total?deviceGid={deviceGid}&timeframe={timeFrame}&unit={unit}&channels={channels}'
 API_DEVICE_PROPERTIES = '/devices/{deviceGid}/locationProperties'
 API_OUTLET = '/devices/outlet'
+API_GET_OUTLETS = '/customers/outlets?customerGid={customerGid}'
 
 CLIENT_ID = '4qte47jbstod8apnfic0bunmrq'
 USER_POOL = 'us-east-2_ghlOXVLi1'
@@ -139,6 +140,18 @@ class PyEmVue(object):
                     channels.append(VuewDeviceChannelUsage().from_json_dictionary(channel))
         return channels, realStart, realEnd
 
+    def get_outlets(self):
+        """ Return a list of outlets linked to the account. """
+        url = API_ROOT + API_GET_OUTLETS.format(customerGid=self.customer.customer_gid)
+        response = self._get_request(url)
+        response.raise_for_status()
+        outlets = []
+        if response.text:
+            j = response.json()
+            for raw_outlet in j:
+                outlets.append(OutletDevice().from_json_dictionary(raw_outlet))
+        return outlets
+
     def update_outlet(self, outlet, on=None):
         """ Primarily to turn an outlet on or off. If the on parameter is not provided then uses the value in the outlet object.
             If on parameter provided uses the provided value."""
@@ -211,7 +224,7 @@ class PyEmVue(object):
         if not self.cognito: raise Exception('Must call "login" before calling any API methods.')
         self._check_token() # ensure our token hasn't expired, refresh if it has
         headers = {'authtoken': self.cognito.id_token}
-        return requests.put(full_endpoint, headers=headers, data=body)
+        return requests.put(full_endpoint, headers=headers, json=body)
 
 def _format_time(time):
     return time.isoformat()+'Z'
