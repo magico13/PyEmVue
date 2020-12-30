@@ -2,6 +2,7 @@ import requests
 import datetime
 import json
 from dateutil.parser import parse
+from urllib.parse import quote
 
 # These provide AWS cognito authentication support
 import boto3
@@ -62,7 +63,8 @@ class PyEmVue(object):
 
     def get_customer_details(self):
         """Get details for the current customer."""
-        url = API_ROOT + API_CUSTOMER.format(email=self.username)
+        
+        url = API_ROOT + API_CUSTOMER.format(email=quote(self.username))
         response = self._get_request(url)
         response.raise_for_status()
         if response.text:
