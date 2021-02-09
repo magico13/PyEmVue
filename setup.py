@@ -8,7 +8,7 @@ except:
     
 setuptools.setup(
     name="pyemvue",
-    version="0.11.0",
+    version="0.12.0",
     author="magico13",
     description="Unofficial library for interacting with the Emporia Vue energy monitor.",
     long_description=long_description,
