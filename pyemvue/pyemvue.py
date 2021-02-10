@@ -71,7 +71,7 @@ class PyEmVue(object):
         return None
 
     def get_devices_usage(self, deviceGids, instant, scale=Scale.SECOND.value, unit=Unit.KWH.value):
-        """Returns a list of VueDeviceChannelUsage with the total usage of the devices over the specified scale"""
+        """Returns a list of VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if not instant: instant = datetime.datetime.utcnow()
         gids = deviceGids
         if isinstance(deviceGids, list):

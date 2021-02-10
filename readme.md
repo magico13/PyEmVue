@@ -4,7 +4,7 @@ A Python Library for reading data from the Emporia Vue energy monitoring system.
 
 The library can be invoked directly to pull back some basic info but requires your email and password to be added to a keys.json file, which is then replaced with the access tokens.
 
-API documentation can be [accessed here](https://github.com/magico13/PyEmVue/blob/master/api_docs.md)
+The backing API documentation can be [accessed here](https://github.com/magico13/PyEmVue/blob/master/api_docs.md)
 
 keys.json
 
@@ -85,7 +85,7 @@ Updates and returns the passed VueDevice with additional information about the d
 
 - **device**: A VueDevice as returned by `get_devices`. Will be updated and returned.
 
-### Get total usage
+### Get usages for devices
 
 ```python
 vue = PyEmVue()
@@ -93,58 +93,24 @@ vue.login(id_token='id_token',
     access_token='access_token',
     refresh_token='refresh_token')
 
-energy_usage = vue.get_total_usage(channel, timeFrame=TotalTimeFrame.ALL.value, unit=TotalUnit.WATTHOURS.value)
-```
+devices = vue.get_devices()
+deviceGids = []
+for device in devices:
+    deviceGids.append(device.device_gid)
 
-Returns the total usage over the time frame for the specified channel as a single float number. Generally energy over all time or month to date.
-
-#### Arguments
-
-- **channel**: A VueDeviceChannel from the `get_devices` call. Key parts are the `device_gid` and `channel_num`.
-- **timeFrame**: Any value from the `TotalTimeFrame` enum. Either all time or month to date.
-- **unit**: Any value from the `TotalUnit` enum. Currently only watthours.
-
-### Get recent usage
-
-```python
-vue = PyEmVue()
-vue.login(id_token='id_token',
-    access_token='access_token',
-    refresh_token='refresh_token')
-
-channel_usage_list = vue.get_recent_usage(scale=Scale.HOUR.value, unit=Unit.WATTS.value)
+channel_usage_list = vue.get_devices_usage(deviceGids, None, scale=Scale.DAY.value, unit=Unit.KWH.value)
 for channel in channel_usage_list:
-    print(channel.usage)
+    print(channel.usage, 'kwh')
 ```
 
-Returns list of `ViewDeviceChannelUsage` objects giving usage over the `scale` timeframe in the `unit` specified. For a scale of under 1 hour this will give the average usage over the time frame (ie kW), for an hour or more it gives the total usage (ie kWh).
+Gets the usage for the given devices (specified by device_gid) over the provided time scale. May need to scale it manually to convert it to a rate if desired.
 
 #### Arguments
 
-- **scale**: Any value from the `Scale` enum. From 1 second to 1 year.
-- **unit**: Any value from the `Unit` enum. Generally watts but there are options for dollars or trees or miles driven, etc.
-
-### Get usage over a time scale
-
-```python
-vue = PyEmVue()
-vue.login(id_token='id_token',
-    access_token='access_token',
-    refresh_token='refresh_token')
-
-channel_usage_list = vue.get_usage_for_time_scale(time=datetime.datetime(2020, 6, 21, 18, 0, 0) scale=Scale.HOUR.value, unit=Unit.WATTS.value)
-for channel in channel_usage_list:
-    print(channel.usage)
-```
-
-Returns list of `ViewDeviceChannelUsage` objects giving usage over the `scale` timeframe in the `unit` specified for the "bucket" containing the time provided. For a scale of under 1 hour this will give the average usage over the time frame (ie kW), for an hour or more it gives the total usage (ie kWh). The start and end times for the bucket will be returned although is not always consistent (month will give only the start of the month but minute gives start/end times one minute apart for instance).
-
-#### Arguments
-
-- **time**: A datetime value to use as the end time.
-- **scale**: Any value from the `Scale` enum. From 1 second to 1 year.
-- **unit**: Any value from the `Unit` enum. Generally watts but there are options for dollars or trees or miles driven, etc.
-
+- **deviceGids**: A list of device_gid values pulled from get_devices() or a single device_gid.
+- **instant**: What instant of time to check, will default to now if None.
+- **scale**: The time scale to check the usage over.
+- **unit**: The unit of measurement.
 
 ### Get usage over time
 
@@ -154,45 +120,24 @@ vue.login(id_token='id_token',
     access_token='access_token',
     refresh_token='refresh_token')
 
-usage_time = vue.get_usage_over_time(channel, start, end, scale=Scale.SECOND.value, unit=Unit.WATTS.value)
+devices = vue.get_devices()
 
-# Throw into matplotlib for plotting
+usage_over_time, start_time = vue.get_chart_usage(devices[0].channels[0], datetime.datetime.utcnow()-datetime.timedelta(days=7), datetime.datetime.utcnow(), scale=Scale.DAY.value, unit=Unit.KWH.value)
+
+print('Usage for the last seven days starting', start_time.isoformat())
+for usage in usage_over_time:
+    print(usage, 'kwh')
 ```
 
-Returns the energy used by the VueDeviceChannel between the `start` and `end` datetimes for each `scale` timeframe. In other words, if `scale` is seconds and there's a minute between `start` and `end`, you'll get 60 data points in the output.
+Gets the usage in the scale and unit provided over the given time range. Returns a tuple with the first element the usage list and the second the datetime that the range starts.
 
 #### Arguments
 
-- **channel**: A VueDeviceChannel from the `get_devices` call. Key parts are the `device_gid` and `channel_num`.
-- **start**: Starting `datetime` given in UTC.
-- **end**: Ending `datetime` given in UTC.
-- **scale**: Any value of `Scale` enum at HOUR or finer, DAY and higher is not supported. For 1 hour between `start` and `end` you'd get 3600 data points at SECOND, 60 at MINUTE, or 4 at MINUTE_15.
-- **unit**: Any value of `Unit` enum, generally watts.
-
-### Get usage over a date range
-
-```python
-vue = PyEmVue()
-vue.login(id_token='id_token',
-    access_token='access_token',
-    refresh_token='refresh_token')
-
-usage_time = vue.get_usage_over_date_range(channel, start, end, scale=Scale.DAY.value, unit=Unit.WATTS.value)
-
-# Throw into matplotlib for plotting
-```
-
-Returns the energy used by the VueDeviceChannel between the `start` and `end` datetimes for each `scale` timeframe. In other words, if `scale` is days and there's a week between `start` and `end`, you'll get 7 data points in the output.
-
-**NOTE:** The actual start and end dates for this call are weird. For my timezone of UTC-4 if I pass in 2020-07-09 for the start the first datapoint is for 2020-07-08. Passing the same value for start and end will appear to work but will give incorrect data. To get correct data for a DAY pass the day you want for the start, two days later for the end, and take the second value. I would recommend doing the same with weeks, months, years, etc.
-
-#### Arguments
-
-- **channel**: A VueDeviceChannel from the `get_devices` call. Key parts are the `device_gid` and `channel_num`.
-- **start**: Starting `datetime` given in UTC.
-- **end**: Ending `datetime` given in UTC.
-- **scale**: Any value of `Scale` enum at DAY or higher, HOUR and lower are not supported.
-- **unit**: Any value of `Unit` enum, generally watts.
+- **channel**: A VueDeviceChannel object, typically pulled from a VueDevice.
+- **start**: The start time for the time period. Defaults to now if None.
+- **end**: The end time for the time period. Default to now if None.
+- **scale**: The time scale to check the usage over.
+- **unit**: The unit of measurement.
 
 ### Toggle outlets
 

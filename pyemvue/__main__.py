@@ -75,6 +75,9 @@ def main():
     for chan in use:
         print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage} kwh')
     print('Total usage for yesterday in kwh: ')
+    # use = vue.get_devices_usage(deviceGids, yesterday, Scale.DAY.value)
+    # for chan in use:
+    #     print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage} kwh')
     for chan in use:
         usage = vue.get_chart_usage(chan, yesterday, yesterday+datetime.timedelta(hours=23, minutes=59), Scale.DAY.value)
         if usage:
@@ -83,6 +86,13 @@ def main():
     use = vue.get_devices_usage(deviceGids, None, Scale.MINUTE.value)
     for chan in use:
         print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage*1000*60} W')
+
+
+    usage_over_time, start_time = vue.get_chart_usage(devices[0].channels[0], datetime.datetime.utcnow()-datetime.timedelta(days=7), datetime.datetime.utcnow(), scale=Scale.DAY.value, unit=Unit.KWH.value)
+
+    print('Usage for the last seven days starting', start_time.isoformat())
+    for usage in usage_over_time:
+        print(usage, 'kwh')
 
 if __name__ == '__main__':
     main()
