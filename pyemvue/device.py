@@ -90,6 +90,7 @@ class VueDeviceChannelUsage(VueDeviceChannel):
 
     def from_json_dictionary(self, js):
         """Populate device channel usage data from a dictionary extracted from the response json."""
+        if not js: return self
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'channelNum' in js: self.channel_num = js['channelNum']
         if 'usage' in js:

@@ -85,7 +85,7 @@ class PyEmVue(object):
             j = response.json()
             if 'channelUsages' in j:
                 for channel in j['channelUsages']:
-                    channels.append(VueDeviceChannelUsage().from_json_dictionary(channel))
+                    if channel: channels.append(VueDeviceChannelUsage().from_json_dictionary(channel))
         return channels
 
 
