@@ -10,17 +10,15 @@ import botocore
 from warrant import Cognito
 
 # Our files
-from pyemvue.enums import Scale, Unit, TotalTimeFrame, TotalUnit
+from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
-from pyemvue.device import VueDevice, VueDeviceChannel, VuewDeviceChannelUsage, OutletDevice
+from pyemvue.device import VueDevice, VueDeviceChannel, VueDeviceChannelUsage, OutletDevice
 
 API_ROOT = 'https://api.emporiaenergy.com'
 API_CUSTOMER = '/customers?email={email}'
 API_CUSTOMER_DEVICES = '/customers/{customerGid}/devices?detailed=true&hierarchy=true'
-API_USAGE_DEVICES = '/usage/devices?start={startTime}&end={endTime}&scale={scale}&unit={unit}&customerGid={customerGid}'
-API_USAGE_TIME = '/usage/time?start={startTime}&end={endTime}&type=INSTANT&deviceGid={deviceGid}&scale={scale}&unit={unit}&channels={channels}'
-API_USAGE_DATE = '/usage/date?start={startDate}&end={endDate}&type=INSTANT&deviceGid={deviceGid}&scale={scale}&unit={unit}&channels={channels}'
-API_USAGE_TOTAL = '/usage/total?deviceGid={deviceGid}&timeframe={timeFrame}&unit={unit}&channels={channels}'
+API_DEVICES_USAGE = '/AppAPI?apiMethod=getDevicesUsage&deviceGids={deviceGids}&instant={instant}&scale={scale}&energyUnit={unit}'
+API_CHART_USAGE = '/AppAPI?apiMethod=getChartUsage&deviceGid={deviceGid}&channel={channel}&start={start}&end={end}&scale={scale}&energyUnit={unit}'
 API_DEVICE_PROPERTIES = '/devices/{deviceGid}/locationProperties'
 API_OUTLET = '/devices/outlet'
 API_GET_OUTLETS = '/customers/outlets?customerGid={customerGid}'
@@ -72,75 +70,40 @@ class PyEmVue(object):
             return Customer().from_json_dictionary(j)
         return None
 
-    def get_total_usage(self, channel, timeFrame=TotalTimeFrame.ALL.value, unit=TotalUnit.WATTHOURS.value):
-        """Get total usage over the provided timeframe for the given device channel."""
-        url = API_ROOT + API_USAGE_TOTAL.format(deviceGid=channel.device_gid, 
-            timeFrame=timeFrame, unit=unit, channels=channel.channel_num)
-        response = self._get_request(url)
-        response.raise_for_status()
-        if response.text:
-            j = response.json()
-            if 'usage' in j: return j['usage']
-        return 0
-    
-    def get_usage_over_time(self, channel, start, end, scale=Scale.SECOND.value, unit=Unit.WATTS.value):
-        """Get usage over the given time range. Used for primarily for plotting history. Supports time scales less than DAY."""
-        if scale != Scale.SECOND.value and scale != Scale.MINUTE.value and scale != Scale.MINUTES_15.value and scale != Scale.HOUR.value:
-            raise ValueError(f'Scale of {scale} is invalid, must be 1S, 1MIN, 15MIN, or 1H.')
-        url = API_ROOT + API_USAGE_TIME.format(deviceGid=channel.device_gid, startTime=_format_time(start), endTime=_format_time(end),
-            scale=scale, unit=unit, channels=channel.channel_num)
-        response = self._get_request(url)
-        response.raise_for_status()
-        if response.text:
-            j = response.json()
-            if 'usage' in j: return j['usage']
-        return []
+    def get_devices_usage(self, deviceGids, instant, scale=Scale.SECOND.value, unit=Unit.KWH.value):
+        """Returns a list of VueDeviceChannelUsage with the total usage of the devices over the specified scale"""
+        if not instant: instant = datetime.datetime.utcnow()
+        gids = deviceGids
+        if isinstance(deviceGids, list):
+            gids = '+'.join(map(str, deviceGids))
 
-    def get_usage_over_date_range(self, channel, start, end, scale=Scale.DAY.value, unit=Unit.WATTS.value):
-        """
-            Get usage over the given date range. Used for primarily for plotting history. Supports time scales of DAY or larger.
-            Note strange behavior with what day is which, first value is for day before start, last value is for day before end, for test timezone of UTC-4.
-            Advise getting a range of days around the desired day and manual verification.
-        """
-        if scale != Scale.DAY.value and scale != Scale.WEEK.value and scale != Scale.MONTH.value and scale != Scale.YEAR.value:
-            raise ValueError(f'Scale of {scale} is invalid, must be 1D, 1W, 1MON, or 1Y.')
-        url = API_ROOT + API_USAGE_DATE.format(deviceGid=channel.device_gid, startDate=_format_date(start), endDate=_format_date(end),
-            scale=scale, unit=unit, channels=channel.channel_num)
-        response = self._get_request(url)
-        response.raise_for_status()
-        if response.text:
-            j = response.json()
-            if 'usage' in j: return j['usage']
-        return []
-    
-    def get_recent_usage(self, scale=Scale.HOUR.value, unit=Unit.WATTS.value):
-        """Get usage over the last 'scale' timeframe."""
-        now = datetime.datetime.utcnow()
-        return self.get_usage_for_time_scale(now, scale, unit)[0]
-
-    def get_usage_for_time_scale(self, time, scale=Scale.HOUR.value, unit=Unit.WATTS.value):
-        """ Get usage for the 'scale' timeframe ending at the given time. 
-            Only supported for scales less than one day, otherwise time value is ignored and most recent data is given.
-        """
-        start = time - datetime.timedelta(seconds=1)
-        end = time
-        url = API_ROOT + API_USAGE_DEVICES.format(customerGid=self.customer.customer_gid, 
-            scale=scale, unit=unit, startTime=_format_time(start), endTime=_format_time(end))
+        url = API_ROOT + API_DEVICES_USAGE.format(deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit)
         response = self._get_request(url)
         response.raise_for_status()
         channels = []
-        realStart = None
-        realEnd = None
         if response.text:
             j = response.json()
-            if 'start' in j: 
-                realStart = parse(j['start'])
-            if 'end' in j: 
-                realEnd = parse(j['end'])
-            if 'channels' in j:
-                for channel in j['channels']:
-                    channels.append(VuewDeviceChannelUsage().from_json_dictionary(channel))
-        return channels, realStart, realEnd
+            if 'channelUsages' in j:
+                for channel in j['channelUsages']:
+                    channels.append(VueDeviceChannelUsage().from_json_dictionary(channel))
+        return channels
+
+
+    def get_chart_usage(self, channel, start, end, scale=Scale.SECOND.value, unit=Unit.KWH.value):
+        """Gets the usage over a given time period and the start of the measurement period. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
+        if not start: start = datetime.datetime.utcnow()
+        if not end: end = datetime.datetime.utcnow()
+        url = API_ROOT + API_CHART_USAGE.format(deviceGid=channel.device_gid, channel=channel.channel_num, start=_format_time(start), end=_format_time(end), scale=scale, unit=unit)
+        response = self._get_request(url)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            if 'firstUsageInstant' in j: instant = parse(j['firstUsageInstant'])
+            else: instant = start
+            if 'usageList' in j: usage = j['usageList']
+            else: usage = []
+            return usage, instant
+        return [], start
 
     def get_outlets(self):
         """ Return a list of outlets linked to the account. """

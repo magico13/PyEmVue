@@ -4,9 +4,9 @@ import json
 import dateutil
 
 # Our files
-from pyemvue.enums import Scale, Unit, TotalTimeFrame, TotalUnit
+from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
-from pyemvue.device import VueDevice, VueDeviceChannel, VuewDeviceChannelUsage
+from pyemvue.device import VueDevice, VueDeviceChannel, VueDeviceChannelUsage
 from pyemvue.pyemvue import PyEmVue
 
 def main():
@@ -52,35 +52,37 @@ def main():
     print(vue.cognito.id_token)
     print()
     devices = vue.get_devices()
+    deviceGids = []
     for device in devices:
+        deviceGids.append(device.device_gid)
         print(device.device_gid, device.manufacturer_id, device.model, device.firmware)
         vue.populate_device_properties(device)
         for chan in device.channels:
             print('\t', chan.device_gid, chan.name, chan.channel_num, chan.channel_multiplier)
-    print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.MONTH.value) / 1000, 'kwh used month to date')
-    print(vue.get_total_usage(devices[0].channels[0], TotalTimeFrame.ALL.value) / 1000, 'kwh used total')
+    monthly, start = vue.get_chart_usage(devices[0].channels[0], None, None, Scale.MONTH.value)
+    print(monthly[0], 'kwh used since', start.isoformat())
     now = datetime.datetime.utcnow()
-    yesterday = datetime.datetime.now(dateutil.tz.gettz(devices[0].time_zone)) - datetime.timedelta(days=1)
-    tomorrow = datetime.datetime.now(dateutil.tz.gettz(devices[0].time_zone)) + datetime.timedelta(days=1)
-    # yesterday = yesterday.replace(hour=23, minute=59, second=59) - datetime.timedelta(days=1)
-    # yesterday = yesterday.astimezone(dateutil.tz.UTC).replace(tzinfo=None)
-    #print(yesterday.isoformat())
+    midnight=(datetime.datetime
+             .now(dateutil.tz.gettz(devices[0].time_zone))
+             .replace(hour=0, minute=0, second=0, microsecond=0)
+             .astimezone(dateutil.tz.tzutc()))
+    yesterday = midnight - datetime.timedelta(days=1)
+    yesterday = yesterday.replace(tzinfo=None)
     minAgo = now - datetime.timedelta(minutes=1)
     print('Total usage for today in kwh: ')
-    use = vue.get_recent_usage(Scale.DAY.value)
+
+    use = vue.get_devices_usage(deviceGids, now, Scale.DAY.value)
     for chan in use:
-        print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage/1000} kwh')
+        print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage} kwh')
     print('Total usage for yesterday in kwh: ')
     for chan in use:
-        usage = vue.get_usage_over_date_range(chan, yesterday, tomorrow)
+        usage = vue.get_chart_usage(chan, yesterday, yesterday+datetime.timedelta(hours=23, minutes=59), Scale.DAY.value)
         if usage:
-            print(f'{chan.device_gid} ({chan.channel_num}): {usage[1]/1000} kwh')
+            print(f'{chan.device_gid} ({chan.channel_num}): {usage[0][0]} kwh')
     print('Average usage over the last minute in watts: ')
-    use = vue.get_recent_usage(Scale.MINUTE.value)
+    use = vue.get_devices_usage(deviceGids, None, Scale.MINUTE.value)
     for chan in use:
-        print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage} W')
-    
-    print('Usage over the last minute in watts: ', vue.get_usage_over_time(devices[0].channels[0], minAgo, now))
+        print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage*1000*60} W')
 
 if __name__ == '__main__':
     main()

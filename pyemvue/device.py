@@ -13,6 +13,7 @@ class VueDevice(object):
         self.time_zone = ''
         self.usage_cent_per_kw_hour = 0.0
         self.peak_demand_dollar_per_kw = 0.0
+        self.billing_cycle_start_day = 0
         self.solar = False
         self.air_conditioning = 'false'
         self.heat_source = ''
@@ -30,6 +31,8 @@ class VueDevice(object):
         if 'manufacturerDeviceId' in js: self.manufacturer_id = js['manufacturerDeviceId']
         if 'model' in js: self.model = js['model']
         if 'firmware' in js: self.firmware = js['firmware']
+        if 'locationProperties' in js:
+            self.populate_location_properties_from_json(js['locationProperties'])
         # 'devices' is empty in my system, will add support later if possible
         if 'channels' in js:
             # Channels are another subtype and the channelNum is used in other calls
@@ -48,6 +51,7 @@ class VueDevice(object):
         if 'timeZone' in js: self.time_zone = js['timeZone']
         if 'usageCentPerKwHour' in js: self.usage_cent_per_kw_hour = js['usageCentPerKwHour']
         if 'peakDemandDollarPerKw' in js: self.peak_demand_dollar_per_kw = js['peakDemandDollarPerKw']
+        if 'billingCycleStartDay' in js: self.billing_cycle_start_day = js['billingCycleStartDay']
         if 'solar' in js: self.solar = js['solar']
         if 'locationInformation' in js and js['locationInformation']:
             li = js['locationInformation']
@@ -77,17 +81,22 @@ class VueDeviceChannel(object):
         if 'channelTypeGid' in js: self.channel_type_gid = js['channelTypeGid']
         return self
 
-class VuewDeviceChannelUsage(VueDeviceChannel):
+class VueDeviceChannelUsage(VueDeviceChannel):
     def __init__(self, gid=0, usage=0, channelNum='1,2,3'):
         self.device_gid = gid
         self.usage = usage
         self.channel_num = channelNum
+        self.timestamp = None
 
     def from_json_dictionary(self, js):
         """Populate device channel usage data from a dictionary extracted from the response json."""
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
-        if 'usage' in js: self.usage = js['usage'] or 0
         if 'channelNum' in js: self.channel_num = js['channelNum']
+        if 'usage' in js:
+            if 'value' in js['usage']:
+                self.usage = js['usage']['value']
+            if 'Timestamp' in js['usage'] and 'epochSecond' in js['usage']['Timestamp']:
+                self.timestamp = js['usage']['Timestamp']['epochSecond']
         return self
 
 class OutletDevice(object):
