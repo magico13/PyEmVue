@@ -80,7 +80,7 @@ def main():
     #     print(f'{chan.device_gid} ({chan.channel_num}): {chan.usage} kwh')
     for chan in use:
         usage = vue.get_chart_usage(chan, yesterday, yesterday+datetime.timedelta(hours=23, minutes=59), Scale.DAY.value)
-        if usage:
+        if usage and usage[0]:
             print(f'{chan.device_gid} ({chan.channel_num}): {usage[0][0]} kwh')
     print('Average usage over the last minute in watts: ')
     use = vue.get_devices_usage(deviceGids, None, Scale.MINUTE.value)

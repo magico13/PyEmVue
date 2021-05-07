@@ -76,7 +76,7 @@ class PyEmVue(object):
         gids = deviceGids
         if isinstance(deviceGids, list):
             gids = '+'.join(map(str, deviceGids))
-
+        
         url = API_ROOT + API_DEVICES_USAGE.format(deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit)
         response = self._get_request(url)
         response.raise_for_status()
@@ -91,6 +91,9 @@ class PyEmVue(object):
 
     def get_chart_usage(self, channel, start, end, scale=Scale.SECOND.value, unit=Unit.KWH.value):
         """Gets the usage over a given time period and the start of the measurement period. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
+        if channel.channel_num in ['MainsFromGrid', 'MainsToGrid']:
+            # These is not populated for the special Mains data as of right now
+            return [], start
         if not start: start = datetime.datetime.utcnow()
         if not end: end = datetime.datetime.utcnow()
         url = API_ROOT + API_CHART_USAGE.format(deviceGid=channel.device_gid, channel=channel.channel_num, start=_format_time(start), end=_format_time(end), scale=scale, unit=unit)
