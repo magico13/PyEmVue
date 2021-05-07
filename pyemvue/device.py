@@ -93,7 +93,7 @@ class VueDeviceChannelUsage(VueDeviceChannel):
         if not js: return self
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'channelNum' in js: self.channel_num = js['channelNum']
-        if 'usage' in js:
+        if 'usage' in js and js['usage']:
             if 'value' in js['usage']:
                 self.usage = js['usage']['value']
             if 'Timestamp' in js['usage'] and 'epochSecond' in js['usage']['Timestamp']:
