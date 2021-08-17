@@ -12,7 +12,7 @@ from warrant import Cognito
 # Our files
 from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
-from pyemvue.device import VueDevice, VueDeviceChannel, VueDeviceChannelUsage, OutletDevice
+from pyemvue.device import ChargerDevice, VueDevice, VueDeviceChannel, VueDeviceChannelUsage, OutletDevice
 
 API_ROOT = 'https://api.emporiaenergy.com'
 API_CUSTOMER = '/customers?email={email}'
@@ -21,7 +21,11 @@ API_DEVICES_USAGE = '/AppAPI?apiMethod=getDevicesUsage&deviceGids={deviceGids}&i
 API_CHART_USAGE = '/AppAPI?apiMethod=getChartUsage&deviceGid={deviceGid}&channel={channel}&start={start}&end={end}&scale={scale}&energyUnit={unit}'
 API_DEVICE_PROPERTIES = '/devices/{deviceGid}/locationProperties'
 API_OUTLET = '/devices/outlet'
-API_GET_OUTLETS = '/customers/outlets?customerGid={customerGid}'
+API_GET_OUTLETS = '/customers/outlets'
+API_CHARGER = '/devices/evcharger'
+API_GET_CHARGERS = '/customers/evchargers'
+
+API_MAINTENANCE = 'https://s3.amazonaws.com/com.emporiaenergy.manual.ota/maintenance/maintenance.json'
 
 CLIENT_ID = '4qte47jbstod8apnfic0bunmrq'
 USER_POOL = 'us-east-2_ghlOXVLi1'
@@ -32,6 +36,15 @@ class PyEmVue(object):
         self.token_storage_file = None
         self.customer = None
         self.cognito = None
+
+    def down_for_maintenance(self):
+        """Checks to see if the API is down for maintenance, returns the reported message if present."""
+        response = requests.get(API_MAINTENANCE)
+        if response.status_code == 404: return None
+        if response.text:
+            j = response.json()
+            if 'msg' in j:
+                return j['msg']
 
     def get_devices(self):
         """Get all devices under the current customer account."""
@@ -110,7 +123,7 @@ class PyEmVue(object):
 
     def get_outlets(self):
         """ Return a list of outlets linked to the account. """
-        url = API_ROOT + API_GET_OUTLETS.format(customerGid=self.customer.customer_gid)
+        url = API_ROOT + API_GET_OUTLETS
         response = self._get_request(url)
         response.raise_for_status()
         outlets = []
@@ -131,6 +144,31 @@ class PyEmVue(object):
         response.raise_for_status()
         outlet.from_json_dictionary(response.json())
         return outlet
+
+    def get_chargers(self):
+        """ Return a list of EVSEs/chargers linked to the account. """
+        url = API_ROOT + API_GET_CHARGERS
+        response = self._get_request(url)
+        response.raise_for_status()
+        chargers = []
+        if response.text:
+            j = response.json()
+            for raw_charger in j:
+                chargers.append(ChargerDevice().from_json_dictionary(raw_charger))
+        return chargers
+
+    def update_charger(self, charger, on = None, charge_rate = None):
+        """ Primarily to enable/disable an evse/charger. The on and charge_rate parameters override the values in the object if provided"""
+        url = API_ROOT + API_CHARGER
+        if on is not None:
+            charger.charger_on = on
+        if charge_rate:
+            charger.charging_rate = charge_rate
+
+        response = self._put_request(url, charger.as_dictionary())
+        response.raise_for_status()
+        charger.from_json_dictionary(response.json())
+        return charger
 
     def login(self, username=None, password=None, id_token=None, access_token=None, refresh_token=None, token_storage_file=None):
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.

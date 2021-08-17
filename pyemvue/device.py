@@ -1,11 +1,20 @@
+import datetime
+from dateutil.parser import parse
+
 class VueDevice(object):
     def __init__(self, gid=0, manId='', modelNum='', firmwareVersion=''):
         self.device_gid = gid
         self.manufacturer_id = manId
         self.model = modelNum
         self.firmware = firmwareVersion
+        self.parent_device_gid = 0
+        self.parent_channel_num = ''
         self.channels = []
         self.outlet = None
+        self.ev_charger = None
+
+        self.connected = False
+        self.offline_since = datetime.datetime.min
 
         #extra info
         self.device_name = ''
@@ -23,6 +32,9 @@ class VueDevice(object):
         self.num_people = ''
         self.swimming_pool = 'false'
         self.hot_tub = 'false'
+        self.latitude = 0
+        self.longitude = 0
+        self.utility_rate_gid = None
 
 
     def from_json_dictionary(self, js):
@@ -31,6 +43,8 @@ class VueDevice(object):
         if 'manufacturerDeviceId' in js: self.manufacturer_id = js['manufacturerDeviceId']
         if 'model' in js: self.model = js['model']
         if 'firmware' in js: self.firmware = js['firmware']
+        if 'parentDeviceGid' in js: self.parent_device_gid = js['parentDeviceGid']
+        if 'parentChannelNum' in js: self.parent_channel_num = js['parentChannelNum']
         if 'locationProperties' in js:
             self.populate_location_properties_from_json(js['locationProperties'])
         # 'devices' is empty in my system, will add support later if possible
@@ -42,6 +56,15 @@ class VueDevice(object):
         # outlets are a special type
         if 'outlet' in js and js['outlet']:
             self.outlet = OutletDevice().from_json_dictionary(js['outlet'])
+        # EVSEs are also special
+        if 'evCharger' in js and js['evCharger']:
+            self.ev_charger = ChargerDevice().from_json_dictionary(js['evCharger'])
+
+        # Online data
+        if 'deviceConnected' in js and js['deviceConnected']:
+            con = js['deviceConnected']
+            if 'connected' in con: self.connected = con['connected']
+            if 'offlineSince' in con: self.offline_since = parse(con['offlineSince'])
         return self
     
     def populate_location_properties_from_json(self, js):
@@ -53,6 +76,7 @@ class VueDevice(object):
         if 'peakDemandDollarPerKw' in js: self.peak_demand_dollar_per_kw = js['peakDemandDollarPerKw']
         if 'billingCycleStartDay' in js: self.billing_cycle_start_day = js['billingCycleStartDay']
         if 'solar' in js: self.solar = js['solar']
+        if 'utilityRateGid' in js: self.utility_rate_gid = js['utilityRateGid']
         if 'locationInformation' in js and js['locationInformation']:
             li = js['locationInformation']
             if 'airConditioning' in li: self.air_conditioning = li['airConditioning']
@@ -63,6 +87,9 @@ class VueDevice(object):
             if 'numPeople' in li: self.num_people = li['numPeople']
             if 'swimmingPool' in li: self.swimming_pool = li['swimmingPool']
             if 'hotTub' in li: self.hot_tub = li['hotTub']
+        if 'latitudeLongitude' in js and js['latitudeLongitude']:
+            if 'latitude' in js['latitudeLongitude']: self.latitude = js['latitudeLongitude']['latitude']
+            if 'longitude' in js['latitudeLongitude']: self.longitude = js['latitudeLongitude']['longitude']
 
 class VueDeviceChannel(object):
     def __init__(self, gid=0, name='', channelNum='1,2,3', channelMultiplier=1.0, channelTypeGid=0):
@@ -122,4 +149,43 @@ class OutletDevice(object):
         j['outletOn'] = self.outlet_on
         j['parentDeviceGid'] = self.parent_device_gid
         j['parentChannelNum'] = self.parent_channel_num
+        return j
+
+class ChargerDevice(object):
+    def __init__(self, gid=0, on=False):
+        self.device_gid = gid
+        self.charger_on = on
+        self.message = ''
+        self.status = ''
+        self.icon = ''
+        self.icon_label = ''
+        self.icon_detail_text = ''
+        self.fault_text = ''
+        self.charging_rate = 0
+        self.max_charging_rate = 0
+        self.off_peak_schedules_enabled = False
+        self.custom_schedules = []
+
+    def from_json_dictionary(self, js):
+        if 'deviceGid' in js: self.device_gid = js['deviceGid']
+        if 'chargerOn' in js: self.charger_on = js['chargerOn']
+        if 'message' in js: self.message = js['message']
+        if 'status' in js: self.status = js['status']
+        if 'icon' in js: self.icon = js['icon']
+        if 'iconLabel' in js: self.icon_label = js['iconLabel']
+        if 'iconDetailText' in js: self.icon_detail_text = js['iconDetailText']
+        if 'faultText' in js: self.fault_text = js['faultText']
+        if 'chargingRate' in js: self.charging_rate = js['chargingRate']
+        if 'maxChargingRate' in js: self.max_charging_rate = js['maxChargingRate']
+        if 'offPeakSchedulesEnabled' in js: self.off_peak_schedules_enabled = js['offPeakSchedulesEnabled']
+        # don't have support for schedules yet
+        return self
+
+    def as_dictionary(self):
+        j = {}
+        j['deviceGid'] = self.device_gid
+        j['chargerOn'] = self.charger_on
+        j['chargingRate'] = self.charging_rate
+        j['maxChargingRate'] = self.max_charging_rate
+        j['offPeakSchedulesEnabled'] = self.off_peak_schedules_enabled
         return j

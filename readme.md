@@ -103,7 +103,7 @@ for channel in channel_usage_list:
     print(channel.usage, 'kwh')
 ```
 
-Gets the usage for the given devices (specified by device_gid) over the provided time scale. May need to scale it manually to convert it to a rate if desired.
+Gets the usage for the given devices (specified by device_gid) over the provided time scale. May need to scale it manually to convert it to a rate, eg for 1 second data `kilowatt={usage in kwh/s}*3600s/1h` or for 1 minute data `kilowatt={usage in kwh/m}*60m/1h`.
 
 #### Arguments
 
@@ -149,13 +149,34 @@ vue.login(id_token='id_token',
 
 outlets = vue.get_outlets()
 for outlet in outlets:
-    vue.update_outlet(outlet, not outlet_on)
+    vue.update_outlet(outlet, on=(not outlet.outlet_on))
     # alternatively it can be set on the outlet object first
     outlet.outlet_on = not outlet.outlet_on
     outlet = vue.update_outlet(outlet)
 ```
 
-The `get_outlets` call returns a list of the basic outlet structure but it is also possible to get a full `VueDevice` for the outlet first through the `get_devices` call where the `OutletDevice` will be an object off of the `VueDevice` (ie `device.outlet`). The call to `update_outlet` can either take a full `OutletDevice` with updated values or for simplicity can also take a True/False to turn the outlet on/off without separately modifying the initial outlet object.
+The `get_outlets` call returns a list of outlets directly but it is also possible to get a full `VueDevice` for the outlet first through the `get_devices` call and access an `OutletDevice` through the `outlet` attribute off of the `VueDevice` (ie `device.outlet`).
+
+### Toggle EV Charger (EVSE)
+
+```python
+vue = PyEmVue()
+vue.login(id_token='id_token',
+    access_token='access_token',
+    refresh_token='refresh_token')
+
+chargers = vue.get_chargers()
+for charger in chargers:
+    vue.update_charger(outlet, on=(not charger.charger_on), charge_rate=charger.max_charging_rate)
+    # alternatively you can update the charger object first
+    charger.charger_on = not charger.charger_on
+    charger.charging_rate = 6
+    charger.max_charging_rate = 16
+    charger = vue.update_charger(charger)
+```
+
+The `get_chargers` call returns a list of chargers directly but it is also possible to get a full `VueDevice` for the charger first through the `get_devices` call and access a `ChargerDevice` through the `ev_charger` attribute off of the `VueDevice` (ie `device.ev_charger`).
+
 
 ### Disclaimer
 
