@@ -126,8 +126,6 @@ class VueUsageDevice(VueDevice):
                     self.channels[populated_channel.channel_num] = populated_channel
         return self
 
-
-
 class VueDeviceChannelUsage(VueDeviceChannel):
     def __init__(self, gid=0, usage=0, channelNum='1,2,3', name='', timestamp=None):
         super().__init__(gid=gid, name=name, channelNum=channelNum)
@@ -160,15 +158,11 @@ class OutletDevice(object):
     def __init__(self, gid=0, on=False, parentGid=0, parentChannel=0):
         self.device_gid = gid
         self.outlet_on = on
-        self.parent_device_gid = parentGid
-        self.parent_channel_num = parentChannel
         self.schedules = []
 
     def from_json_dictionary(self, js):
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'outletOn' in js: self.outlet_on = js['outletOn']
-        if 'parentDeviceGid' in js: self.parent_device_gid = js['parentDeviceGid']
-        if 'parentChannelNum' in js: self.parent_channel_num = js['parentChannelNum']
         # don't have support for schedules yet
         return self
     
@@ -176,8 +170,6 @@ class OutletDevice(object):
         j = {}
         j['deviceGid'] = self.device_gid
         j['outletOn'] = self.outlet_on
-        j['parentDeviceGid'] = self.parent_device_gid
-        j['parentChannelNum'] = self.parent_channel_num
         return j
 
 class ChargerDevice(object):

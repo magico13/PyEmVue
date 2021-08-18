@@ -85,7 +85,7 @@ class PyEmVue(object):
 
     def get_device_list_usage(self, deviceGids, instant, scale=Scale.SECOND.value, unit=Unit.KWH.value):
         """Returns a nested dictionary of VueUsageDevice and VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
-        if not instant: instant = datetime.datetime.utcnow()
+        if not instant: instant = datetime.datetime.now(datetime.timezone.utc)
         gids = deviceGids
         if isinstance(deviceGids, list):
             gids = '+'.join(map(str, deviceGids))
@@ -109,8 +109,8 @@ class PyEmVue(object):
         if channel.channel_num in ['MainsFromGrid', 'MainsToGrid']:
             # These is not populated for the special Mains data as of right now
             return [], start
-        if not start: start = datetime.datetime.utcnow()
-        if not end: end = datetime.datetime.utcnow()
+        if not start: start = datetime.datetime.now(datetime.timezone.utc)
+        if not end: end = datetime.datetime.now(datetime.timezone.utc)
         url = API_ROOT + API_CHART_USAGE.format(deviceGid=channel.device_gid, channel=channel.channel_num, start=_format_time(start), end=_format_time(end), scale=scale, unit=unit)
         response = self._get_request(url)
         response.raise_for_status()
@@ -180,7 +180,18 @@ class PyEmVue(object):
         # Use warrant to go through the SRP authentication to get an auth token and refresh token
         client = boto3.client('cognito-idp', region_name='us-east-2', 
             config=botocore.client.Config(signature_version=botocore.UNSIGNED))
-        if id_token is not None and access_token is not None and refresh_token is not None:
+
+        # try to pull data out of the token storage file if present
+        if not password and not id_token and token_storage_file:
+            with open(token_storage_file, 'r') as f:
+                data = json.load(f)
+                if 'idToken' in data: id_token = data['idToken']
+                if 'accessToken' in data: access_token = data['accessToken']
+                if 'refreshToken' in data: refresh_token = data['refreshToken']
+                if 'email' in data: username = data['email']
+                if 'password' in data: password = data['password']
+
+        if id_token and access_token and refresh_token :
             # use existing tokens
             self.cognito = Cognito(USER_POOL, CLIENT_ID,
                 user_pool_region='us-east-2', 
@@ -188,7 +199,7 @@ class PyEmVue(object):
                 access_token=access_token, 
                 refresh_token=refresh_token)
             self.cognito.client = client
-        elif username is not None and password is not None:
+        elif username and password:
             #log in with username and password
             self.cognito = Cognito(USER_POOL, CLIENT_ID, 
                 user_pool_region='us-east-2', username=username)
@@ -196,8 +207,8 @@ class PyEmVue(object):
             self.cognito.authenticate(password=password)
         else:
             raise Exception('No authentication method found. Must supply username/password or id/auth/refresh tokens.')
-        if self.cognito.access_token is not None:
-            if token_storage_file is not None: self.token_storage_file = token_storage_file
+        if self.cognito.access_token:
+            if token_storage_file: self.token_storage_file = token_storage_file
             self._check_token()
             user = self.cognito.get_user()
             self.username = user._data['email']
@@ -235,7 +246,14 @@ class PyEmVue(object):
         return requests.put(full_endpoint, headers=headers, json=body)
 
 def _format_time(time):
+    '''Convert time to utc, then format'''
+    # check if aware
+    if time.tzinfo and time.tzinfo.utcoffset(time) is not None:
+        # aware, convert to utc
+        time = time.astimezone(datetime.timezone.utc)
+    else:
+        #unaware, assume it's already utc
+        time = time.replace(tzinfo=
+        datetime.timezone.utc)
+    time = time.replace(tzinfo=None) # make it unaware
     return time.isoformat()+'Z'
-
-def _format_date(date):
-    return date.strftime('%Y-%m-%d')

@@ -113,7 +113,7 @@ for device in devices:
     else:
         info[device.device_gid].channels += device.channels
 
-device_usage_dict = vue.get_device_list_usage(deviceGids=device_gids, instant=datetime.utcnow(), scale=Scale.HOUR.value, unit=Unit.KWH.value)
+device_usage_dict = vue.get_device_list_usage(deviceGids=device_gids, instant=datetime.now(datetime.timezone.utc), scale=Scale.HOUR.value, unit=Unit.KWH.value)
 print_recursive(device_usage_dict, info)
 ```
 
@@ -136,7 +136,7 @@ vue.login(id_token='id_token',
 
 devices = vue.get_devices()
 
-usage_over_time, start_time = vue.get_chart_usage(devices[0].channels[0], datetime.datetime.utcnow()-datetime.timedelta(days=7), datetime.datetime.utcnow(), scale=Scale.DAY.value, unit=Unit.KWH.value)
+usage_over_time, start_time = vue.get_chart_usage(devices[0].channels[0], datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(days=7), datetime.datetime.now(datetime.timezone.utc), scale=Scale.DAY.value, unit=Unit.KWH.value)
 
 print('Usage for the last seven days starting', start_time.isoformat())
 for usage in usage_over_time:
