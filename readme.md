@@ -88,6 +88,16 @@ Updates and returns the passed VueDevice with additional information about the d
 ### Get usages for devices
 
 ```python
+def print_recursive(usage_dict, info, depth=0):
+    for gid, device in usage_dict.items():
+        for channelnum, channel in device.channels.items():
+            name = channel.name
+            if name == 'Main':
+                name = info[gid].device_name
+            print('-'*depth, f'{gid} {channelnum} {name} {channel.usage} kwh')
+            if channel.nested_devices:
+                print_recursive(channel.nested_devices, depth+1)
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -95,12 +105,16 @@ vue.login(id_token='id_token',
 
 devices = vue.get_devices()
 deviceGids = []
+info = {}
 for device in devices:
-    deviceGids.append(device.device_gid)
+    if not device.device_gid in device_gids:
+        device_gids.append(device.device_gid)
+        info[device.device_gid] = device
+    else:
+        info[device.device_gid].channels += device.channels
 
-channel_usage_list = vue.get_devices_usage(deviceGids, None, scale=Scale.DAY.value, unit=Unit.KWH.value)
-for channel in channel_usage_list:
-    print(channel.usage, 'kwh')
+device_usage_dict = vue.get_device_list_usage(deviceGids=device_gids, instant=datetime.utcnow(), scale=Scale.HOUR.value, unit=Unit.KWH.value)
+print_recursive(device_usage_dict, info)
 ```
 
 Gets the usage for the given devices (specified by device_gid) over the provided time scale. May need to scale it manually to convert it to a rate, eg for 1 second data `kilowatt={usage in kwh/s}*3600s/1h` or for 1 minute data `kilowatt={usage in kwh/m}*60m/1h`.
