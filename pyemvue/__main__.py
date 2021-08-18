@@ -12,7 +12,8 @@ def print_recursive(usage_dict, info, scaleBy=1, unit='kWh', depth=0):
             name = channel.name
             if name == 'Main':
                 name = info[gid].device_name
-            print('-'*depth, f'{gid} {channelnum} {name} {channel.usage*scaleBy} {unit}')
+            usage = channel.usage or 0
+            print('-'*depth, f'{gid} {channelnum} {name} {usage*scaleBy} {unit}')
             if channel.nested_devices:
                 print_recursive(channel.nested_devices, info, scaleBy=scaleBy, unit=unit, depth=depth+1)
 
