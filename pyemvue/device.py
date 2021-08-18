@@ -1,4 +1,5 @@
 import datetime
+from time import time
 from dateutil.parser import parse
 
 class VueDevice(object):
@@ -98,6 +99,7 @@ class VueDeviceChannel(object):
         self.channel_num = channelNum
         self.channel_multiplier = channelMultiplier
         self.channel_type_gid = channelTypeGid
+        self.nested_devices = {}
 
     def from_json_dictionary(self, js):
         """Populate device channel data from a dictionary extracted from the response json."""
@@ -108,23 +110,50 @@ class VueDeviceChannel(object):
         if 'channelTypeGid' in js: self.channel_type_gid = js['channelTypeGid']
         return self
 
+class VueUsageDevice(VueDevice):
+    def __init__(self, gid=0, timestamp=None):
+        super().__init__(gid=gid)
+        self.timestamp = timestamp
+        self.channels = {}
+
+    def from_json_dictionary(self, js):
+        if not js: return self
+        if 'deviceGid' in js: self.device_gid = js['deviceGid']
+        if 'channelUsages' in js and js['channelUsages']:
+            for channel in js['channelUsages']:
+                if channel: 
+                    populated_channel = VueDeviceChannelUsage(timestamp=self.timestamp).from_json_dictionary(channel)
+                    self.channels[populated_channel.channel_num] = populated_channel
+        return self
+
+
+
 class VueDeviceChannelUsage(VueDeviceChannel):
-    def __init__(self, gid=0, usage=0, channelNum='1,2,3'):
+    def __init__(self, gid=0, usage=0, channelNum='1,2,3', name='', timestamp=None):
+        super().__init__(gid=gid, name=name, channelNum=channelNum)
+        self.name = name
         self.device_gid = gid
         self.usage = usage
         self.channel_num = channelNum
-        self.timestamp = None
+        self.percentage = 0.0
+        self.timestamp = timestamp
+        self.nested_devices = {}
 
     def from_json_dictionary(self, js):
         """Populate device channel usage data from a dictionary extracted from the response json."""
         if not js: return self
+        if 'channelUsages' in js: js = js['channelUsages'] # were given "device" level and we want to work off "channel" level
+        if 'name' in js: self.name = js['name']
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'channelNum' in js: self.channel_num = js['channelNum']
-        if 'usage' in js and js['usage']:
-            if 'value' in js['usage']:
-                self.usage = js['usage']['value']
-            if 'Timestamp' in js['usage'] and 'epochSecond' in js['usage']['Timestamp']:
-                self.timestamp = js['usage']['Timestamp']['epochSecond']
+        if 'usage' in js: self.usage = js['usage']
+        if 'percentage' in js: self.percentage = js['percentage']
+        # Nested device handling
+        if 'nestedDevices' in js and js['nestedDevices']:
+            for device in js['nestedDevices']:
+                if device:
+                    populated = VueUsageDevice(timestamp=self.timestamp).from_json_dictionary(device)
+                    self.nested_devices[populated.device_gid] = populated
         return self
 
 class OutletDevice(object):

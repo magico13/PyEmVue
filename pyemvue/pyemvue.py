@@ -12,12 +12,12 @@ from warrant import Cognito
 # Our files
 from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
-from pyemvue.device import ChargerDevice, VueDevice, VueDeviceChannel, VueDeviceChannelUsage, OutletDevice
+from pyemvue.device import ChargerDevice, VueDevice, VueDeviceChannel, VueDeviceChannelUsage, OutletDevice, VueUsageDevice
 
 API_ROOT = 'https://api.emporiaenergy.com'
 API_CUSTOMER = '/customers?email={email}'
-API_CUSTOMER_DEVICES = '/customers/{customerGid}/devices?detailed=true&hierarchy=true'
-API_DEVICES_USAGE = '/AppAPI?apiMethod=getDevicesUsage&deviceGids={deviceGids}&instant={instant}&scale={scale}&energyUnit={unit}'
+API_CUSTOMER_DEVICES = '/customers/devices'
+API_DEVICES_USAGE = '/AppAPI?apiMethod=getDeviceListUsages&deviceGids={deviceGids}&instant={instant}&scale={scale}&energyUnit={unit}'
 API_CHART_USAGE = '/AppAPI?apiMethod=getChartUsage&deviceGid={deviceGid}&channel={channel}&start={start}&end={end}&scale={scale}&energyUnit={unit}'
 API_DEVICE_PROPERTIES = '/devices/{deviceGid}/locationProperties'
 API_OUTLET = '/devices/outlet'
@@ -83,8 +83,8 @@ class PyEmVue(object):
             return Customer().from_json_dictionary(j)
         return None
 
-    def get_devices_usage(self, deviceGids, instant, scale=Scale.SECOND.value, unit=Unit.KWH.value):
-        """Returns a list of VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
+    def get_device_list_usage(self, deviceGids, instant, scale=Scale.SECOND.value, unit=Unit.KWH.value):
+        """Returns a nested dictionary of VueUsageDevice and VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if not instant: instant = datetime.datetime.utcnow()
         gids = deviceGids
         if isinstance(deviceGids, list):
@@ -93,13 +93,15 @@ class PyEmVue(object):
         url = API_ROOT + API_DEVICES_USAGE.format(deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit)
         response = self._get_request(url)
         response.raise_for_status()
-        channels = []
+        devices = {}
         if response.text:
             j = response.json()
-            if 'channelUsages' in j:
-                for channel in j['channelUsages']:
-                    if channel: channels.append(VueDeviceChannelUsage().from_json_dictionary(channel))
-        return channels
+            if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
+                timestamp = parse(j['deviceListUsages']['instant'])
+                for device in j['deviceListUsages']['devices']:
+                    populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
+                    devices[populated.device_gid] = populated
+        return devices
 
 
     def get_chart_usage(self, channel, start, end, scale=Scale.SECOND.value, unit=Unit.KWH.value):
