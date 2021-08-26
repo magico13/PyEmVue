@@ -8,7 +8,7 @@ except:
     
 setuptools.setup(
     name="pyemvue",
-    version="0.14.1",
+    version="0.15.0",
     author="magico13",
     description="Unofficial library for interacting with the Emporia Vue energy monitor.",
     long_description=long_description,
@@ -22,6 +22,6 @@ setuptools.setup(
         "Topic :: Home Automation",
 
     ],
-    python_requires='>=2.7',
-    install_requires=['warrant', 'requests', 'python-dateutil'],
+    python_requires='>=3.4',
+    install_requires=['pycognito', 'requests', 'python-dateutil'],
 )
