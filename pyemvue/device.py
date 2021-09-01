@@ -65,7 +65,10 @@ class VueDevice(object):
         if 'deviceConnected' in js and js['deviceConnected']:
             con = js['deviceConnected']
             if 'connected' in con: self.connected = con['connected']
-            if 'offlineSince' in con: self.offline_since = parse(con['offlineSince'])
+            try:
+                if 'offlineSince' in con and con['offlineSince']: self.offline_since = parse(con['offlineSince'])
+            except:
+                self.offline_since = datetime.datetime.min
         return self
     
     def populate_location_properties_from_json(self, js):
