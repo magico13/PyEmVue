@@ -10,7 +10,7 @@ keys.json
 
 ```json
 {
-    "email": "you@email.com",
+    "username": "you@email.com",
     "password": "password"
 }
 ```
@@ -33,9 +33,9 @@ with open('keys.json') as f:
     data = json.load(f)
 
 vue = PyEmVue()
-vue.login(id_token=data['idToken'],
-    access_token=data['accessToken'],
-    refresh_token=data['refreshToken'],
+vue.login(id_token=data['id_token'],
+    access_token=data['access_token'],
+    refresh_token=data['refresh_token'],
     token_storage_file='keys.json')
 ```
 
