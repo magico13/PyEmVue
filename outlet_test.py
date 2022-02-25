@@ -2,8 +2,7 @@ from pyemvue.pyemvue import PyEmVue
 
 vue = PyEmVue()
 vue.login(token_storage_file='keys.json')
-print('Logged in. Authtoken follows:')
-print(vue.cognito.id_token)
+print('Logged in.')
 print()
 
 devices = vue.get_devices()

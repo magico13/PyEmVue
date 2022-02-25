@@ -22,9 +22,8 @@ API_DEVICES_USAGE = 'AppAPI?apiMethod=getDeviceListUsages&deviceGids={deviceGids
 API_CHART_USAGE = 'AppAPI?apiMethod=getChartUsage&deviceGid={deviceGid}&channel={channel}&start={start}&end={end}&scale={scale}&energyUnit={unit}'
 API_DEVICE_PROPERTIES = 'devices/{deviceGid}/locationProperties'
 API_OUTLET = 'devices/outlet'
-API_GET_OUTLETS = 'customers/outlets'
+API_GET_STATUS = 'customers/devices/status'
 API_CHARGER = 'devices/evcharger'
-API_GET_CHARGERS = 'customers/evchargers'
 
 API_MAINTENANCE = 'https://s3.amazonaws.com/com.emporiaenergy.manual.ota/maintenance/maintenance.json'
 
@@ -121,13 +120,14 @@ class PyEmVue(object):
 
     def get_outlets(self):
         """ Return a list of outlets linked to the account. """
-        response = self.auth.request('get', API_GET_OUTLETS)
+        response = self.auth.request('get', API_GET_STATUS)
         response.raise_for_status()
         outlets = []
         if response.text:
             j = response.json()
-            for raw_outlet in j:
-                outlets.append(OutletDevice().from_json_dictionary(raw_outlet))
+            if j and 'outlets' in j and j['outlets']:
+                for raw_outlet in j['outlets']:
+                    outlets.append(OutletDevice().from_json_dictionary(raw_outlet))
         return outlets
 
     def update_outlet(self, outlet, on=None):
@@ -143,13 +143,14 @@ class PyEmVue(object):
 
     def get_chargers(self):
         """ Return a list of EVSEs/chargers linked to the account. """
-        response = self.auth.request('get', API_GET_CHARGERS)
+        response = self.auth.request('get', API_GET_STATUS)
         response.raise_for_status()
         chargers = []
         if response.text:
             j = response.json()
-            for raw_charger in j:
-                chargers.append(ChargerDevice().from_json_dictionary(raw_charger))
+            if j and 'evChargers' in j and j['evChargers']:
+                for raw_charger in j['evChargers']:
+                    chargers.append(ChargerDevice().from_json_dictionary(raw_charger))
         return chargers
 
     def update_charger(self, charger, on = None, charge_rate = None):
