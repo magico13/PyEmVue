@@ -29,10 +29,12 @@ API_MAINTENANCE = 'https://s3.amazonaws.com/com.emporiaenergy.manual.ota/mainten
 
 
 class PyEmVue(object):
-    def __init__(self):
+    def __init__(self, connect_timeout: float = 6.03, read_timeout: float = 10.03):
         self.username = None
         self.token_storage_file = None
         self.customer = None
+        self.connect_timeout = connect_timeout
+        self.read_timeout = read_timeout
 
     def down_for_maintenance(self):
         """Checks to see if the API is down for maintenance, returns the reported message if present."""
@@ -84,7 +86,7 @@ class PyEmVue(object):
         gids = deviceGids
         if isinstance(deviceGids, list):
             gids = '+'.join(map(str, deviceGids))
-        
+
         url = API_DEVICES_USAGE.format(deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit)
         response = self.auth.request('get', url)
         response.raise_for_status()
@@ -184,8 +186,10 @@ class PyEmVue(object):
 
         self.auth = Auth(
             host=API_ROOT,
-            username=self.username, 
-            password=password, 
+            username=self.username,
+            password=password,
+            connect_timeout=self.connect_timeout,
+            read_timeout=self.read_timeout,
             tokens={
                 'access_token': access_token,
                 'id_token': id_token,
