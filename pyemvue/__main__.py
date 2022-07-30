@@ -3,10 +3,11 @@ import datetime
 import dateutil
 
 # Our files
+from pyemvue.device import VueDevice, VueUsageDevice
 from pyemvue.enums import Scale, Unit
 from pyemvue.pyemvue import PyEmVue
 
-def print_recursive(usage_dict, info, scaleBy=1, unit='kWh', depth=0):
+def print_recursive(usage_dict: dict[int, VueUsageDevice], info: dict[int, VueDevice], scaleBy: float=1, unit='kWh', depth=0):
     for gid, device in usage_dict.items():
         for channelnum, channel in device.channels.items():
             name = channel.name
@@ -27,11 +28,11 @@ def main():
     vue = PyEmVue()
     vue.login(token_storage_file=filepath)
     print('Logged in. Authtoken follows:')
-    print(vue.cognito.id_token)
+    print(vue.auth.tokens["id_token"])
     print()
     devices = vue.get_devices()
-    deviceGids = []
-    deviceInfo = {}
+    deviceGids: list[int] = []
+    deviceInfo: dict[int, VueDevice] = {}
     for device in devices:
         if not device.device_gid in deviceGids:
             deviceGids.append(device.device_gid)
@@ -42,7 +43,7 @@ def main():
         else:
             deviceInfo[device.device_gid].channels += device.channels
 
-    monthly, start = vue.get_chart_usage(devices[0].channels[0], None, None, Scale.MONTH.value)
+    monthly, start = vue.get_chart_usage(devices[0].channels[0],scale=Scale.MONTH.value)
     print(monthly[0], 'kwh used since', start.isoformat())
     now = datetime.datetime.now(datetime.timezone.utc)
     midnight=(datetime.datetime
@@ -70,6 +71,15 @@ def main():
     print('Usage for the last seven days starting', start_time.isoformat())
     for usage in usage_over_time:
         print(usage, 'kwh')
+
+    (outlets, chargers) = vue.get_devices_status(devices)
+    print('List of Outlets:')
+    for outlet in outlets:
+        print(f"\t{outlet.device_gid} On? {outlet.outlet_on}")
+
+    print('List of Chargers:')
+    for charger in chargers:
+        print(f"\t{charger.device_gid} On? {charger.charger_on} Charge rate: {charger.charging_rate}/{charger.max_charging_rate} Status: {charger.status}")
 
 if __name__ == '__main__':
     main()

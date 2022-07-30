@@ -1,19 +1,15 @@
-from pyemvue.auth import Auth
+from typing import Optional, Union
 import requests
 import datetime
 import json
 from dateutil.parser import parse
 from urllib.parse import quote
 
-# These provide AWS cognito authentication support
-import boto3
-import botocore
-from pycognito import Cognito
-
 # Our files
+from pyemvue.auth import Auth
 from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
-from pyemvue.device import ChargerDevice, VueDevice, VueDeviceChannel, VueDeviceChannelUsage, OutletDevice, VueUsageDevice
+from pyemvue.device import ChargerDevice, VueDevice, OutletDevice, VueDeviceChannel, VueDeviceChannelUsage, VueUsageDevice
 
 API_ROOT = 'https://api.emporiaenergy.com'
 API_CUSTOMER = 'customers?email={email}'
@@ -34,7 +30,7 @@ class PyEmVue(object):
         self.token_storage_file = None
         self.customer = None
 
-    def down_for_maintenance(self):
+    def down_for_maintenance(self) -> Union[str, None]:
         """Checks to see if the API is down for maintenance, returns the reported message if present."""
         response = requests.get(API_MAINTENANCE)
         if response.status_code == 404: return None
@@ -43,11 +39,11 @@ class PyEmVue(object):
             if 'msg' in j:
                 return j['msg']
 
-    def get_devices(self):
+    def get_devices(self) -> list[VueDevice]:
         """Get all devices under the current customer account."""
         response = self.auth.request('get', API_CUSTOMER_DEVICES)
         response.raise_for_status()
-        devices = []
+        devices: list[VueDevice] = []
         if response.text:
             j = response.json()
             if 'devices' in j:
@@ -58,7 +54,7 @@ class PyEmVue(object):
                             devices.append(VueDevice().from_json_dictionary(subdev))
         return devices
 
-    def populate_device_properties(self, device):
+    def populate_device_properties(self, device: VueDevice) -> VueDevice:
         """Get details about a specific device"""
         url = API_DEVICE_PROPERTIES.format(deviceGid=device.device_gid)
         response = self.auth.request('get', url)
@@ -68,7 +64,7 @@ class PyEmVue(object):
             device.populate_location_properties_from_json(j)
         return device
 
-    def get_customer_details(self, username):
+    def get_customer_details(self, username: str) -> Union[Customer, None]:
         """Get details for the current customer."""
         url = API_CUSTOMER.format(email=quote(username))
         response = self.auth.request('get', url)
@@ -78,7 +74,7 @@ class PyEmVue(object):
             return Customer().from_json_dictionary(j)
         return None
 
-    def get_device_list_usage(self, deviceGids, instant, scale=Scale.SECOND.value, unit=Unit.KWH.value):
+    def get_device_list_usage(self, deviceGids: Union[str, list[str]], instant: Optional[datetime.datetime], scale=Scale.SECOND.value, unit=Unit.KWH.value) -> dict[int, VueUsageDevice]:
         """Returns a nested dictionary of VueUsageDevice and VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if not instant: instant = datetime.datetime.now(datetime.timezone.utc)
         gids = deviceGids
@@ -88,7 +84,7 @@ class PyEmVue(object):
         url = API_DEVICES_USAGE.format(deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit)
         response = self.auth.request('get', url)
         response.raise_for_status()
-        devices = {}
+        devices: dict[int, VueUsageDevice] = {}
         if response.text:
             j = response.json()
             if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
@@ -99,7 +95,7 @@ class PyEmVue(object):
         return devices
 
 
-    def get_chart_usage(self, channel, start, end, scale=Scale.SECOND.value, unit=Unit.KWH.value):
+    def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> tuple[list[float], datetime.datetime]:
         """Gets the usage over a given time period and the start of the measurement period. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if channel.channel_num in ['MainsFromGrid', 'MainsToGrid']:
             # These is not populated for the special Mains data as of right now
@@ -109,17 +105,16 @@ class PyEmVue(object):
         url = API_CHART_USAGE.format(deviceGid=channel.device_gid, channel=channel.channel_num, start=_format_time(start), end=_format_time(end), scale=scale, unit=unit)
         response = self.auth.request('get', url)
         response.raise_for_status()
+        usage: list[float] = []
+        instant = start
         if response.text:
             j = response.json()
             if 'firstUsageInstant' in j: instant = parse(j['firstUsageInstant'])
-            else: instant = start
             if 'usageList' in j: usage = j['usageList']
-            else: usage = []
-            return usage, instant
-        return [], start
+        return usage, instant
 
-    def get_outlets(self):
-        """ Return a list of outlets linked to the account. """
+    def get_outlets(self) -> list[OutletDevice]:
+        """ Return a list of outlets linked to the account. Deprecated, use get_devices_status instead."""
         response = self.auth.request('get', API_GET_STATUS)
         response.raise_for_status()
         outlets = []
@@ -130,7 +125,7 @@ class PyEmVue(object):
                     outlets.append(OutletDevice().from_json_dictionary(raw_outlet))
         return outlets
 
-    def update_outlet(self, outlet, on=None):
+    def update_outlet(self, outlet: OutletDevice, on: Optional[bool]=None) -> OutletDevice:
         """ Primarily to turn an outlet on or off. If the on parameter is not provided then uses the value in the outlet object.
             If on parameter provided uses the provided value."""
         if on is not None:
@@ -141,8 +136,8 @@ class PyEmVue(object):
         outlet.from_json_dictionary(response.json())
         return outlet
 
-    def get_chargers(self):
-        """ Return a list of EVSEs/chargers linked to the account. """
+    def get_chargers(self) -> list[ChargerDevice]:
+        """ Return a list of EVSEs/chargers linked to the account. Deprecated, use get_devices_status instead."""
         response = self.auth.request('get', API_GET_STATUS)
         response.raise_for_status()
         chargers = []
@@ -153,7 +148,7 @@ class PyEmVue(object):
                     chargers.append(ChargerDevice().from_json_dictionary(raw_charger))
         return chargers
 
-    def update_charger(self, charger, on = None, charge_rate = None):
+    def update_charger(self, charger: ChargerDevice, on: Optional[bool] = None, charge_rate: Optional[int] = None) -> ChargerDevice:
         """ Primarily to enable/disable an evse/charger. The on and charge_rate parameters override the values in the object if provided"""
         if on is not None:
             charger.charger_on = on
@@ -165,7 +160,32 @@ class PyEmVue(object):
         charger.from_json_dictionary(response.json())
         return charger
 
-    def login(self, username=None, password=None, id_token=None, access_token=None, refresh_token=None, token_storage_file=None):
+    def get_devices_status(self, device_list: Optional[list[VueDevice]] = None) -> tuple[list[OutletDevice], list[ChargerDevice]]:
+        """Gets the list of outlets and chargers. If device list is provided, updates the connected status on each device."""
+        response = self.auth.request('get', API_GET_STATUS)
+        response.raise_for_status()
+        chargers: list[ChargerDevice] = []
+        outlets: list[OutletDevice] = []
+        if response.text:
+            j = response.json()
+            if j and 'evChargers' in j and j['evChargers']:
+                for raw_charger in j['evChargers']:
+                    chargers.append(ChargerDevice().from_json_dictionary(raw_charger))
+            if j and 'outlets' in j and j['outlets']:
+                for raw_outlet in j['outlets']:
+                    outlets.append(OutletDevice().from_json_dictionary(raw_outlet))
+            if device_list and j and 'devicesConnected' in j and j['devicesConnected']:
+                for raw_device_data in j['devicesConnected']:
+                    if raw_device_data and 'deviceGid' in raw_device_data and raw_device_data['deviceGid']:
+                        for device in device_list:
+                            if device.device_gid == raw_device_data['deviceGid']:
+                                device.connected = raw_device_data['connected']
+                                device.offline_since = raw_device_data['offlineSince']
+                                break
+
+        return (outlets, chargers)
+
+    def login(self, username: str=None, password: str=None, id_token: str=None, access_token: str=None, refresh_token: str=None, token_storage_file: str=None) -> bool:
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.
             Provide a path for storing the token data that can be used to reauthenticate without providing the password.
             Tokens stored in the file are updated when they expire.
@@ -200,14 +220,14 @@ class PyEmVue(object):
             self._store_tokens(self.auth.tokens)
         return self.customer is not None
 
-    def _store_tokens(self, tokens):
+    def _store_tokens(self, tokens: list[str]):
         if not self.token_storage_file: return
         if self.username:
             tokens['username'] = self.username
         with open(self.token_storage_file, 'w') as f:
             json.dump(tokens, f, indent=2)
 
-def _format_time(time):
+def _format_time(time: datetime.datetime) -> str:
     '''Convert time to utc, then format'''
     # check if aware
     if time.tzinfo and time.tzinfo.utcoffset(time) is not None:

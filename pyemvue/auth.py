@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Callable, Dict
+from typing import Optional, Callable
 from jose import jwt
 import requests
 import datetime
@@ -17,10 +17,10 @@ class Auth:
     def __init__(
         self,
         host: str,
-        username: str = None,
-        password: str = None,
-        tokens: Optional[Dict[str, str]] = None,
-        token_updater: Optional[Callable[[Dict[str, str]], None]] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        tokens: Optional[dict[str, str]] = None,
+        token_updater: Optional[Callable[[dict[str, str]], None]] = None,
     ):
         self.host = host
         self.token_updater = token_updater
@@ -46,7 +46,7 @@ class Auth:
 
         self.tokens = self.refresh_tokens()
 
-    def refresh_tokens(self) -> Dict[str, str]:
+    def refresh_tokens(self) -> dict[str, str]:
         """Refresh and return new tokens."""
         self.cognito.renew_access_token()
         tokens = self._extract_tokens_from_cognito()
@@ -84,7 +84,7 @@ class Auth:
             method, f"{self.host}/{path}", **kwargs, headers=headers,
         )
 
-    def _extract_tokens_from_cognito(self) -> Dict[str, str]:
+    def _extract_tokens_from_cognito(self) -> dict[str, str]:
         return {
             'access_token': self.cognito.access_token,
             'id_token': self.cognito.id_token, # Emporia uses this token for authentication

@@ -6,13 +6,13 @@ print('Logged in.')
 print()
 
 devices = vue.get_devices()
-outlets = vue.get_outlets()
+outlets, chargers = vue.get_devices_status()
 for device in devices:
     print(device.device_gid, device.manufacturer_id, device.model, device.firmware)
     if device.outlet:
-        print('Is an outlet! On? ', device.outlet.outlet_on)
+        print('Found an outlet! On?', device.outlet.outlet_on)
     if device.ev_charger:
-        print(f'Is an EV Charger! On? {device.ev_charger.charger_on} Charge rate: {device.ev_charger.charging_rate}A/{device.ev_charger.max_charging_rate}A')
+        print(f'Found an EV Charger! On? {device.ev_charger.charger_on} Charge rate: {device.ev_charger.charging_rate}A/{device.ev_charger.max_charging_rate}A')
     for chan in device.channels:
         print('\t', chan.device_gid, chan.name, chan.channel_num, chan.channel_multiplier)
     

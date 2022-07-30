@@ -1,21 +1,22 @@
 import datetime
-from time import time
+from typing import Any
+from typing_extensions import Self
 from dateutil.parser import parse
 
 class VueDevice(object):
     def __init__(self, gid=0, manId='', modelNum='', firmwareVersion=''):
-        self.device_gid = gid
+        self.device_gid: int = gid
         self.manufacturer_id = manId
         self.model = modelNum
         self.firmware = firmwareVersion
-        self.parent_device_gid = 0
-        self.parent_channel_num = ''
-        self.channels = []
-        self.outlet = None
-        self.ev_charger = None
+        self.parent_device_gid: int = 0
+        self.parent_channel_num: str = ''
+        self.channels: list[VueDeviceChannel] = []
+        self.outlet: OutletDevice = None
+        self.ev_charger: ChargerDevice = None
 
-        self.connected = False
-        self.offline_since = datetime.datetime.min
+        self.connected: bool = False
+        self.offline_since: str = None
 
         #extra info
         self.device_name = ''
@@ -38,7 +39,7 @@ class VueDevice(object):
         self.utility_rate_gid = None
 
 
-    def from_json_dictionary(self, js):
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
         """Populate device data from a dictionary extracted from the response json."""
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'manufacturerDeviceId' in js: self.manufacturer_id = js['manufacturerDeviceId']
@@ -71,7 +72,7 @@ class VueDevice(object):
                 self.offline_since = datetime.datetime.min
         return self
     
-    def populate_location_properties_from_json(self, js):
+    def populate_location_properties_from_json(self, js: dict[str, Any]):
         """Adds the values from the get_device_properties method."""
         if 'deviceName' in js: self.device_name = js['deviceName']
         if 'zipCode' in js: self.zip_code = js['zipCode']
@@ -97,14 +98,14 @@ class VueDevice(object):
 
 class VueDeviceChannel(object):
     def __init__(self, gid=0, name='', channelNum='1,2,3', channelMultiplier=1.0, channelTypeGid=0):
-        self.device_gid = gid
+        self.device_gid: int = gid
         self.name = name
         self.channel_num = channelNum
         self.channel_multiplier = channelMultiplier
         self.channel_type_gid = channelTypeGid
         self.nested_devices = {}
 
-    def from_json_dictionary(self, js):
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
         """Populate device channel data from a dictionary extracted from the response json."""
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'name' in js: self.name = js['name']
@@ -117,9 +118,9 @@ class VueUsageDevice(VueDevice):
     def __init__(self, gid=0, timestamp=None):
         super().__init__(gid=gid)
         self.timestamp = timestamp
-        self.channels = {}
+        self.channels: dict[str, VueDeviceChannelUsage] = {}
 
-    def from_json_dictionary(self, js):
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
         if not js: return self
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'channelUsages' in js and js['channelUsages']:
@@ -130,17 +131,17 @@ class VueUsageDevice(VueDevice):
         return self
 
 class VueDeviceChannelUsage(VueDeviceChannel):
-    def __init__(self, gid=0, usage=0, channelNum='1,2,3', name='', timestamp=None):
+    def __init__(self, gid: int=0, usage: float=0, channelNum='1,2,3', name='', timestamp=None):
         super().__init__(gid=gid, name=name, channelNum=channelNum)
         self.name = name
-        self.device_gid = gid
-        self.usage = usage
+        self.device_gid: int = gid
+        self.usage: float = usage
         self.channel_num = channelNum
         self.percentage = 0.0
         self.timestamp = timestamp
         self.nested_devices = {}
 
-    def from_json_dictionary(self, js):
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
         """Populate device channel usage data from a dictionary extracted from the response json."""
         if not js: return self
         if 'channelUsages' in js: js = js['channelUsages'] # were given "device" level and we want to work off "channel" level
@@ -158,25 +159,25 @@ class VueDeviceChannelUsage(VueDeviceChannel):
         return self
 
 class OutletDevice(object):
-    def __init__(self, gid=0, on=False, parentGid=0, parentChannel=0):
+    def __init__(self, gid: int=0, on: bool=False, parentGid=0, parentChannel=0):
         self.device_gid = gid
         self.outlet_on = on
         self.schedules = []
 
-    def from_json_dictionary(self, js):
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'outletOn' in js: self.outlet_on = js['outletOn']
         # don't have support for schedules yet
         return self
     
-    def as_dictionary(self):
+    def as_dictionary(self) -> dict[str, Any]:
         j = {}
         j['deviceGid'] = self.device_gid
         j['outletOn'] = self.outlet_on
         return j
 
 class ChargerDevice(object):
-    def __init__(self, gid=0, on=False):
+    def __init__(self, gid: int=0, on: bool=False):
         self.device_gid = gid
         self.charger_on = on
         self.message = ''
@@ -190,7 +191,7 @@ class ChargerDevice(object):
         self.off_peak_schedules_enabled = False
         self.custom_schedules = []
 
-    def from_json_dictionary(self, js):
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'chargerOn' in js: self.charger_on = js['chargerOn']
         if 'message' in js: self.message = js['message']
@@ -205,7 +206,7 @@ class ChargerDevice(object):
         # don't have support for schedules yet
         return self
 
-    def as_dictionary(self):
+    def as_dictionary(self) -> dict[str, Any]:
         j = {}
         j['deviceGid'] = self.device_gid
         j['chargerOn'] = self.charger_on
