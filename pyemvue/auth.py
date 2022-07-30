@@ -19,10 +19,14 @@ class Auth:
         host: str,
         username: str = None,
         password: str = None,
+        connect_timeout: float = None,
+        read_timeout: float = None,
         tokens: Optional[Dict[str, str]] = None,
         token_updater: Optional[Callable[[Dict[str, str]], None]] = None,
     ):
         self.host = host
+        self.connect_timeout = connect_timeout
+        self.read_timeout = read_timeout
         self.token_updater = token_updater
         # Use pycognito to go through the SRP authentication to get an auth token and refresh token
         self.client = boto3.client(
@@ -82,6 +86,7 @@ class Auth:
 
         return requests.request(
             method, f"{self.host}/{path}", **kwargs, headers=headers,
+            timeout=(self.connect_timeout, self.read_timeout),
         )
 
     def _extract_tokens_from_cognito(self) -> Dict[str, str]:
