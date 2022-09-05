@@ -67,27 +67,23 @@ class Auth:
 
     def request(self, method: str, path: str, **kwargs) -> requests.Response:
         """Make a request."""
-        headers = kwargs.get("headers")
-
-        if headers is None:
-            headers = {}
-        else:
-            headers = dict(headers)
-
         #pycognito's method for checking expiry, but without the hard dependency on the cognito object
         now = datetime.datetime.now()
         dec_access_token = jwt.get_unverified_claims(self.tokens['access_token'])
 
         if now > datetime.datetime.fromtimestamp(dec_access_token["exp"]):
-            # expired
+            # expired, get new tokens
             self.tokens = self.refresh_tokens()
 
-        headers["authtoken"] = self.tokens['id_token']
+        response = self._do_request(method, path, **kwargs)
 
-        return requests.request(
-            method, f"{self.host}/{path}", **kwargs, headers=headers,
-            timeout=(self.connect_timeout, self.read_timeout),
-        )
+        if response.status_code == 401:
+            # if unauthorized, try refreshing the tokens
+            self.tokens = self.refresh_tokens()
+            # then run the request again with updated tokens
+            response = self._do_request(method, path, **kwargs)
+
+        return response
 
     def _extract_tokens_from_cognito(self) -> dict[str, str]:
         return {
@@ -96,3 +92,17 @@ class Auth:
             'refresh_token': self.cognito.refresh_token,
             'token_type': self.cognito.token_type
         }
+
+    def _do_request(self, method: str, path: str, **kwargs) -> requests.Response:
+        headers = kwargs.get("headers")
+
+        if headers is None:
+            headers = {}
+        else:
+            headers = dict(headers)
+        headers["authtoken"] = self.tokens['id_token']
+
+        return requests.request(
+            method, f"{self.host}/{path}", **kwargs, headers=headers,
+            timeout=(self.connect_timeout, self.read_timeout),
+        )
