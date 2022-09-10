@@ -1,5 +1,5 @@
 import datetime
-from typing import Any
+from typing import Any, Union
 from typing_extensions import Self
 from dateutil.parser import parse
 
@@ -115,7 +115,7 @@ class VueDeviceChannel(object):
         return self
 
 class VueUsageDevice(VueDevice):
-    def __init__(self, gid=0, timestamp=None):
+    def __init__(self, gid=0, timestamp: Union[datetime.datetime, None] = None):
         super().__init__(gid=gid)
         self.timestamp = timestamp
         self.channels: dict[str, VueDeviceChannelUsage] = {}
@@ -131,7 +131,7 @@ class VueUsageDevice(VueDevice):
         return self
 
 class VueDeviceChannelUsage(VueDeviceChannel):
-    def __init__(self, gid: int=0, usage: float=0, channelNum='1,2,3', name='', timestamp=None):
+    def __init__(self, gid: int=0, usage: float=0, channelNum='1,2,3', name='', timestamp: Union[datetime.datetime, None] = None):
         super().__init__(gid=gid, name=name, channelNum=channelNum)
         self.name = name
         self.device_gid: int = gid
