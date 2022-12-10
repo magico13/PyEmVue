@@ -20,6 +20,8 @@ keys.json
 ### Log in with username/password
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(username='you@email.com', password='password', token_storage_file='keys.json')
 ```
@@ -29,6 +31,9 @@ vue.login(username='you@email.com', password='password', token_storage_file='key
 ### Log in with access tokens
 
 ```python
+import json
+from pyemvue import PyEmVue
+
 with open('keys.json') as f:
     data = json.load(f)
 
@@ -42,6 +47,8 @@ vue.login(id_token=data['id_token'],
 ### Get customer details
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -55,6 +62,8 @@ Returns a Customer object with email address, name, customer_gid, and creation d
 ### Get devices
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -68,6 +77,8 @@ Returns a list of VueDevices with device information, including device_gid and l
 ### Get additional device properties
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -88,33 +99,52 @@ Updates and returns the passed VueDevice with additional information about the d
 ### Get usages for devices
 
 ```python
+import json
+import datetime
+from pyemvue import PyEmVue
+from pyemvue.enums import Scale, Unit
+
+
 def print_recursive(usage_dict, info, depth=0):
     for gid, device in usage_dict.items():
         for channelnum, channel in device.channels.items():
             name = channel.name
-            if name == 'Main':
+            if name == "Main":
                 name = info[gid].device_name
-            print('-'*depth, f'{gid} {channelnum} {name} {channel.usage} kwh')
+            print("-" * depth, f"{gid} {channelnum} {name} {channel.usage} kwh")
             if channel.nested_devices:
-                print_recursive(channel.nested_devices, depth+1)
+                print_recursive(channel.nested_devices, depth + 1)
 
-vue = PyEmVue()
-vue.login(id_token='id_token',
-    access_token='access_token',
-    refresh_token='refresh_token')
 
-devices = vue.get_devices()
-deviceGids = []
-info = {}
-for device in devices:
-    if not device.device_gid in device_gids:
-        device_gids.append(device.device_gid)
-        info[device.device_gid] = device
-    else:
-        info[device.device_gid].channels += device.channels
+if __name__ == "__main__":
+    with open("keys.json") as f:
+        data = json.load(f)
 
-device_usage_dict = vue.get_device_list_usage(deviceGids=device_gids, instant=datetime.now(datetime.timezone.utc), scale=Scale.HOUR.value, unit=Unit.KWH.value)
-print_recursive(device_usage_dict, info)
+    vue = PyEmVue()
+    vue.login(
+        id_token=data["id_token"],
+        access_token=data["access_token"],
+        refresh_token=data["refresh_token"],
+        token_storage_file="keys.json",
+    )
+
+    devices = vue.get_devices()
+    device_gids = []
+    info = {}
+    for device in devices:
+        if device.device_gid not in device_gids:
+            device_gids.append(device.device_gid)
+            info[device.device_gid] = device
+        else:
+            info[device.device_gid].channels += device.channels
+
+    device_usage_dict = vue.get_device_list_usage(
+        deviceGids=device_gids,
+        instant=datetime.datetime.now(datetime.timezone.utc),
+        scale=Scale.MINUTE.value,
+        unit=Unit.KWH.value,
+    )
+    print_recursive(device_usage_dict, info)
 ```
 
 Gets the usage for the given devices (specified by device_gid) over the provided time scale. May need to scale it manually to convert it to a rate, eg for 1 second data `kilowatt={usage in kwh/s}*3600s/1h` or for 1 minute data `kilowatt={usage in kwh/m}*60m/1h`.
@@ -129,6 +159,10 @@ Gets the usage for the given devices (specified by device_gid) over the provided
 ### Get usage over time
 
 ```python
+import datetime
+from pyemvue import PyEmVue
+from pyemvue.enums import Scale, Unit
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -156,6 +190,8 @@ Gets the usage in the scale and unit provided over the given time range. Returns
 ### Toggle outlets
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -174,6 +210,8 @@ The `get_outlets` call returns a list of outlets directly but it is also possibl
 ### Toggle EV Charger (EVSE)
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
