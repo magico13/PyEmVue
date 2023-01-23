@@ -21,8 +21,8 @@ class Auth:
         password: Optional[str] = None,
         connect_timeout: float = None,
         read_timeout: float = None,
-        tokens: Optional[dict[str, str]] = None,
-        token_updater: Optional[Callable[[dict[str, str]], None]] = None
+        tokens: Optional['dict[str, str]'] = None,
+        token_updater: Optional[Callable[['dict[str, str]'], None]] = None
     ):
         self.host = host
         self.connect_timeout = connect_timeout
@@ -50,7 +50,7 @@ class Auth:
 
         self.tokens = self.refresh_tokens()
 
-    def refresh_tokens(self) -> dict[str, str]:
+    def refresh_tokens(self) -> 'dict[str, str]':
         """Refresh and return new tokens."""
         self.cognito.renew_access_token()
         tokens = self._extract_tokens_from_cognito()
@@ -85,7 +85,7 @@ class Auth:
 
         return response
 
-    def _extract_tokens_from_cognito(self) -> dict[str, str]:
+    def _extract_tokens_from_cognito(self) -> 'dict[str, str]':
         return {
             'access_token': self.cognito.access_token,
             'id_token': self.cognito.id_token, # Emporia uses this token for authentication

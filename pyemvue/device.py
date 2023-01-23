@@ -39,7 +39,7 @@ class VueDevice(object):
         self.utility_rate_gid = None
 
 
-    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+    def from_json_dictionary(self, js: 'dict[str, Any]') -> Self:
         """Populate device data from a dictionary extracted from the response json."""
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'manufacturerDeviceId' in js: self.manufacturer_id = js['manufacturerDeviceId']
@@ -72,7 +72,7 @@ class VueDevice(object):
                 self.offline_since = datetime.datetime.min
         return self
     
-    def populate_location_properties_from_json(self, js: dict[str, Any]):
+    def populate_location_properties_from_json(self, js: 'dict[str, Any]'):
         """Adds the values from the get_device_properties method."""
         if 'deviceName' in js: self.device_name = js['deviceName']
         if 'zipCode' in js: self.zip_code = js['zipCode']
@@ -105,7 +105,7 @@ class VueDeviceChannel(object):
         self.channel_type_gid = channelTypeGid
         self.nested_devices = {}
 
-    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+    def from_json_dictionary(self, js: 'dict[str, Any]') -> Self:
         """Populate device channel data from a dictionary extracted from the response json."""
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'name' in js: self.name = js['name']
@@ -120,7 +120,7 @@ class VueUsageDevice(VueDevice):
         self.timestamp = timestamp
         self.channels: dict[str, VueDeviceChannelUsage] = {}
 
-    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+    def from_json_dictionary(self, js: 'dict[str, Any]') -> Self:
         if not js: return self
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'channelUsages' in js and js['channelUsages']:
@@ -141,7 +141,7 @@ class VueDeviceChannelUsage(VueDeviceChannel):
         self.timestamp = timestamp
         self.nested_devices = {}
 
-    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+    def from_json_dictionary(self, js: 'dict[str, Any]') -> Self:
         """Populate device channel usage data from a dictionary extracted from the response json."""
         if not js: return self
         if 'channelUsages' in js: js = js['channelUsages'] # were given "device" level and we want to work off "channel" level
@@ -162,18 +162,21 @@ class OutletDevice(object):
     def __init__(self, gid: int=0, on: bool=False, parentGid=0, parentChannel=0):
         self.device_gid = gid
         self.outlet_on = on
+        self.load_gid: int = 0
         self.schedules = []
 
-    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+    def from_json_dictionary(self, js: 'dict[str, Any]') -> Self:
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
         if 'outletOn' in js: self.outlet_on = js['outletOn']
+        if 'loadGid' in js: self.load_gid = js['loadGid']
         # don't have support for schedules yet
         return self
     
-    def as_dictionary(self) -> dict[str, Any]:
+    def as_dictionary(self) -> 'dict[str, Any]':
         j = {}
         j['deviceGid'] = self.device_gid
         j['outletOn'] = self.outlet_on
+        j['loadGid'] = self.load_gid
         return j
 
 class ChargerDevice(object):
@@ -190,9 +193,11 @@ class ChargerDevice(object):
         self.max_charging_rate = 0
         self.off_peak_schedules_enabled = False
         self.custom_schedules = []
+        self.load_gid: int = 0
 
-    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+    def from_json_dictionary(self, js: 'dict[str, Any]') -> Self:
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
+        if 'loadGid' in js: self.load_gid = js['loadGid']
         if 'chargerOn' in js: self.charger_on = js['chargerOn']
         if 'message' in js: self.message = js['message']
         if 'status' in js: self.status = js['status']
@@ -206,9 +211,10 @@ class ChargerDevice(object):
         # don't have support for schedules yet
         return self
 
-    def as_dictionary(self) -> dict[str, Any]:
+    def as_dictionary(self) -> 'dict[str, Any]':
         j = {}
         j['deviceGid'] = self.device_gid
+        j['loadGid'] = self.load_gid
         j['chargerOn'] = self.charger_on
         j['chargingRate'] = self.charging_rate
         j['maxChargingRate'] = self.max_charging_rate
