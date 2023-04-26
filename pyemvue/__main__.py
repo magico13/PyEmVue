@@ -30,6 +30,7 @@ def main():
     print('Logged in. Authtoken follows:')
     print(vue.auth.tokens["id_token"])
     print()
+    channelTypes = vue.get_channel_types()
     devices = vue.get_devices()
     deviceGids: list[int] = []
     deviceInfo: dict[int, VueDevice] = {}
@@ -39,9 +40,13 @@ def main():
             deviceInfo[device.device_gid] = device
             print(device.device_gid, device.manufacturer_id, device.model, device.firmware)
             for chan in device.channels:
-                print('\t', chan.device_gid, chan.name, chan.channel_num, chan.channel_multiplier)
+                channelTypeInfo = next((c for c in channelTypes if c.channel_type_gid == chan.channel_type_gid), None)
+                print('\t', chan.device_gid, chan.name, chan.channel_num, chan.channel_multiplier, channelTypeInfo.description if channelTypeInfo else chan.channel_type_gid)
         else:
             deviceInfo[device.device_gid].channels += device.channels
+            for chan in device.channels:
+                channelTypeInfo = next((c for c in channelTypes if c.channel_type_gid == chan.channel_type_gid), None)
+                print('\t', chan.device_gid, chan.name, chan.channel_num, chan.channel_multiplier, channelTypeInfo.description if channelTypeInfo else chan.channel_type_gid)
 
     monthly, start = vue.get_chart_usage(devices[0].channels[0],scale=Scale.MONTH.value)
     print(monthly[0], 'kwh used since', start.isoformat())
