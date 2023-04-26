@@ -9,17 +9,19 @@ from urllib.parse import quote
 from pyemvue.auth import Auth
 from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
-from pyemvue.device import ChargerDevice, VueDevice, OutletDevice, VueDeviceChannel, VueDeviceChannelUsage, VueUsageDevice
+from pyemvue.device import ChargerDevice, VueDevice, OutletDevice, VueDeviceChannel, VueDeviceChannelUsage, VueUsageDevice, ChannelType
 
 API_ROOT = 'https://api.emporiaenergy.com'
+API_CHANNELS = 'devices/{deviceGid}/channels'
+API_CHANNEL_TYPES = 'devices/channels/channeltypes'
+API_CHARGER = 'devices/evcharger'
+API_CHART_USAGE = 'AppAPI?apiMethod=getChartUsage&deviceGid={deviceGid}&channel={channel}&start={start}&end={end}&scale={scale}&energyUnit={unit}'
 API_CUSTOMER = 'customers?email={email}'
 API_CUSTOMER_DEVICES = 'customers/devices'
 API_DEVICES_USAGE = 'AppAPI?apiMethod=getDeviceListUsages&deviceGids={deviceGids}&instant={instant}&scale={scale}&energyUnit={unit}'
-API_CHART_USAGE = 'AppAPI?apiMethod=getChartUsage&deviceGid={deviceGid}&channel={channel}&start={start}&end={end}&scale={scale}&energyUnit={unit}'
 API_DEVICE_PROPERTIES = 'devices/{deviceGid}/locationProperties'
-API_OUTLET = 'devices/outlet'
 API_GET_STATUS = 'customers/devices/status'
-API_CHARGER = 'devices/evcharger'
+API_OUTLET = 'devices/outlet'
 
 API_MAINTENANCE = 'https://s3.amazonaws.com/com.emporiaenergy.manual.ota/maintenance/maintenance.json'
 
@@ -66,6 +68,16 @@ class PyEmVue(object):
             device.populate_location_properties_from_json(j)
         return device
 
+    def update_channel(self, channel: VueDeviceChannel) -> VueDeviceChannel:
+        """Update the channel with the provided state."""
+        url = API_CHANNELS.format(deviceGid=channel.device_gid)
+        response = self.auth.request('put', url, json=channel.as_dictionary())
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            channel.from_json_dictionary(j)
+        return channel
+
     def get_customer_details(self, username: str) -> Union[Customer, None]:
         """Get details for the current customer."""
         url = API_CUSTOMER.format(email=quote(username))
@@ -95,7 +107,6 @@ class PyEmVue(object):
                     populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
                     devices[populated.device_gid] = populated
         return devices
-
 
     def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], datetime.datetime]':
         """Gets the usage over a given time period and the start of the measurement period. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
@@ -186,6 +197,18 @@ class PyEmVue(object):
                                 break
 
         return (outlets, chargers)
+    
+    def get_channel_types(self) -> 'list[ChannelType]':
+        """Gets the list of channel types"""
+        response = self.auth.request('get', API_CHANNEL_TYPES)
+        response.raise_for_status()
+        channel_types: list[ChannelType] = []
+        if response.text:
+            j = response.json()
+            if j:
+                for raw_channel_type in j:
+                    channel_types.append(ChannelType().from_json_dictionary(raw_channel_type))
+        return channel_types
 
     def login(self, username: str=None, password: str=None, id_token: str=None, access_token: str=None, refresh_token: str=None, token_storage_file: str=None) -> bool:
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.

@@ -113,6 +113,16 @@ class VueDeviceChannel(object):
         if 'channelMultiplier' in js: self.channel_multiplier = js['channelMultiplier']
         if 'channelTypeGid' in js: self.channel_type_gid = js['channelTypeGid']
         return self
+    
+    def as_dictionary(self) -> 'dict[str, Any]':
+        """Returns a dictionary of the device channel data."""
+        return {
+            'deviceGid': self.device_gid,
+            'name': self.name,
+            'channelNum': self.channel_num,
+            'channelMultiplier': self.channel_multiplier,
+            'channelTypeGid': self.channel_type_gid
+        }
 
 class VueUsageDevice(VueDevice):
     def __init__(self, gid=0, timestamp: Union[datetime.datetime, None] = None):
@@ -173,11 +183,11 @@ class OutletDevice(object):
         return self
     
     def as_dictionary(self) -> 'dict[str, Any]':
-        j = {}
-        j['deviceGid'] = self.device_gid
-        j['outletOn'] = self.outlet_on
-        j['loadGid'] = self.load_gid
-        return j
+        return {
+            'deviceGid': self.device_gid,
+            'outletOn': self.outlet_on,
+            'loadGid': self.load_gid
+        }
 
 class ChargerDevice(object):
     def __init__(self, gid: int=0, on: bool=False):
@@ -212,11 +222,24 @@ class ChargerDevice(object):
         return self
 
     def as_dictionary(self) -> 'dict[str, Any]':
-        j = {}
-        j['deviceGid'] = self.device_gid
-        j['loadGid'] = self.load_gid
-        j['chargerOn'] = self.charger_on
-        j['chargingRate'] = self.charging_rate
-        j['maxChargingRate'] = self.max_charging_rate
-        j['offPeakSchedulesEnabled'] = self.off_peak_schedules_enabled
-        return j
+        return {
+            'deviceGid': self.device_gid,
+            'loadGid': self.load_gid,
+            'chargerOn': self.charger_on,
+            'chargingRate': self.charging_rate,
+            'maxChargingRate': self.max_charging_rate,
+            'offPeakSchedulesEnabled': self.off_peak_schedules_enabled,
+        }
+    
+class ChannelType(object):
+    def __init__(self, gid: int=0, description: str='', selectable: bool=False) -> None:
+        self.channel_type_gid = gid
+        self.description = description
+        self.selectable = selectable
+
+    def from_json_dictionary(self, js: 'dict[str, Any]') -> Self:
+        if 'channelTypeGid' in js: self.channel_type_gid = js['channelTypeGid']
+        if 'description' in js: self.description = js['description']
+        if 'selectable' in js: self.selectable = js['selectable']
+        return self
+    
