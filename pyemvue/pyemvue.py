@@ -216,7 +216,7 @@ class PyEmVue(object):
             Tokens stored in the file are updated when they expire.
         """
         # try to pull data out of the token storage file if present
-        self.username = username
+        self.username = username.lower() if username else None
         if token_storage_file: self.token_storage_file = token_storage_file
         if not password and not id_token and token_storage_file:
             with open(token_storage_file, 'r') as f:

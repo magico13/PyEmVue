@@ -17,6 +17,76 @@ keys.json
 
 ## Usage
 
+### Typical Example - Getting Recent Usage
+This example prints out the device list and energy usage over the last minute.
+```python
+#!/usr/bin/python3
+
+import pyemvue
+from pyemvue.enums import Scale, Unit
+
+def print_recursive(usage_dict, info, depth=0):
+    for gid, device in usage_dict.items():
+        for channelnum, channel in device.channels.items():
+            name = channel.name
+            if name == 'Main':
+                name = info[gid].device_name
+            print('-'*depth, f'{gid} {channelnum} {name} {channel.usage} kwh')
+            if channel.nested_devices:
+                print_recursive(channel.nested_devices, info, depth+1)
+
+vue = pyemvue.PyEmVue()
+vue.login(username='put_username_here', password='put_password_here', token_storage_file='keys.json')
+
+devices = vue.get_devices()
+device_gids = []
+device_info = {}
+for device in devices:
+    if not device.device_gid in device_gids:
+        device_gids.append(device.device_gid)
+        device_info[device.device_gid] = device
+    else:
+        device_info[device.device_gid].channels += device.channels
+
+device_usage_dict = vue.get_device_list_usage(deviceGids=device_gids, instant=None, scale=Scale.MINUTE.value, unit=Unit.KWH.value)
+print('device_gid channel_num name usage unit')
+print_recursive(device_usage_dict, device_info)
+```
+
+This will print out something like:
+```
+device_gid channel_num name usage unit
+ 1234 1,2,3 Home 0.018625023078918456 kwh
+- 2345 1,2,3 Furnace 0.0 kwh
+- 2346 1,2,3 EV 0.0 kwh
+ 1234 1 Oven 0.0 kwh
+ 1234 2 Dryer 0.0 kwh
+ 1234 3 Water Heater 0.0 kwh
+ 1234 4 Kitchen 1 0.0 kwh
+- 3456 1,2,3 Washer 2.0127220576742082e-06 kwh
+ 1234 5 Living Room 0.00031066492724719774 kwh
+- 123456 1,2,3 myplug None kwh
+- 123457 1,2,3 Tree None kwh
+- 123458 1,2,3 Kitchen Counter 5.368702827258442e-05 kwh
+ 1234 6 Bar Area 0.0020457032945421006 kwh
+ 1234 7 Kitchen 2 0.0 kwh
+ 1234 8 Dishwasher 0.0002561144436730279 kwh
+ 1234 9 Bathroom Heater 0.0 kwh
+ 1234 10 Microwave 0.0 kwh
+ 1234 11 AC 0.0 kwh
+ 1234 12 Basement 0.0011743871887920825 kwh
+- 123459 1,2,3 Dehumidifier 0.005342410305036585 kwh
+ 1234 13 Deck 0.0 kwh
+ 1234 14 Front Room 0.0027938466452995143 kwh
+- 123450 1,2,3 Library 0.0001436362373061446 kwh
+ 1234 15 Office 0.004370743334687561 kwh
+- 123451 1,2,3 Network 0.001209796911216301 kwh
+- 123452 1,2,3 Bedroom Fan None kwh
+ 1234 16 Garage 0.0005456661001841227 kwh
+ 1234 Balance Balance 0.00037836666266123273 kwh
+```
+
+
 ### Log in with username/password
 
 ```python
@@ -87,35 +157,7 @@ Updates and returns the passed VueDevice with additional information about the d
 
 ### Get usages for devices
 
-```python
-def print_recursive(usage_dict, info, depth=0):
-    for gid, device in usage_dict.items():
-        for channelnum, channel in device.channels.items():
-            name = channel.name
-            if name == 'Main':
-                name = info[gid].device_name
-            print('-'*depth, f'{gid} {channelnum} {name} {channel.usage} kwh')
-            if channel.nested_devices:
-                print_recursive(channel.nested_devices, depth+1)
-
-vue = PyEmVue()
-vue.login(id_token='id_token',
-    access_token='access_token',
-    refresh_token='refresh_token')
-
-devices = vue.get_devices()
-deviceGids = []
-info = {}
-for device in devices:
-    if not device.device_gid in device_gids:
-        device_gids.append(device.device_gid)
-        info[device.device_gid] = device
-    else:
-        info[device.device_gid].channels += device.channels
-
-device_usage_dict = vue.get_device_list_usage(deviceGids=device_gids, instant=datetime.now(datetime.timezone.utc), scale=Scale.HOUR.value, unit=Unit.KWH.value)
-print_recursive(device_usage_dict, info)
-```
+`See Typical Example above.`
 
 Gets the usage for the given devices (specified by device_gid) over the provided time scale. May need to scale it manually to convert it to a rate, eg for 1 second data `kilowatt={usage in kwh/s}*3600s/1h` or for 1 minute data `kilowatt={usage in kwh/m}*60m/1h`.
 
