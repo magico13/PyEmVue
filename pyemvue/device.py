@@ -204,6 +204,9 @@ class ChargerDevice(object):
         self.off_peak_schedules_enabled = False
         self.custom_schedules = []
         self.load_gid: int = 0
+        self.debug_code = ''
+        self.pro_control_code = ''
+        self.breaker_pin = ''
 
     def from_json_dictionary(self, js: 'dict[str, Any]') -> Self:
         if 'deviceGid' in js: self.device_gid = js['deviceGid']
@@ -218,18 +221,22 @@ class ChargerDevice(object):
         if 'chargingRate' in js: self.charging_rate = js['chargingRate']
         if 'maxChargingRate' in js: self.max_charging_rate = js['maxChargingRate']
         if 'offPeakSchedulesEnabled' in js: self.off_peak_schedules_enabled = js['offPeakSchedulesEnabled']
+        if 'debugCode' in js: self.debug_code = js['debugCode']
+        if 'proControlCode' in js: self.pro_control_code = js['proControlCode']
+        if 'breakerPIN' in js: self.breaker_pin = js['breakerPIN']
         # don't have support for schedules yet
         return self
 
     def as_dictionary(self) -> 'dict[str, Any]':
-        return {
+        d = {
             'deviceGid': self.device_gid,
             'loadGid': self.load_gid,
             'chargerOn': self.charger_on,
             'chargingRate': self.charging_rate,
-            'maxChargingRate': self.max_charging_rate,
-            'offPeakSchedulesEnabled': self.off_peak_schedules_enabled,
+            'maxChargingRate': self.max_charging_rate
         }
+        if self.breaker_pin: d['breakerPIN'] = self.breaker_pin
+        return d
     
 class ChannelType(object):
     def __init__(self, gid: int=0, description: str='', selectable: bool=False) -> None:
