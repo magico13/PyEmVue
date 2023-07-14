@@ -1,12 +1,9 @@
 from datetime import datetime
-from typing import Optional, Callable
+from typing import Any, Optional, Callable
 from jose import jwt
 import requests
-import datetime
 
 # These provide AWS cognito authentication support
-import boto3
-import botocore
 from pycognito import Cognito
 import requests
 
@@ -19,21 +16,15 @@ class Auth:
         host: str,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        connect_timeout: float = None,
-        read_timeout: float = None,
-        tokens: Optional['dict[str, str]'] = None,
-        token_updater: Optional[Callable[['dict[str, str]'], None]] = None
+        connect_timeout: float = 6.03,
+        read_timeout: float = 10.03,
+        tokens: Optional['dict[str, Any]'] = None,
+        token_updater: Optional[Callable[['dict[str, Any]'], None]] = None
     ):
         self.host = host
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout
         self.token_updater = token_updater
-        # Use pycognito to go through the SRP authentication to get an auth token and refresh token
-        self.client = boto3.client(
-            'cognito-idp', 
-            region_name='us-east-2', 
-            config=botocore.client.Config(signature_version=botocore.UNSIGNED)
-        )
 
         if tokens and tokens['access_token'] and tokens['id_token'] and tokens['refresh_token']:
             # use existing tokens
@@ -68,10 +59,10 @@ class Auth:
     def request(self, method: str, path: str, **kwargs) -> requests.Response:
         """Make a request."""
         #pycognito's method for checking expiry, but without the hard dependency on the cognito object
-        now = datetime.datetime.now()
+        now = datetime.now()
         dec_access_token = jwt.get_unverified_claims(self.tokens['access_token'])
 
-        if now > datetime.datetime.fromtimestamp(dec_access_token["exp"]):
+        if now > datetime.fromtimestamp(dec_access_token["exp"]):
             # expired, get new tokens
             self.tokens = self.refresh_tokens()
 
@@ -85,7 +76,7 @@ class Auth:
 
         return response
 
-    def _extract_tokens_from_cognito(self) -> 'dict[str, str]':
+    def _extract_tokens_from_cognito(self) -> 'dict[str, Any]':
         return {
             'access_token': self.cognito.access_token,
             'id_token': self.cognito.id_token, # Emporia uses this token for authentication

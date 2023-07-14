@@ -1,5 +1,5 @@
 import datetime
-from typing import Any, Union
+from typing import Any, Optional
 from typing_extensions import Self
 from dateutil.parser import parse
 
@@ -12,11 +12,11 @@ class VueDevice(object):
         self.parent_device_gid: int = 0
         self.parent_channel_num: str = ''
         self.channels: list[VueDeviceChannel] = []
-        self.outlet: OutletDevice = None
-        self.ev_charger: ChargerDevice = None
+        self.outlet: Optional[OutletDevice] = None
+        self.ev_charger: Optional[ChargerDevice] = None
 
         self.connected: bool = False
-        self.offline_since: str = None
+        self.offline_since = datetime.datetime.min
 
         #extra info
         self.device_name = ''
@@ -125,7 +125,7 @@ class VueDeviceChannel(object):
         }
 
 class VueUsageDevice(VueDevice):
-    def __init__(self, gid=0, timestamp: Union[datetime.datetime, None] = None):
+    def __init__(self, gid=0, timestamp: Optional[datetime.datetime] = None):
         super().__init__(gid=gid)
         self.timestamp = timestamp
         self.channels: dict[str, VueDeviceChannelUsage] = {}
@@ -141,7 +141,7 @@ class VueUsageDevice(VueDevice):
         return self
 
 class VueDeviceChannelUsage(VueDeviceChannel):
-    def __init__(self, gid: int=0, usage: float=0, channelNum='1,2,3', name='', timestamp: Union[datetime.datetime, None] = None):
+    def __init__(self, gid: int=0, usage: float=0, channelNum='1,2,3', name='', timestamp: Optional[datetime.datetime] = None):
         super().__init__(gid=gid, name=name, channelNum=channelNum)
         self.name = name
         self.device_gid: int = gid
@@ -169,7 +169,7 @@ class VueDeviceChannelUsage(VueDeviceChannel):
         return self
 
 class OutletDevice(object):
-    def __init__(self, gid: int=0, on: bool=False, parentGid=0, parentChannel=0):
+    def __init__(self, gid: int=0, on: bool=False):
         self.device_gid = gid
         self.outlet_on = on
         self.load_gid: int = 0

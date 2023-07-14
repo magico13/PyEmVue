@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Optional, Union
 import requests
 import datetime
 import json
@@ -25,7 +25,6 @@ API_OUTLET = 'devices/outlet'
 
 API_MAINTENANCE = 'https://s3.amazonaws.com/com.emporiaenergy.manual.ota/maintenance/maintenance.json'
 
-
 class PyEmVue(object):
     def __init__(self, connect_timeout: float = 6.03, read_timeout: float = 10.03):
         self.username = None
@@ -34,7 +33,7 @@ class PyEmVue(object):
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout
 
-    def down_for_maintenance(self) -> Union[str, None]:
+    def down_for_maintenance(self) -> Optional[str]:
         """Checks to see if the API is down for maintenance, returns the reported message if present."""
         response = requests.get(API_MAINTENANCE)
         if response.status_code == 404: return None
@@ -78,7 +77,7 @@ class PyEmVue(object):
             channel.from_json_dictionary(j)
         return channel
 
-    def get_customer_details(self, username: str) -> Union[Customer, None]:
+    def get_customer_details(self, username: str) -> Optional[Customer]:
         """Get details for the current customer."""
         url = API_CUSTOMER.format(email=quote(username))
         response = self.auth.request('get', url)
@@ -108,7 +107,7 @@ class PyEmVue(object):
                     devices[populated.device_gid] = populated
         return devices
 
-    def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], datetime.datetime]':
+    def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], Optional[datetime.datetime]]':
         """Gets the usage over a given time period and the start of the measurement period. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if channel.channel_num in ['MainsFromGrid', 'MainsToGrid']:
             # These is not populated for the special Mains data as of right now
@@ -210,7 +209,7 @@ class PyEmVue(object):
                     channel_types.append(ChannelType().from_json_dictionary(raw_channel_type))
         return channel_types
 
-    def login(self, username: str=None, password: str=None, id_token: str=None, access_token: str=None, refresh_token: str=None, token_storage_file: str=None) -> bool:
+    def login(self, username: Optional[str]=None, password: Optional[str]=None, id_token: Optional[str]=None, access_token: Optional[str]=None, refresh_token: Optional[str]=None, token_storage_file: Optional[str]=None) -> bool:
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.
             Provide a path for storing the token data that can be used to reauthenticate without providing the password.
             Tokens stored in the file are updated when they expire.
@@ -247,7 +246,7 @@ class PyEmVue(object):
             self._store_tokens(self.auth.tokens)
         return self.customer is not None
 
-    def _store_tokens(self, tokens: 'list[str]'):
+    def _store_tokens(self, tokens: 'dict[str, Any]'):
         if not self.token_storage_file: return
         if self.username:
             tokens['username'] = self.username
