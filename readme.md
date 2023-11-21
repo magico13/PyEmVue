@@ -233,6 +233,16 @@ for charger in chargers:
 
 The `get_chargers` call returns a list of chargers directly but it is also possible to get a full `VueDevice` for the charger first through the `get_devices` call and access a `ChargerDevice` through the `ev_charger` attribute off of the `VueDevice` (ie `device.ev_charger`).
 
+# Get Vehicles and Status (including battery charge level).
+vehicles = vue.get_vehicles()
+print('List of Vehicles')
+for vehicle in vehicles:
+    print(f'\t{vehicle.vehicle_gid} ({vehicle.display_name}) - {vehicle.year} {vehicle.make} {vehicle.model}')
+
+print('List of Vehicle Statuses')
+for vehicle in vehicles:
+    vehicleStatus = vue.get_vehicle_status(vehicle)
+    print(f'\t{vehicleStatus.vehicle_gid} {vehicleStatus.vehicle_state} - Charging: {vehicleStatus.charging_state} Battery level: {vehicleStatus.battery_level}')
 
 ### Disclaimer
 

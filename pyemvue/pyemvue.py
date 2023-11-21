@@ -212,7 +212,7 @@ class PyEmVue(object):
         return channel_types
 
     def get_vehicles(self) -> 'list[Vehicle]':
-        """Get all devices under the current customer account."""
+        """Get all vehicles under the current customer account."""
         response = self.auth.request('get', API_VEHICLES)
         response.raise_for_status()
         vehicles: list[Vehicle] = []
