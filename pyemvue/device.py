@@ -249,4 +249,79 @@ class ChannelType(object):
         if 'description' in js: self.description = js['description']
         if 'selectable' in js: self.selectable = js['selectable']
         return self
-    
+   
+class Vehicle(object):
+    def __init__(self, vehicleGid=0, vendor='', apiId='', displayName='', loadGid='', make='', model='', year=0):
+        self.vehicle_gid = vehicleGid
+        self.vendor = vendor
+        self.api_id = apiId
+        self.display_name = displayName
+        self.loadGid = loadGid
+        self.make = make
+        self.model = model
+        self.year = year
+
+    def from_json_dictionary(self, js):
+        if 'vehicleGid' in js: self.vehicle_gid = js['vehicleGid']
+        if 'vendor' in js: self.vendor = js['vendor']
+        if 'apiId' in js: self.api_id = js['apiId']
+        if 'displayName' in js: self.display_name = js['displayName']
+        if 'loadGid' in js: self.loadGid = js['loadGid']
+        if 'make' in js: self.make = js['make']
+        if 'model' in js: self.model = js['model']
+        if 'year' in js: self.year = js['year']
+        return self
+
+    def as_dictionary(self) -> 'dict[str, Any]':
+        return {
+            'vehicleGid': self.vehicle_gid,
+            'vendor': self.vendor,
+            'apiId': self.api_id,
+            'displayName': self.displayName,
+            'loadGid': self.loadGid,
+            'make': self.make,
+            'model': self.model,
+            'year': self.year
+        }
+
+class VehicleStatus(object):
+    def __init__(self, vehicleGid=0, vehicleState='', batteryLevel=0, batteryRange=0, chargingState='', chargeLimitPercent = 0, minutesToFullCharge = 0, chargeCurrentRequest = 0, chargeCurrentRequestMax = 0):
+        self.vehicle_gid = vehicleGid
+        self.vehicle_state = vehicleState
+        self.battery_level = batteryLevel
+        self.battery_range = batteryRange
+        self.charging_state = chargingState
+        self.charge_limit_percent = chargeLimitPercent
+        self.minutes_to_full_charge = minutesToFullCharge
+        self.charge_current_request = chargeCurrentRequest
+        self.charge_current_request_max = chargeCurrentRequestMax
+
+    def from_json_dictionary(self, js):
+
+        if 'settings' in js:
+            jsv = js['settings']
+
+        if 'vehicleGid' in jsv: self.vehicle_gid = jsv['vehicleGid']
+        if 'vehicleState' in jsv: self.vehicle_state = jsv['vehicleState']
+        if 'batteryLevel' in jsv: self.battery_level = jsv['batteryLevel']
+        if 'batteryRange' in jsv: self.battery_range = jsv['batteryRange']
+        if 'chargingState' in jsv: self.charging_state = jsv['chargingState']
+        if 'chargeLimitPercent' in jsv: self.charge_limit_percent = jsv['chargeLimitPercent']
+        if 'minutesToFullCharge' in jsv: self.minutes_to_full_charge = jsv['minutesToFullCharge']
+        if 'chargeCurrentRequest' in jsv: self.charge_current_request = jsv['chargeCurrentRequest']
+        if 'chargeCurrentRequestMax' in jsv: self.charge_current_request_max = jsv['chargeCurrentRequestMax']
+
+        return self
+
+    def as_dictionary(self) -> 'dict[str, Any]':
+        return {
+            'vehicleGid': self.vehicle_gid,
+            'vehicleState': self.vehicle_state,
+            'batteryLevel': self.battery_level,
+            'batteryRange': self.battery_range,
+            'chargingState': self.charging_state,
+            'chargeLimitPercent': self.charge_limit_percent,
+            'minutesToFullCharge': self.minutes_to_full_charge,
+            'chargeCurrentRequest': self.charge_current_request,
+            'chargeCurrentRequestMax': self.charge_current_request_max
+        }

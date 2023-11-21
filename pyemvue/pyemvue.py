@@ -9,7 +9,7 @@ from urllib.parse import quote
 from pyemvue.auth import Auth
 from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
-from pyemvue.device import ChargerDevice, VueDevice, OutletDevice, VueDeviceChannel, VueDeviceChannelUsage, VueUsageDevice, ChannelType
+from pyemvue.device import ChargerDevice, VueDevice, OutletDevice, VueDeviceChannel, VueDeviceChannelUsage, VueUsageDevice, ChannelType, Vehicle, VehicleStatus
 
 API_ROOT = 'https://api.emporiaenergy.com'
 API_CHANNELS = 'devices/{deviceGid}/channels'
@@ -22,6 +22,8 @@ API_DEVICES_USAGE = 'AppAPI?apiMethod=getDeviceListUsages&deviceGids={deviceGids
 API_DEVICE_PROPERTIES = 'devices/{deviceGid}/locationProperties'
 API_GET_STATUS = 'customers/devices/status'
 API_OUTLET = 'devices/outlet'
+API_VEHICLES = 'customers/vehicles'
+API_VEHICLE_STATUS = 'vehicles/v2/settings?vehicleGid={vehicleGid}'
 
 API_MAINTENANCE = 'https://s3.amazonaws.com/com.emporiaenergy.manual.ota/maintenance/maintenance.json'
 
@@ -208,6 +210,27 @@ class PyEmVue(object):
                 for raw_channel_type in j:
                     channel_types.append(ChannelType().from_json_dictionary(raw_channel_type))
         return channel_types
+
+    def get_vehicles(self) -> 'list[Vehicle]':
+        """Get all devices under the current customer account."""
+        response = self.auth.request('get', API_VEHICLES)
+        response.raise_for_status()
+        vehicles: list[Vehicle] = []
+        if response.text:
+            j = response.json()
+            for veh in j:
+                vehicles.append(Vehicle().from_json_dictionary(veh))
+        return vehicles
+
+    def get_vehicle_status(self, vehicle: Vehicle) -> Optional[VehicleStatus]:
+        """Get details for the current vehicle."""
+        url = API_VEHICLE_STATUS.format(vehicleGid=vehicle.vehicle_gid)
+        response = self.auth.request('get', url)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            return VehicleStatus().from_json_dictionary(j)
+        return None
 
     def login(self, username: Optional[str]=None, password: Optional[str]=None, id_token: Optional[str]=None, access_token: Optional[str]=None, refresh_token: Optional[str]=None, token_storage_file: Optional[str]=None) -> bool:
         """ Authenticates the current user using access tokens if provided or username/password if no tokens available.
