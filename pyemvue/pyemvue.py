@@ -89,6 +89,7 @@ class PyEmVue(object):
             return Customer().from_json_dictionary(j)
         return None
 
+
     def get_device_list_usage(self, deviceGids: Union[str, 'list[str]'], instant: Optional[datetime.datetime], scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'dict[int, VueUsageDevice]':
         """Returns a nested dictionary of VueUsageDevice and VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if not instant: instant = datetime.datetime.now(datetime.timezone.utc)
@@ -224,7 +225,11 @@ class PyEmVue(object):
 
     def get_vehicle_status(self, vehicle: Vehicle) -> Optional[VehicleStatus]:
         """Get details for the current vehicle."""
-        url = API_VEHICLE_STATUS.format(vehicleGid=vehicle.vehicle_gid)
+        return get_vehicle_status(self, vehicle.vehicle_gid)
+
+    def get_vehicle_status(self, vehicle_gid: str) -> Optional[VehicleStatus]:
+        """Get details for the current vehicle."""
+        url = API_VEHICLE_STATUS.format(vehicleGid=vehicle_gid)
         response = self.auth.request('get', url)
         response.raise_for_status()
         if response.text:
