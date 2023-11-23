@@ -3,7 +3,7 @@ import datetime
 import dateutil
 
 # Our files
-from pyemvue.device import VueDevice, VueUsageDevice
+from pyemvue.device import VueDevice, VueUsageDevice, Vehicle, VehicleStatus
 from pyemvue.enums import Scale, Unit
 from pyemvue.pyemvue import PyEmVue
 
@@ -86,5 +86,16 @@ def main():
     for charger in chargers:
         print(f"\t{charger.device_gid} On? {charger.charger_on} Charge rate: {charger.charging_rate}/{charger.max_charging_rate} Status: {charger.status}")
 
+    vehicles = vue.get_vehicles()
+    print('List of Vehicles')
+    for vehicle in vehicles:
+        print(f'\t{vehicle.vehicle_gid} ({vehicle.display_name}) - {vehicle.year} {vehicle.make} {vehicle.model}')
+
+    print('List of Vehicle Statuses')
+    for vehicle in vehicles:
+        vehicleStatus = vue.get_vehicle_status(vehicle)
+        print(f'\t{vehicleStatus.vehicle_gid} {vehicleStatus.vehicle_state} - Charging: {vehicleStatus.charging_state} Battery level: {vehicleStatus.battery_level}')
+
 if __name__ == '__main__':
     main()
+
