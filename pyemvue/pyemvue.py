@@ -3,7 +3,6 @@ import requests
 import datetime
 import json
 from dateutil.parser import parse
-from urllib.parse import quote
 
 # Our files
 from pyemvue.auth import Auth
@@ -16,7 +15,7 @@ API_CHANNELS = 'devices/{deviceGid}/channels'
 API_CHANNEL_TYPES = 'devices/channels/channeltypes'
 API_CHARGER = 'devices/evcharger'
 API_CHART_USAGE = 'AppAPI?apiMethod=getChartUsage&deviceGid={deviceGid}&channel={channel}&start={start}&end={end}&scale={scale}&energyUnit={unit}'
-API_CUSTOMER = 'customers?email={email}'
+API_CUSTOMER = 'customers'
 API_CUSTOMER_DEVICES = 'customers/devices'
 API_DEVICES_USAGE = 'AppAPI?apiMethod=getDeviceListUsages&deviceGids={deviceGids}&instant={instant}&scale={scale}&energyUnit={unit}'
 API_DEVICE_PROPERTIES = 'devices/{deviceGid}/locationProperties'
@@ -80,9 +79,12 @@ class PyEmVue(object):
         return channel
 
     def get_customer_details(self, username: str) -> Optional[Customer]:
+        """Deprecated, username not required"""
+        return self.get_customer_details()
+    
+    def get_customer_details(self) -> Optional[Customer]:
         """Get details for the current customer."""
-        url = API_CUSTOMER.format(email=quote(username))
-        response = self.auth.request('get', url)
+        response = self.auth.request('get', API_CUSTOMER)
         response.raise_for_status()
         if response.text:
             j = response.json()

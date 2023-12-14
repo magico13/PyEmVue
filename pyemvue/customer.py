@@ -5,7 +5,7 @@ class Customer(object):
         self.customer_gid = gid
         self.email = email
         self.first_name = firstName
-        self.lastName = lastName
+        self.last_name = lastName
         self.created_at = createdAt
 
     def from_json_dictionary(self, js):
@@ -13,6 +13,6 @@ class Customer(object):
         if 'customerGid' in js: self.customer_gid = js['customerGid']
         if 'email' in js: self.email = js['email']
         if 'firstName' in js: self.first_name = js['firstName']
-        if 'lastName' in js: self.lastName = js['lastName']
+        if 'lastName' in js: self.last_name = js['lastName']
         if 'createdAt' in js: self.created_at = js['createdAt']
         return self
