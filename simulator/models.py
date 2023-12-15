@@ -93,3 +93,8 @@ class SimulatorCustomerDevices(SimulatorBase):
     lastName: str
     createdAt: datetime.datetime
     devices: list[SimulatorDevice]
+
+class ChannelType(SimulatorBase):
+    channelTypeGid: int
+    description: str
+    selectable: bool

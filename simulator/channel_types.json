@@ -1,0 +1,132 @@
+[
+    {
+        "channelTypeGid": 1,
+        "description": "Air Conditioner",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 2,
+        "description": "Battery",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 3,
+        "description": "Boiler",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 4,
+        "description": "Clothes Dryer",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 5,
+        "description": "Clothes Washer",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 6,
+        "description": "Computer/Network",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 7,
+        "description": "Cooktop/Range/Oven/Stove",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 8,
+        "description": "Dishwasher",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 9,
+        "description": "Electric Vehicle/RV",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 10,
+        "description": "Fridge/Freezer",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 11,
+        "description": "Furnace",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 12,
+        "description": "Garage/Shop/Barn/Shed",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 24,
+        "description": "Heat Pump",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 14,
+        "description": "Hot Tub/Spa",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 15,
+        "description": "Humidifier/Dehumidifier",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 16,
+        "description": "Kitchen",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 17,
+        "description": "Microwave",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 18,
+        "description": "Other",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 19,
+        "description": "Pump",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 20,
+        "description": "Room/Multi-use Circuit",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 21,
+        "description": "Sub Panel",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 22,
+        "description": "Water Heater",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 13,
+        "description": "Solar/Generation",
+        "selectable": true
+    },
+    {
+        "channelTypeGid": 23,
+        "description": "Smart Outlet",
+        "selectable": false
+    },
+    {
+        "channelTypeGid": 25,
+        "description": "EV Charger",
+        "selectable": false
+    },
+    {
+        "channelTypeGid": 26,
+        "description": "Lights",
+        "selectable": true
+    }
+]

@@ -7,3 +7,4 @@ __pycache__
 *.egg-info
 Notes/
 test.py
+sample_requests.md

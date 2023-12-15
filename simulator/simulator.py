@@ -1,9 +1,11 @@
+import json
+import os
 from typing import Union
 import datetime
 
 from fastapi import FastAPI
 
-from simulator.models import SimulatorCustomer, SimulatorCustomerDevices
+from simulator.models import *
 
 app = FastAPI()
 
@@ -39,3 +41,14 @@ def get_customers_devices() -> SimulatorCustomerDevices:
         lastName='Ulator',
         createdAt=datetime.datetime.utcnow(),
         devices=[])
+
+@app.get("/devices/channels/channeltypes")
+def get_devices_channels_channelTypes() -> list[ChannelType]:
+    # load the file channel_types.json into a list of ChannelType objects
+    script_dir = os.path.dirname(__file__)
+    channel_types_file = script_dir+'/channel_types.json'
+    channel_types = []
+    with open(channel_types_file, 'r') as f:
+        channel_types = json.load(f)
+    return channel_types
+
