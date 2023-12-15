@@ -2,26 +2,26 @@ from typing import Optional
 from pydantic import BaseModel
 import datetime
 
+
 def _format_time(time: datetime.datetime) -> str:
-    '''Convert time to utc, then format'''
+    """Convert time to utc, then format"""
     # check if aware
     if time.tzinfo and time.tzinfo.utcoffset(time) is not None:
         # aware, convert to utc
         time = time.astimezone(datetime.timezone.utc)
     else:
-        #unaware, assume it's already utc
-        time = time.replace(tzinfo=
-        datetime.timezone.utc)
-    time = time.replace(tzinfo=None) # make it unaware
+        # unaware, assume it's already utc
+        time = time.replace(tzinfo=datetime.timezone.utc)
+    time = time.replace(tzinfo=None)  # make it unaware
     iso_formatted = time.isoformat()
     # drop the milliseconds
-    return iso_formatted[:iso_formatted.rfind('.')]+'Z'
+    return iso_formatted[: iso_formatted.rfind(".")] + "Z"
+
 
 class SimulatorBase(BaseModel):
     class Config:
-        json_encoders = {
-            datetime.datetime: _format_time
-        }
+        json_encoders = {datetime.datetime: _format_time}
+
 
 class SimulatorCustomer(SimulatorBase):
     customerGid: int
@@ -30,10 +30,12 @@ class SimulatorCustomer(SimulatorBase):
     lastName: str
     createdAt: datetime.datetime
 
+
 class SimulatorOutlet(SimulatorBase):
     deviceGid: int
     outletOn: bool
     loadGid: int
+
 
 class SimulatorChargerRequest(SimulatorBase):
     deviceGid: int
@@ -42,6 +44,7 @@ class SimulatorChargerRequest(SimulatorBase):
     chargingRate: int
     maxChargingRate: int
     breakerPIN: Optional[str] = None
+
 
 class SimulatorCharger(SimulatorBase):
     deviceGid: int
@@ -75,6 +78,7 @@ class SimulatorDeviceConnected(SimulatorBase):
     connected: bool
     offlineSince: Optional[datetime.datetime]
 
+
 class SimulatorChannel(SimulatorBase):
     deviceGid: int
     name: Optional[str]
@@ -82,9 +86,11 @@ class SimulatorChannel(SimulatorBase):
     channelMultiplier: float = 1.0
     channelTypeGid: Optional[int]
 
+
 class SimulatorLatitudeLongitude(SimulatorBase):
     latitude: float
     longitude: float
+
 
 class SimulatorLocationInformation(SimulatorBase):
     airConditioning: str = "true"
@@ -96,6 +102,7 @@ class SimulatorLocationInformation(SimulatorBase):
     swimmingPool: str = "false"
     hotTub: str = "false"
     primaryVehicle: Optional[str] = None
+
 
 class SimulatorLocationProperties(SimulatorBase):
     timeZone: str
@@ -109,12 +116,14 @@ class SimulatorLocationProperties(SimulatorBase):
     peakDemandDollarPerKw: float
     locationInformation: SimulatorLocationInformation
 
+
 class SimulatorSubDevice(SimulatorBase):
     deviceGid: int
     manufacturerDeviceId: str
     model: str
     firmware: Optional[str]
     channels: list[SimulatorChannel]
+
 
 class SimulatorDevice(SimulatorBase):
     deviceGid: int
@@ -131,6 +140,7 @@ class SimulatorDevice(SimulatorBase):
     devices: list[SimulatorSubDevice]
     channels: list[SimulatorChannel]
 
+
 class CustomerDevicesResponse(SimulatorBase):
     customerGid: int
     email: str
@@ -139,10 +149,12 @@ class CustomerDevicesResponse(SimulatorBase):
     createdAt: datetime.datetime
     devices: list[SimulatorDevice]
 
+
 class ChannelType(SimulatorBase):
     channelTypeGid: int
     description: str
     selectable: bool
+
 
 class SimulatorLoad(SimulatorBase):
     loadGid: int
@@ -154,12 +166,14 @@ class SimulatorLoad(SimulatorBase):
     energyManagementOverridden: bool
     warningText: Optional[str]
 
+
 class StatusResponse(SimulatorBase):
     devicesConnected: list[SimulatorDeviceConnected]
     evChargers: list[SimulatorCharger]
     loads: list[SimulatorLoad]
     batteries: list[dict]
     outlets: list[SimulatorOutlet]
+
 
 class CreateOutletRequest(SimulatorBase):
     deviceGid: int
@@ -168,6 +182,7 @@ class CreateOutletRequest(SimulatorBase):
     parentDeviceGid: Optional[int] = None
     parentChannelNum: Optional[str] = None
 
+
 class CreateChargerRequest(SimulatorBase):
     deviceGid: int
     chargerOn: bool = True
@@ -175,6 +190,7 @@ class CreateChargerRequest(SimulatorBase):
     breakerSize: int = 50
     parentDeviceGid: Optional[int] = None
     parentChannelNum: Optional[str] = None
+
 
 class CreateVueRequest(SimulatorBase):
     deviceGid: int

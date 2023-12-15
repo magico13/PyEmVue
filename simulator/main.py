@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
@@ -8,12 +7,14 @@ from simulator.simulator_state import SimulatorState
 state = SimulatorState()
 
 # Set up a default home with an 8 channel Vue, 4 outlets, and 1 EV charger
-state.add_vue(1000, 'Home', channelCount=8)
-state.add_outlet(1001, 'plug1', True, parentDeviceGid=1000, parentChannelNum='1')
-state.add_outlet(1002, 'plug2', False, parentDeviceGid=1000, parentChannelNum='1')
-state.add_outlet(1003, 'plug3', True, parentDeviceGid=1000, parentChannelNum='4')
-state.add_outlet(1004, 'plug4', False, parentDeviceGid=1000, parentChannelNum='1,2,3')
-state.add_charger(1005, 'EV', True, breakerSize=50, parentDeviceGid=1000, parentChannelNum='1,2,3')
+state.add_vue(1000, "Home", channelCount=8)
+state.add_outlet(1001, "plug1", True, parentDeviceGid=1000, parentChannelNum="1")
+state.add_outlet(1002, "plug2", False, parentDeviceGid=1000, parentChannelNum="1")
+state.add_outlet(1003, "plug3", True, parentDeviceGid=1000, parentChannelNum="4")
+state.add_outlet(1004, "plug4", False, parentDeviceGid=1000, parentChannelNum="1,2,3")
+state.add_charger(
+    1005, "EV", True, breakerSize=50, parentDeviceGid=1000, parentChannelNum="1,2,3"
+)
 
 app = FastAPI()
 
@@ -31,15 +32,18 @@ app = FastAPI()
 # API_VEHICLES = 'customers/vehicles'
 # API_VEHICLE_STATUS = 'vehicles/v2/settings?vehicleGid={vehicleGid}'
 
+
 class CustomException(Exception):
     def __init__(self, status_code: int, message: str):
         self.status_code = status_code
         self.message = message
 
+
 class NotAuthorizedException(CustomException):
     def __init__(self, deviceGid: int):
         self.status_code = 401
         self.message = f"{state.customer.email} is not authorized on the requested deviceGid {deviceGid}"
+
 
 @app.exception_handler(CustomException)
 async def unicorn_exception_handler(request: Request, exc: CustomException):
@@ -48,13 +52,16 @@ async def unicorn_exception_handler(request: Request, exc: CustomException):
         content={"message": exc.message},
     )
 
+
 @app.get("/customers")
 def get_customers() -> SimulatorCustomer:
     return state.customer
 
+
 @app.get("/customers/devices")
 def get_customers_devices() -> CustomerDevicesResponse:
     return state.get_customers_devices()
+
 
 @app.get("/devices/{deviceGid}/locationProperties")
 def get_devices_locationProperties(deviceGid: int) -> SimulatorLocationProperties:
@@ -64,13 +71,16 @@ def get_devices_locationProperties(deviceGid: int) -> SimulatorLocationPropertie
     # return a 401 if the deviceGid is not found
     raise NotAuthorizedException(deviceGid)
 
+
 @app.get("/devices/channels/channeltypes")
 def get_devices_channels_channelTypes() -> list[ChannelType]:
     return state.channel_types
 
+
 @app.get("/customers/devices/status")
 def get_customers_devices_status() -> StatusResponse:
     return state.get_status()
+
 
 @app.put("/devices/outlet")
 def put_devices_outlet(outlet: SimulatorOutlet) -> SimulatorOutlet:
@@ -81,6 +91,7 @@ def put_devices_outlet(outlet: SimulatorOutlet) -> SimulatorOutlet:
             return existingOutlet
     # return a 401 if the deviceGid is not found
     raise NotAuthorizedException(outlet.deviceGid)
+
 
 @app.put("/devices/evcharger")
 def put_devices_evcharger(charger: SimulatorChargerRequest) -> SimulatorCharger:
@@ -98,23 +109,45 @@ def put_devices_evcharger(charger: SimulatorChargerRequest) -> SimulatorCharger:
 # meta APIs for controlling the simulator
 @app.post("/simulator/vue")
 def post_create_vue(vue: CreateVueRequest) -> SimulatorDevice:
-    created = state.add_vue(vue.deviceGid, vue.name, vue.channelCount, vue.parentDeviceGid, vue.parentChannelNum)
+    created = state.add_vue(
+        vue.deviceGid,
+        vue.name,
+        vue.channelCount,
+        vue.parentDeviceGid,
+        vue.parentChannelNum,
+    )
     return created
+
 
 @app.post("/simulator/outlet")
 def post_create_outlet(outlet: CreateOutletRequest) -> SimulatorOutlet:
-    created = state.add_outlet(outlet.deviceGid, outlet.name, outlet.outletOn, outlet.parentDeviceGid, outlet.parentChannelNum)
+    created = state.add_outlet(
+        outlet.deviceGid,
+        outlet.name,
+        outlet.outletOn,
+        outlet.parentDeviceGid,
+        outlet.parentChannelNum,
+    )
     return created
+
 
 @app.post("/simulator/charger")
 def post_create_charger(charger: CreateChargerRequest) -> SimulatorCharger:
-    created = state.add_charger(charger.deviceGid, charger.name, charger.chargerOn, charger.breakerSize, charger.parentDeviceGid, charger.parentChannelNum)
+    created = state.add_charger(
+        charger.deviceGid,
+        charger.name,
+        charger.chargerOn,
+        charger.breakerSize,
+        charger.parentDeviceGid,
+        charger.parentChannelNum,
+    )
     return created
+
 
 @app.delete("/simulator/device/{deviceGid}")
 def delete_device(deviceGid: int, response: Response) -> SimulatorDevice:
     deleted = state.delete_device(deviceGid)
     if deleted is None:
         response.status_code = 404
-        return response # type: ignore
+        return response  # type: ignore
     return deleted
