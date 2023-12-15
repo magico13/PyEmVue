@@ -35,6 +35,41 @@ class SimulatorOutlet(SimulatorBase):
     outletOn: bool
     loadGid: int
 
+class SimulatorChargerRequest(SimulatorBase):
+    deviceGid: int
+    loadGid: int
+    chargerOn: bool
+    chargingRate: int
+    maxChargingRate: int
+    breakerPIN: Optional[str] = None
+
+class SimulatorCharger(SimulatorBase):
+    deviceGid: int
+    loadGid: int
+    message: str = "EV is not accepting charge"
+    status: str = "Standby"
+    icon: str = "CarConnected"
+    iconLabel: str = "Offering Charge"
+    debugCode: str = "311"
+    iconDetailText: str = "Check your vehicle for a scheduled charge time."
+    faultText: Optional[str] = None
+    proControlCode: Optional[str] = None
+    breakerPIN: Optional[str] = "0000"
+    chargerOn: bool = True
+    chargingRate: int = 40
+    maxChargingRate: int = 40
+    loadManagementEnabled: bool = False
+    hideChargeRateSliderText: Optional[str] = None
+
+    def set_to_standby(self):
+        self.message = "EV is not accepting charge"
+        self.status = "Standby"
+        self.icon = "CarConnected"
+        self.iconLabel = "Offering Charge"
+        self.debugCode = "311"
+        self.iconDetailText = "Check your vehicle for a scheduled charge time."
+
+
 class SimulatorDeviceConnected(SimulatorBase):
     deviceGid: int
     connected: bool
@@ -45,25 +80,28 @@ class SimulatorChannel(SimulatorBase):
     name: Optional[str]
     channelNum: str
     channelMultiplier: float = 1.0
-    channelTypeGid: int
+    channelTypeGid: Optional[int]
 
 class SimulatorLatitudeLongitude(SimulatorBase):
     latitude: float
     longitude: float
 
 class SimulatorLocationInformation(SimulatorBase):
-    airConditioning: str
-    heatSource: str
-    locationSqFt: str
-    numElectricCars: str
-    locationType: str
-    numPeople: str
+    airConditioning: str = "true"
+    heatSource: str = "electricFurnace"
+    locationSqFt: str = "2000"
+    numElectricCars: str = "0"
+    locationType: str = "houseMultiLevel"
+    numPeople: str = "4"
+    swimmingPool: str = "false"
+    hotTub: str = "false"
+    primaryVehicle: Optional[str] = None
 
 class SimulatorLocationProperties(SimulatorBase):
     timeZone: str
     latitudeLongitude: SimulatorLatitudeLongitude
     utilityRateGid: Optional[int]
-    deviceName: str
+    deviceName: Optional[str]
     deviceGid: int
     zipCode: str
     billingCycleStartDay: int
@@ -71,22 +109,29 @@ class SimulatorLocationProperties(SimulatorBase):
     peakDemandDollarPerKw: float
     locationInformation: SimulatorLocationInformation
 
+class SimulatorSubDevice(SimulatorBase):
+    deviceGid: int
+    manufacturerDeviceId: str
+    model: str
+    firmware: Optional[str]
+    channels: list[SimulatorChannel]
+
 class SimulatorDevice(SimulatorBase):
     deviceGid: int
     manufacturerDeviceId: str
     model: str
-    firmware: str
-    parentDeviceGid: int
-    parentChannelNum: str
+    firmware: Optional[str]
+    parentDeviceGid: Optional[int]
+    parentChannelNum: Optional[str]
     locationProperties: SimulatorLocationProperties
     outlet: Optional[SimulatorOutlet]
-    evCharger: Optional[dict]
+    evCharger: Optional[SimulatorCharger]
     battery: Optional[dict]
     deviceConnected: SimulatorDeviceConnected
-    devices: list
+    devices: list[SimulatorSubDevice]
     channels: list[SimulatorChannel]
 
-class SimulatorCustomerDevices(SimulatorBase):
+class CustomerDevicesResponse(SimulatorBase):
     customerGid: int
     email: str
     firstName: str
@@ -98,3 +143,42 @@ class ChannelType(SimulatorBase):
     channelTypeGid: int
     description: str
     selectable: bool
+
+class SimulatorLoad(SimulatorBase):
+    loadGid: int
+    schedulesEnabled: bool
+    nextScheduledEventText: Optional[str]
+    peakDemandEnabled: bool
+    excessGenerationEnabled: bool
+    energyManagementText: Optional[str]
+    energyManagementOverridden: bool
+    warningText: Optional[str]
+
+class StatusResponse(SimulatorBase):
+    devicesConnected: list[SimulatorDeviceConnected]
+    evChargers: list[SimulatorCharger]
+    loads: list[SimulatorLoad]
+    batteries: list[dict]
+    outlets: list[SimulatorOutlet]
+
+class CreateOutletRequest(SimulatorBase):
+    deviceGid: int
+    outletOn: bool = True
+    name: Optional[str] = None
+    parentDeviceGid: Optional[int] = None
+    parentChannelNum: Optional[str] = None
+
+class CreateChargerRequest(SimulatorBase):
+    deviceGid: int
+    chargerOn: bool = True
+    name: Optional[str] = None
+    breakerSize: int = 50
+    parentDeviceGid: Optional[int] = None
+    parentChannelNum: Optional[str] = None
+
+class CreateVueRequest(SimulatorBase):
+    deviceGid: int
+    name: Optional[str] = None
+    channelCount: int = 8
+    parentDeviceGid: Optional[int] = None
+    parentChannelNum: Optional[str] = None
