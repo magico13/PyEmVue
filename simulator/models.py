@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from pydantic import BaseModel
 import datetime
 
@@ -198,3 +198,27 @@ class CreateVueRequest(SimulatorBase):
     channelCount: int = 8
     parentDeviceGid: Optional[int] = None
     parentChannelNum: Optional[str] = None
+
+if TYPE_CHECKING:
+    from .models import DeviceUsage  # Avoid circular import
+
+class ChannelUsage(SimulatorBase):
+    name: str
+    percentage: float
+    nestedDevices: list['DeviceUsage']
+    usage: float
+    deviceGid: int
+    channelNum: str
+
+class DeviceUsage(SimulatorBase):
+    deviceGid: int
+    channelUsages: list[ChannelUsage]
+
+class DeviceListUsage(SimulatorBase):
+    devices: list[DeviceUsage]
+    energyUnit: str
+    instant: datetime.datetime
+    scale: str
+
+class DeviceUsageResponse(SimulatorBase):
+    deviceListUsages: DeviceListUsage

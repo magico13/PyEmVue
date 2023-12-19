@@ -15,6 +15,8 @@ class SimulatorState(object):
             lastName="Ulator",
             createdAt=datetime.datetime.utcnow(),
         )
+        # Hold the usage for each channel. deviceGid_channelNum : usage
+        self.usage_dict_1min: dict[str, float] = {}
         self.devices: list[SimulatorDevice] = []
         self.channel_types: list[ChannelType] = []
         self.outlets: list[SimulatorOutlet] = []
@@ -67,6 +69,91 @@ class SimulatorState(object):
             batteries=[],
             outlets=self.outlets,
         )
+
+    # state.get_devices_usage(deviceGids, instant, scale, energyUnit)
+    def get_devices_usage(
+        self, deviceGids: str, instant: datetime.datetime, scale: str, energyUnit: str
+    ) -> DeviceUsageResponse:
+        if scale != "1MIN" or energyUnit != "KilowattHours":
+            raise Exception(
+                f"Scale {scale} or energyUnit {energyUnit} not yet supported"
+            )
+        deviceListUsage = DeviceListUsage(
+            energyUnit=energyUnit, scale=scale, instant=instant, devices=[]
+        )
+        response = DeviceUsageResponse(deviceListUsages=deviceListUsage)
+        # build the usage tree by recursively calling build_tree
+        root = self.build_tree(None, None)
+        deviceListUsage.devices = root
+        return response
+
+    def build_tree(
+        self, parentDeviceGid: Optional[int], parentChannelNum: Optional[str]
+    ) -> list[DeviceUsage]:
+        devices_at_level: DeviceUsage = []
+        # We end up looping through all of the devices each time, but that's ok for now
+        # we can optimize later if it becomes a performance concern
+        for device in self.devices:
+            if (
+                device.parentDeviceGid == parentDeviceGid
+                and device.parentChannelNum == parentChannelNum
+            ):
+                # handle the main device, then any sub-devices
+                device_usage = DeviceUsage(deviceGid=device.deviceGid, channelUsages=[])
+                channel_usages: list[ChannelUsage] = []
+                for channel in device.channels:
+                    # get the usage for this channel
+                    usage = self.usage_dict_1min.get(
+                        f"{device.deviceGid}_{channel.channelNum}", 0.0
+                    )
+                    channel_usages.append(
+                        ChannelUsage(
+                            name=channel.name or "Main",
+                            percentage=0.0,
+                            usage=usage,
+                            deviceGid=device.deviceGid,
+                            channelNum=channel.channelNum,
+                            nestedDevices=self.build_tree(
+                                device.deviceGid, channel.channelNum
+                            ),
+                        )
+                    )
+                for sub_device in device.devices:
+                    for channel in sub_device.channels:
+                        # get the usage for this channel
+                        usage = self.usage_dict_1min.get(
+                            f"{sub_device.deviceGid}_{channel.channelNum}", 0.0
+                        )
+                        channel_usages.append(
+                            ChannelUsage(
+                                name=channel.name or "Main",
+                                percentage=0.0,
+                                usage=usage,
+                                deviceGid=sub_device.deviceGid,
+                                channelNum=channel.channelNum,
+                                nestedDevices=self.build_tree(
+                                    sub_device.deviceGid, channel.channelNum
+                                ),
+                            )
+                        )
+                # There is a special Balance channel that appears when there are multiple channels on a device
+                if len(channel_usages) > 1:
+                    balance_usage = self.usage_dict_1min.get(
+                        f"{device.deviceGid}_Balance", 0.0
+                    )
+                    channel_usages.append(
+                        ChannelUsage(
+                            name="Balance",
+                            percentage=0.0,
+                            usage=balance_usage,
+                            deviceGid=device.deviceGid,
+                            channelNum="Balance",
+                            nestedDevices=[],
+                        )
+                    )
+                device_usage.channelUsages = channel_usages
+                devices_at_level.append(device_usage)
+        return devices_at_level
 
     def set_location_properties(
         self, location_properties: SimulatorLocationProperties, propagate: bool = True
@@ -255,3 +342,11 @@ class SimulatorState(object):
                 self.devices.remove(device)
                 return device
         return None
+
+    def set_channel_1min_watts(self, deviceGid: int, channelNum: str, watts: float):
+        # convert from watts to watt hours used over a 1 minute period
+        usage = watts / 3600
+        self.set_channel_1min_usage(deviceGid, channelNum, usage)
+
+    def set_channel_1min_usage(self, deviceGid: int, channelNum: str, usage: float):
+        self.usage_dict_1min[f"{deviceGid}_{channelNum}"] = usage

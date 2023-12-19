@@ -15,6 +15,21 @@ state.add_outlet(1004, "plug4", False, parentDeviceGid=1000, parentChannelNum="1
 state.add_charger(
     1005, "EV", True, breakerSize=50, parentDeviceGid=1000, parentChannelNum="1,2,3"
 )
+# the EV charger is pulling 40 amps at 240 volts
+state.set_channel_1min_watts(1005, "1,2,3", 40 * 240)
+
+# plug 3 is pulling 10 amps at 120 volts
+state.set_channel_1min_watts(1003, "1,2,3", 10 * 120)
+
+# plug 1 is pulling 5 amps at 120 volts
+state.set_channel_1min_watts(1001, "1,2,3", 5 * 120)
+
+# the overall house is pulling 95 amps at 240 volts
+state.set_channel_1min_watts(1000, "1,2,3", 95 * 240)
+
+# the balance is effectively 40 amps
+state.set_channel_1min_watts(1000, "Balance", 40 * 240)
+
 
 app = FastAPI()
 
@@ -106,6 +121,19 @@ def put_devices_evcharger(charger: SimulatorChargerRequest) -> SimulatorCharger:
     raise NotAuthorizedException(charger.deviceGid)
 
 
+# API_DEVICES_USAGE = 'AppAPI?apiMethod=getDeviceListUsages&deviceGids={deviceGids}&instant={instant}&scale={scale}&energyUnit={unit}'
+@app.get("/AppAPI")
+def get_app_api(
+    deviceGids: str = None,
+    instant: str = None,
+    scale: str = "1MIN",
+    energyUnit: str = "KilowattHours",
+) -> DeviceUsageResponse:
+    return state.get_devices_usage(
+        deviceGids, instant or datetime.datetime.utcnow(), scale, energyUnit
+    )
+
+
 # meta APIs for controlling the simulator
 @app.post("/simulator/vue")
 def post_create_vue(vue: CreateVueRequest) -> SimulatorDevice:
@@ -151,3 +179,23 @@ def delete_device(deviceGid: int, response: Response) -> SimulatorDevice:
         response.status_code = 404
         return response  # type: ignore
     return deleted
+
+
+@app.put("/simulator/device/{deviceGid}/channel/{channelNum}/usage")
+def put_channel_usage(
+    deviceGid: int,
+    channelNum: str,
+    watts: Optional[float] = None,
+    usage: Optional[float] = None,
+    scale: Optional[str] = "1MIN",
+) -> None:
+    if scale == "1MIN":
+        if usage is not None:  # usage takes precedence
+            state.set_channel_1min_usage(deviceGid, channelNum, usage)
+        elif watts is not None:
+            state.set_channel_1min_watts(deviceGid, channelNum, watts)
+        else:
+            raise ValueError("usage or watts must be provided")
+        # probably should return the state of the channel here
+        return None
+    # other scales are not supported yet

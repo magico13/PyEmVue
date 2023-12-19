@@ -227,7 +227,7 @@ class PyEmVue(object):
 
     def get_vehicle_status(self, vehicle: Vehicle) -> Optional[VehicleStatus]:
         """Get details for the current vehicle."""
-        return get_vehicle_status(self, vehicle.vehicle_gid)
+        return self.get_vehicle_status(self, vehicle.vehicle_gid)
 
     def get_vehicle_status(self, vehicle_gid: str) -> Optional[VehicleStatus]:
         """Get details for the current vehicle."""
