@@ -1,10 +1,13 @@
-/Canary
-/keys.json
+.venv
 .vscode
 __pycache__
 /dist
 /build
 *.egg-info
+
+# testing files
+/Canary
 Notes/
+keys.json
 test.py
 sample_requests.md
