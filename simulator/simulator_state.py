@@ -72,7 +72,7 @@ class SimulatorState(object):
 
     # state.get_devices_usage(deviceGids, instant, scale, energyUnit)
     def get_devices_usage(
-        self, deviceGids: str, instant: datetime.datetime, scale: str, energyUnit: str
+        self, deviceGids: Optional[str], instant: datetime.datetime, scale: str, energyUnit: str
     ) -> DeviceUsageResponse:
         if scale != "1MIN" or energyUnit != "KilowattHours":
             raise Exception(

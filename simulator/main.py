@@ -124,8 +124,8 @@ def put_devices_evcharger(charger: SimulatorChargerRequest) -> SimulatorCharger:
 # API_DEVICES_USAGE = 'AppAPI?apiMethod=getDeviceListUsages&deviceGids={deviceGids}&instant={instant}&scale={scale}&energyUnit={unit}'
 @app.get("/AppAPI")
 def get_app_api(
-    deviceGids: str = None,
-    instant: str = None,
+    deviceGids: Optional[str] = None,
+    instant: Optional[datetime.datetime] = None,
     scale: str = "1MIN",
     energyUnit: str = "KilowattHours",
 ) -> DeviceUsageResponse:
