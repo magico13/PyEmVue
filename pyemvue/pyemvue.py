@@ -5,7 +5,7 @@ import json
 from dateutil.parser import parse
 
 # Our files
-from pyemvue.auth import Auth
+from pyemvue.auth import Auth, SimulatedAuth
 from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
 from pyemvue.device import ChargerDevice, VueDevice, OutletDevice, VueDeviceChannel, VueDeviceChannelUsage, VueUsageDevice, ChannelType, Vehicle, VehicleStatus
@@ -78,10 +78,6 @@ class PyEmVue(object):
             channel.from_json_dictionary(j)
         return channel
 
-    def get_customer_details(self, username: str) -> Optional[Customer]:
-        """Deprecated, username not required"""
-        return self.get_customer_details()
-    
     def get_customer_details(self) -> Optional[Customer]:
         """Get details for the current customer."""
         response = self.auth.request('get', API_CUSTOMER)
@@ -225,10 +221,6 @@ class PyEmVue(object):
                 vehicles.append(Vehicle().from_json_dictionary(veh))
         return vehicles
 
-    def get_vehicle_status(self, vehicle: Vehicle) -> Optional[VehicleStatus]:
-        """Get details for the current vehicle."""
-        return self.get_vehicle_status(self, vehicle.vehicle_gid)
-
     def get_vehicle_status(self, vehicle_gid: str) -> Optional[VehicleStatus]:
         """Get details for the current vehicle."""
         url = API_VEHICLE_STATUS.format(vehicleGid=vehicle_gid)
@@ -272,8 +264,14 @@ class PyEmVue(object):
 
         if self.auth.tokens:
             self.username = self.auth.get_username()
-            self.customer = self.get_customer_details(self.username)
+            self.customer = self.get_customer_details()
             self._store_tokens(self.auth.tokens)
+        return self.customer is not None
+    
+    def login_simulator(self, host: str, username: Optional[str]=None, password: Optional[str]=None) -> bool:
+        self.username = username.lower() if username else None
+        self.auth = SimulatedAuth(host=host, username=self.username, password=password)
+        self.customer = self.get_customer_details()
         return self.customer is not None
 
     def _store_tokens(self, tokens: 'dict[str, Any]'):

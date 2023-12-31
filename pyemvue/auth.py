@@ -97,3 +97,32 @@ class Auth:
             method, f"{self.host}/{path}", **kwargs, headers=headers,
             timeout=(self.connect_timeout, self.read_timeout),
         )
+
+class SimulatedAuth(Auth):
+    def __init__(self, host: str, username: str | None = None, password: str | None = None):
+        self.host = host
+        self.username = username
+        self.password = password
+        self.connect_timeout = 6.03
+        self.read_timeout = 10.03
+
+        self.tokens = self.refresh_tokens()
+    
+    def refresh_tokens(self) -> dict[str, str]:
+        return {'id_token': 'simulator'}
+
+    def get_username(self) -> str:
+        """Get the username associated with the logged in user."""
+        return self.username or "simulator"
+
+    def request(self, method: str, path: str, **kwargs) -> requests.Response:
+        """Make a request."""
+        response = self._do_request(method, path, **kwargs)
+
+        if response.status_code == 401:
+            # if unauthorized, try refreshing the tokens
+            self.tokens = self.refresh_tokens()
+            # then run the request again with updated tokens
+            response = self._do_request(method, path, **kwargs)
+
+        return response
