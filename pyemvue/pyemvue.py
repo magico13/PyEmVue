@@ -101,7 +101,7 @@ class PyEmVue(object):
         devices: dict[int, VueUsageDevice] = {}
         if response.text:
             j = response.json()
-            if (len(j) == len(gids))        #Issue #39 and Issue #61 fix, only process if not malformed response from api - DabblerIOT
+            if (len(j) == len(gids))
                 if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
                     timestamp = parse(j['deviceListUsages']['instant'])
                     for device in j['deviceListUsages']['devices']:
