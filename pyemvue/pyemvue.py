@@ -101,11 +101,12 @@ class PyEmVue(object):
         devices: dict[int, VueUsageDevice] = {}
         if response.text:
             j = response.json()
-            if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
-                timestamp = parse(j['deviceListUsages']['instant'])
-                for device in j['deviceListUsages']['devices']:
-                    populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
-                    devices[populated.device_gid] = populated
+            if (len(j) == len(gids))        #Issue #39 and Issue #61 fix, only process if not malformed response from api - DabblerIOT
+                if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
+                    timestamp = parse(j['deviceListUsages']['instant'])
+                    for device in j['deviceListUsages']['devices']:
+                        populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
+                        devices[populated.device_gid] = populated
         return devices
 
     def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], Optional[datetime.datetime]]':
