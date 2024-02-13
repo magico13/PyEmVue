@@ -102,13 +102,13 @@ class PyEmVue(object):
         if response.text:
             j = response.json()
             
-            """if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:  *** this is not right way to get number of devices in total"""
-            timestamp = parse(j['deviceListUsages']['instant'])
-            for device in j['deviceListUsages']['devices']:
-                """Sanity Check, number channels returned = number channels configured"""
-                if (len(device["channelUsages"]) > 1):
-                    populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
-                    devices[populated.device_gid] = populated
+            if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
+                timestamp = parse(j['deviceListUsages']['instant'])
+                for device in j['deviceListUsages']['devices']:
+                    """Sanity Check, number channels returned = number channels configured"""
+                    if (len(device["channelUsages"]) > 1):
+                        populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
+                        devices[populated.device_gid] = populated
         return devices
 
     def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], Optional[datetime.datetime]]':
