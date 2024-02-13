@@ -101,7 +101,8 @@ class PyEmVue(object):
         devices: dict[int, VueUsageDevice] = {}
         if response.text:
             j = response.json()
-            if (len(j) == len(gids)):
+            """Sanity Check, number devices returned = number devices requested"""
+            if (len(j["deviceListUsages"]["devices"]) == len(gids)):
                 if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
                     timestamp = parse(j['deviceListUsages']['instant'])
                     for device in j['deviceListUsages']['devices']:
