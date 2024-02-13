@@ -103,9 +103,11 @@ class PyEmVue(object):
             j = response.json()
             """Sanity Check, number devices returned = number devices requested"""
             if (len(j["deviceListUsages"]["devices"]) == len(gids)):
-                if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
-                    timestamp = parse(j['deviceListUsages']['instant'])
-                    for device in j['deviceListUsages']['devices']:
+                """if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:  *** this is not right way to get number of devices in total"""
+                timestamp = parse(j['deviceListUsages']['instant'])
+                for device in j['deviceListUsages']['devices']:
+                    """Sanity Check, number channels returned = number channels configured"""
+                    if (len(device["channelUsages]") == deviceInfo[device.deviceGId].channels:
                         populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
                         devices[populated.device_gid] = populated
         return devices
