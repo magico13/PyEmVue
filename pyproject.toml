@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyemvue"
-version = "0.18.7"
+version = "0.18.8"
 authors = [
   { name="magico13", email="magico1313@gmail.com" },
 ]
