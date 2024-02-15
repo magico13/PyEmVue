@@ -98,7 +98,7 @@ class PyEmVue(object):
         url = API_DEVICES_USAGE.format(deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit)
         
         retries = 0
-        success = false
+        success = False
         
         while ((retries <= 10) and (success == false)):
             response = self.auth.request('get', url)
@@ -114,9 +114,9 @@ class PyEmVue(object):
                         if (len(device["channelUsages"]) > 1):
                             populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
                             devices[populated.device_gid] = populated
-                            success = true
+                            success = True
                         else:
-                            success = false
+                            success = False
                             retries +=1
         return devices
 
