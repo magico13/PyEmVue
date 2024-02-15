@@ -117,7 +117,7 @@ class PyEmVue(object):
                             success = true
                         else:
                             success = false
-                            retries++
+                            retries +=1
         return devices
 
     def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], Optional[datetime.datetime]]':
