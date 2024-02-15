@@ -100,7 +100,7 @@ class PyEmVue(object):
         retries = 0
         success = false
         
-        while ((retries <= 10) && (success == false)):
+        while ((retries <= 10) and (success == false)):
             response = self.auth.request('get', url)
             response.raise_for_status()
             devices: dict[int, VueUsageDevice] = {}
