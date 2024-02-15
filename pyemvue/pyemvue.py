@@ -2,6 +2,7 @@ from typing import Any, Optional, Union
 import requests
 import datetime
 import json
+import time
 from dateutil.parser import parse
 
 # Our files
@@ -101,6 +102,10 @@ class PyEmVue(object):
         success = False
         
         while ((retries <= 10) and (success == False)):       
+            #Is this correct way to add a delay, blocks thread?   ha python code on its own thread? -DabblerIOT
+            if (retries > 0):
+                time.sleep(2)
+            
             response = self.auth.request('get', url)
             response.raise_for_status()
             devices: dict[int, VueUsageDevice] = {}
