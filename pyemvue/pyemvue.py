@@ -105,7 +105,7 @@ class PyEmVue(object):
             response.raise_for_status()
             devices: dict[int, VueUsageDevice] = {}
             """Only process response, of 200 (success) response, server fails with 500s (internal server error) from time to time"""
-            if response.status_code != 200:
+            if response.status_code == 200:
                 if response.text:
                     j = response.json()            
                     if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
