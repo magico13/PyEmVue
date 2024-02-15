@@ -102,7 +102,7 @@ class PyEmVue(object):
         
         while ((retries <= 10) and (success == False)):
             if (retries > 0):
-                time.sleep(3);
+                #time.sleep(3)
 
             response = self.auth.request('get', url)
             response.raise_for_status()
