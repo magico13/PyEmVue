@@ -96,19 +96,28 @@ class PyEmVue(object):
             gids = '+'.join(map(str, deviceGids))
 
         url = API_DEVICES_USAGE.format(deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit)
-        response = self.auth.request('get', url)
-        response.raise_for_status()
-        devices: dict[int, VueUsageDevice] = {}
-        if response.text:
-            j = response.json()
+        
+        retries = 0
+        success = false
+        
+        while ((retries <= 10) && (success == false)):
+            response = self.auth.request('get', url)
+            response.raise_for_status()
+            devices: dict[int, VueUsageDevice] = {}
+            if response.text:
+                j = response.json()
             
-            if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
-                timestamp = parse(j['deviceListUsages']['instant'])
-                for device in j['deviceListUsages']['devices']:
-                    """Sanity Check, number channels returned = number channels configured"""
-                    if (len(device["channelUsages"]) > 1):
-                        populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
-                        devices[populated.device_gid] = populated
+                if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
+                    timestamp = parse(j['deviceListUsages']['instant'])
+                    for device in j['deviceListUsages']['devices']:
+                        """Sanity Check, number channels returned = number channels configured"""
+                        if (len(device["channelUsages"]) > 1):
+                            populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
+                            devices[populated.device_gid] = populated
+                            success = true
+                        else:
+                            success = false
+                            retries++
         return devices
 
     def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], Optional[datetime.datetime]]':
