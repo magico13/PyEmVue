@@ -104,19 +104,25 @@ class PyEmVue(object):
             response = self.auth.request('get', url)
             response.raise_for_status()
             devices: dict[int, VueUsageDevice] = {}
-            if response.text:
-                j = response.json()            
-                if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
-                    timestamp = parse(j['deviceListUsages']['instant'])
-                    for device in j['deviceListUsages']['devices']:
-                        """Sanity Check, first channel = null = None after parse in python"""
-                        if (j['deviceListUsages']['devices'][0]['channelUsages'][0]['usage'] is not None):
-                            populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
-                            devices[populated.device_gid] = populated
-                            success = True
-                        else:
-                            success = False
-                            retries +=1
+            """Only process response, of 200 (success) response, server fails with 500s (internal server error) from time to time"""
+            if response.status_code != 200:
+                if response.text:
+                    j = response.json()            
+                    if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
+                        timestamp = parse(j['deviceListUsages']['instant'])
+                        for device in j['deviceListUsages']['devices']:
+                            """Sanity Check, first channel = null = None after parse in python"""
+                            if (j['deviceListUsages']['devices'][0]['channelUsages'][0]['usage'] is not None):
+                                populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
+                                devices[populated.device_gid] = populated
+                                success = True
+                            else:
+                                success = False
+                                retries +=1
+            else:
+                success = False
+                retries += 1
+                
         return devices
 
     def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], Optional[datetime.datetime]]':
