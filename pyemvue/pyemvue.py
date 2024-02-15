@@ -110,7 +110,7 @@ class PyEmVue(object):
                     timestamp = parse(j['deviceListUsages']['instant'])
                     for device in j['deviceListUsages']['devices']:
                         """Sanity Check, number channels returned = number channels configured"""
-                        if (len(device["channelUsages"]) > 1):
+                        if (device["channelUsages"][0].usage) is not None):
                             populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
                             devices[populated.device_gid] = populated
                             success = True
