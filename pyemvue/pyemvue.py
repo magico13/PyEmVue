@@ -101,10 +101,8 @@ class PyEmVue(object):
         retries = 0
         success = False
         
-        while ((retries <= 10) and (success == False)):       
-            #Is this correct way to add a delay, blocks thread?   ha python code on its own thread? -DabblerIOT
-            if (retries > 0):
-                time.sleep(2)
+        while ((retries <= 10) and (success == False)):
+            if (retries > 0): time.sleep(5)
             
             response = self.auth.request('get', url)
             response.raise_for_status()
@@ -123,7 +121,10 @@ class PyEmVue(object):
                                 success = True
                             else:
                                 success = False
-                                retries +=1
+                                retries += 1
+                    else:
+                        success = False
+                        retries += 1
             else:
                 success = False
                 retries += 1
