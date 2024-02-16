@@ -105,9 +105,8 @@ class PyEmVue(object):
             if (retries > 0): time.sleep(5)
             
             response = self.auth.request('get', url)
-            response.raise_for_status()
             devices: dict[int, VueUsageDevice] = {}
-            """Only process response, of 200 (success) response, server fails with 500s (internal server error) from time to time"""
+            #Only process response, of 200 (success) response, server fails with 500s (internal server error) from time to time
             if response.status_code == 200:
                 if response.text:
                     j = response.json()            
@@ -128,7 +127,9 @@ class PyEmVue(object):
             else:
                 success = False
                 retries += 1
-                
+        
+        #raise http exception if returned response is in error, ex server 500 error will cause 10 retries, then exception here
+        response.raise_for_status()        
         return devices
 
     def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], Optional[datetime.datetime]]':
