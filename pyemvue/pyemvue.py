@@ -101,8 +101,8 @@ class PyEmVue(object):
         retries = 0
         success = False
         
-        while ((retries <= 10) and (success == False)):
-            if (retries > 0): asyncio.sleep(5)
+        while ((retries <= 5) and (success == False)):
+            if (retries > 0): asyncio.sleep(max(10,retries*2);
             
             response = self.auth.request('get', url)
             devices: dict[int, VueUsageDevice] = {}
@@ -113,8 +113,9 @@ class PyEmVue(object):
                     if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
                         timestamp = parse(j['deviceListUsages']['instant'])
                         for device in j['deviceListUsages']['devices']:
-                            """Sanity Check, first channel = null = None after parse in python"""
-                            if (j['deviceListUsages']['devices'][0]['channelUsages'][0]['usage'] is not None):
+                            #Sanity Check, first channel = null = None after parse in python
+                            #2/18/24 - Change check for every device
+                            if (j[device]['channelUsages'][0]['usage'] is not None):
                                 populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
                                 devices[populated.device_gid] = populated
                                 success = True
