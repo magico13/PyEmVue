@@ -120,6 +120,8 @@ class PyEmVue(object):
                                 devices[populated.device_gid] = populated
                                 success = True
                             else:
+                                #clear devices in total, try again, second device backend failed
+                                devices = None;
                                 success = False
                                 retries += 1
                     else:
