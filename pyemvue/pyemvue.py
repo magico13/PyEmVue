@@ -124,6 +124,7 @@ class PyEmVue(object):
                                 del devices;
                                 success = False
                                 retries += 1
+                                break
                     else:
                         success = False
                         retries += 1
