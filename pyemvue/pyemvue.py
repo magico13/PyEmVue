@@ -102,7 +102,7 @@ class PyEmVue(object):
         success = False
         
         while ((retries <= 5) and (success == False)):
-            if (retries > 0): asyncio.sleep(max(10,(retries*2)));
+            if (retries > 0): asyncio.sleep(max(10,(retries*2)))
             
             response = self.auth.request('get', url)
             devices: dict[int, VueUsageDevice] = {}
