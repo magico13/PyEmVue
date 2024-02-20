@@ -114,7 +114,6 @@ class PyEmVue(object):
                         timestamp = parse(j['deviceListUsages']['instant'])
                         for device in j['deviceListUsages']['devices']:
                             #Sanity Check, first channel = null = None after parse in python
-                            #2/18/24 - Change check for every device
                             if (device['channelUsages'][0]['usage'] is not None):
                                 populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
                                 devices[populated.device_gid] = populated
