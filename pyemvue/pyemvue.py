@@ -102,7 +102,7 @@ class PyEmVue(object):
         success = False
         
         while ((retries <= 5) and (success == False)):
-            if (retries > 0): asyncio.sleep(max(10,(retries*2)))
+            if (retries > 0): asyncio.sleep(min(10,(retries*2)))
             
             response = self.auth.request('get', url)
             devices: dict[int, VueUsageDevice] = {}
@@ -121,7 +121,7 @@ class PyEmVue(object):
                                 success = True
                             else:
                                 #clear devices in total, try again, second device backend failed
-                                del devices;
+                                del devices
                                 success = False
                                 retries += 1
                                 break
