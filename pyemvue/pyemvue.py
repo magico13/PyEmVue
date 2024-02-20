@@ -114,12 +114,19 @@ class PyEmVue(object):
                         timestamp = parse(j['deviceListUsages']['instant'])
                         for device in j['deviceListUsages']['devices']:
                             #Sanity Check, first channel = null = None after parse in python
-                            if (device['channelUsages'][0]['usage'] is not None):
-                                populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
-                                devices[populated.device_gid] = populated
-                                success = True
+                            if 'channelUsages' in device:
+                                channelUsage = device['channelUsages'][0]
+                                if 'usage' in channelUsage and (channelUsage['usage'] is not None):
+                                    populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
+                                    devices[populated.device_gid] = populated
+                                    success = True
+                                else:
+                                    #clear devices in total, try again, second device backend failed
+                                    del devices
+                                    success = False
+                                    retries += 1
+                                    break
                             else:
-                                #clear devices in total, try again, second device backend failed
                                 del devices
                                 success = False
                                 retries += 1
