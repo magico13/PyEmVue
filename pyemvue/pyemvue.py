@@ -2,7 +2,7 @@ from typing import Any, Optional, Union
 import requests
 import datetime
 import json
-import asyncio
+import time
 from dateutil.parser import parse
 
 # Our files
@@ -102,7 +102,7 @@ class PyEmVue(object):
         success = False
         
         while ((retries <= 5) and (success == False)):
-            if (retries > 0): asyncio.sleep(min(10,(retries*2)))
+            if (retries > 0): time.sleep(min(10,(retries*2)))
             
             response = self.auth.request('get', url)
             devices: dict[int, VueUsageDevice] = {}
