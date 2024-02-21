@@ -2,7 +2,7 @@ from typing import Any, Optional, Union
 import requests
 import datetime
 import json
-import asyncio
+import time
 from dateutil.parser import parse
 
 # Our files
@@ -89,7 +89,7 @@ class PyEmVue(object):
         return None
 
 
-    async def get_device_list_usage(self, deviceGids: Union[str, 'list[str]'], instant: Optional[datetime.datetime], scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'dict[int, VueUsageDevice]':
+    def get_device_list_usage(self, deviceGids: Union[str, 'list[str]'], instant: Optional[datetime.datetime], scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'dict[int, VueUsageDevice]':
         """Returns a nested dictionary of VueUsageDevice and VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if not instant: instant = datetime.datetime.now(datetime.timezone.utc)
         gids = deviceGids
@@ -102,7 +102,8 @@ class PyEmVue(object):
         success = False
         
         while ((retries <= 5) and (success == False)):
-            if (retries > 0): await asyncio.sleep(min(10,(retries*2)))
+            #Is this proper way to delay?   Functions that call this function are async.
+            if (retries > 0): time.sleep(min(10,(retries*2)))
             
             response = self.auth.request('get', url)
             devices: dict[int, VueUsageDevice] = {}
