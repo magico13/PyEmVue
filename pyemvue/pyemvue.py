@@ -89,7 +89,7 @@ class PyEmVue(object):
         return None
 
 
-    def get_device_list_usage(self, deviceGids: Union[str, 'list[str]'], instant: Optional[datetime.datetime], scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'dict[int, VueUsageDevice]':
+    async def get_device_list_usage(self, deviceGids: Union[str, 'list[str]'], instant: Optional[datetime.datetime], scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'dict[int, VueUsageDevice]':
         """Returns a nested dictionary of VueUsageDevice and VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if not instant: instant = datetime.datetime.now(datetime.timezone.utc)
         gids = deviceGids
