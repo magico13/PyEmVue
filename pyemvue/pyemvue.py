@@ -2,7 +2,7 @@ from typing import Any, Optional, Union
 import requests
 import datetime
 import json
-import time
+import asyncio
 from dateutil.parser import parse
 
 # Our files
@@ -102,18 +102,17 @@ class PyEmVue(object):
         success = False
         
         while ((retries <= 5) and (success == False)):
-            if (retries > 0): time.sleep(min(10,(retries*2)))
+            if (retries > 0): await asyncio.sleep(min(10,(retries*2)))
             
             response = self.auth.request('get', url)
             devices: dict[int, VueUsageDevice] = {}
-            #Only process response, of 200 (success) response, server fails with 500s (internal server error) from time to time
+            #39 - Api Returns HTTP erross fro time to time
             if response.status_code == 200:
                 if response.text:
                     j = response.json()            
                     if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
                         timestamp = parse(j['deviceListUsages']['instant'])
                         for device in j['deviceListUsages']['devices']:
-                            #Sanity Check, first channel = null = None after parse in python
                             if 'channelUsages' in device:
                                 channelUsage = device['channelUsages'][0]
                                 if 'usage' in channelUsage and (channelUsage['usage'] is not None):
@@ -138,7 +137,7 @@ class PyEmVue(object):
                 success = False
                 retries += 1
         
-        #raise http exception if returned response is in error, ex server 500 error will cause 10 retries, then exception here
+        #raise http exception if returned response is in error, ex server 500 error will cause 5 retries, then exception here before minute is done
         response.raise_for_status()        
         return devices
 
