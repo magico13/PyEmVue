@@ -90,7 +90,7 @@ class SimulatorState(object):
     def build_tree(
         self, parentDeviceGid: Optional[int], parentChannelNum: Optional[str]
     ) -> list[DeviceUsage]:
-        devices_at_level: DeviceUsage = []
+        devices_at_level: list[DeviceUsage] = []
         # We end up looping through all of the devices each time, but that's ok for now
         # we can optimize later if it becomes a performance concern
         for device in self.devices:
@@ -344,8 +344,9 @@ class SimulatorState(object):
         return None
 
     def set_channel_1min_watts(self, deviceGid: int, channelNum: str, watts: float):
-        # convert from watts to watt hours used over a 1 minute period
-        usage = watts / 3600
+        # convert from watts to kilowatt hours used over a 1 minute period
+        scaler = 60*1000 # 60 minutes/hr * 1000 watts/kilowatt
+        usage = watts / scaler
         self.set_channel_1min_usage(deviceGid, channelNum, usage)
 
     def set_channel_1min_usage(self, deviceGid: int, channelNum: str, usage: float):

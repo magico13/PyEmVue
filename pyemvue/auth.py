@@ -1,11 +1,11 @@
 from datetime import datetime
+import time
 from typing import Any, Optional, Callable
-from jose import jwt
+import jwt
 import requests
 
 # These provide AWS cognito authentication support
 from pycognito import Cognito
-import requests
 
 CLIENT_ID = '4qte47jbstod8apnfic0bunmrq'
 USER_POOL = 'us-east-2_ghlOXVLi1'
@@ -19,12 +19,19 @@ class Auth:
         connect_timeout: float = 6.03,
         read_timeout: float = 10.03,
         tokens: Optional['dict[str, Any]'] = None,
-        token_updater: Optional[Callable[['dict[str, Any]'], None]] = None
+        token_updater: Optional[Callable[['dict[str, Any]'], None]] = None,
+        max_retry_attempts: int = 5,
+        initial_retry_delay: float = 0.5,
+        max_retry_delay: float = 30.0,
     ):
         self.host = host
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout
         self.token_updater = token_updater
+        self.max_retry_attempts = max(max_retry_attempts, 1)
+        self.initial_retry_delay = max(initial_retry_delay, 0)
+        self.max_retry_delay = max(max_retry_delay, 0)
+        self.pool_wellknown_jwks = None
 
         if tokens and tokens['access_token'] and tokens['id_token'] and tokens['refresh_token']:
             # use existing tokens
@@ -58,21 +65,35 @@ class Auth:
 
     def request(self, method: str, path: str, **kwargs) -> requests.Response:
         """Make a request."""
-        #pycognito's method for checking expiry, but without the hard dependency on the cognito object
-        now = datetime.now()
-        dec_access_token = jwt.get_unverified_claims(self.tokens['access_token'])
+        dec_access_token = self._decode_token(self.tokens['access_token'])
 
-        if now > datetime.fromtimestamp(dec_access_token["exp"]):
-            # expired, get new tokens
-            self.tokens = self.refresh_tokens()
+        attempts = 0
+        while attempts < self.max_retry_attempts:
+            attempts += 1
+            if datetime.now() > datetime.fromtimestamp(dec_access_token["exp"]):
+                # expired, get new tokens
+                self.tokens = self.refresh_tokens()
 
-        response = self._do_request(method, path, **kwargs)
-
-        if response.status_code == 401:
-            # if unauthorized, try refreshing the tokens
-            self.tokens = self.refresh_tokens()
-            # then run the request again with updated tokens
             response = self._do_request(method, path, **kwargs)
+
+            if response.status_code == 401:
+                # if unauthorized, try refreshing the tokens
+                self.tokens = self.refresh_tokens()
+                # then run the request again with updated tokens
+                response = self._do_request(method, path, **kwargs)
+            
+            if response.status_code >= 500:
+                # if server error, retry with exponential backoff
+                delay = min(
+                    self.initial_retry_delay * (2 ** (attempts - 1)),
+                    self.max_retry_delay,
+                )
+                print(f"Server error {response.status_code}, retrying in {delay} seconds")
+                time.sleep(delay)
+                continue
+
+            if response.status_code < 500:
+                return response
 
         return response
 
@@ -97,9 +118,22 @@ class Auth:
             method, f"{self.host}/{path}", **kwargs, headers=headers,
             timeout=(self.connect_timeout, self.read_timeout),
         )
+    
+    def _decode_token(self, token: str) -> dict:
+        '''Decode a JWT token and return the payload as a dictionary, without a hard dependency on pycognito.'''
+        if not self.pool_wellknown_jwks:
+            self.pool_wellknown_jwks = requests.get(
+                f"https://cognito-idp.us-east-2.amazonaws.com/{USER_POOL}/.well-known/jwks.json", timeout=5
+            ).json()
+        
+        kid = jwt.get_unverified_header(token).get("kid")
+        keys = self.pool_wellknown_jwks.get("keys")
+        key = list(filter(lambda x: x.get("kid") == kid, keys))[0]
+        hmac_key = jwt.api_jwk.PyJWK(key).key
+        return jwt.api_jwt.decode(token, algorithms=["RS256"], key=hmac_key, options={"verify_exp": False})
 
 class SimulatedAuth(Auth):
-    def __init__(self, host: str, username: str | None = None, password: str | None = None):
+    def __init__(self, host: str, username: Optional[str] = None, password: Optional[str] = None):
         self.host = host
         self.username = username
         self.password = password

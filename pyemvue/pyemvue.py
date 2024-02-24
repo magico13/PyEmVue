@@ -1,3 +1,4 @@
+import time
 from typing import Any, Optional, Union
 import requests
 import datetime
@@ -96,16 +97,44 @@ class PyEmVue(object):
             gids = '+'.join(map(str, deviceGids))
 
         url = API_DEVICES_USAGE.format(deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit)
-        response = self.auth.request('get', url)
-        response.raise_for_status()
-        devices: dict[int, VueUsageDevice] = {}
-        if response.text:
-            j = response.json()
-            if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
-                timestamp = parse(j['deviceListUsages']['instant'])
-                for device in j['deviceListUsages']['devices']:
-                    populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
-                    devices[populated.device_gid] = populated
+        max_attempts = 3
+        attempts = 0
+        success = False
+
+        while attempts < max_attempts and not success:
+            if attempts > 0:
+                # if we're retrying, wait a bit before trying again
+                delay = 2**attempts
+                print(f'Waiting {delay} seconds before retrying device usage request.')
+                time.sleep(delay)
+            attempts += 1
+            print(f'Attempt {attempts} to get device usage')
+            response = self.auth.request('get', url)
+            devices: dict[int, VueUsageDevice] = {}
+            if response.status_code == 200 and response.text:
+                j = response.json()
+                if 'deviceListUsages' in j and 'devices' in j['deviceListUsages']:
+                    timestamp = parse(j['deviceListUsages']['instant'])
+                    for device in j['deviceListUsages']['devices']:
+                        populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(device)
+                        devices[populated.device_gid] = populated
+                        for _, channel_usage in populated.channels.items():
+                            if channel_usage.usage is not None:
+                                success = True
+                            else:
+                                # if the usage is None then we have bad data. Retry from the top.
+                                print(f'Bad data for device {populated.device_gid} channel {channel_usage.channel_num} at {timestamp}')
+                                success = False
+                                devices.clear()
+                                break
+                        if not success:
+                            break
+                else:
+                    success = False
+            else:
+                success = False
+        if response:
+            response.raise_for_status()
         return devices
 
     def get_chart_usage(self, channel: Union[VueDeviceChannel, VueDeviceChannelUsage], start: Optional[datetime.datetime] = None, end: Optional[datetime.datetime] = None, scale=Scale.SECOND.value, unit=Unit.KWH.value) -> 'tuple[list[float], Optional[datetime.datetime]]':
@@ -221,7 +250,7 @@ class PyEmVue(object):
                 vehicles.append(Vehicle().from_json_dictionary(veh))
         return vehicles
 
-    def get_vehicle_status(self, vehicle_gid: str) -> Optional[VehicleStatus]:
+    def get_vehicle_status(self, vehicle_gid: int) -> Optional[VehicleStatus]:
         """Get details for the current vehicle."""
         url = API_VEHICLE_STATUS.format(vehicleGid=vehicle_gid)
         response = self.auth.request('get', url)
