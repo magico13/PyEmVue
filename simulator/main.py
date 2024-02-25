@@ -192,10 +192,8 @@ def put_channel_usage(
     if scale == "1MIN":
         if usage is not None:  # usage takes precedence
             state.set_channel_1min_usage(deviceGid, channelNum, usage)
-        elif watts is not None:
-            state.set_channel_1min_watts(deviceGid, channelNum, watts)
         else:
-            raise ValueError("usage or watts must be provided")
+            state.set_channel_1min_watts(deviceGid, channelNum, watts)
         # probably should return the state of the channel here
         return None
     # other scales are not supported yet

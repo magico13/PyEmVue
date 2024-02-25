@@ -105,10 +105,8 @@ class PyEmVue(object):
             if attempts > 0:
                 # if we're retrying, wait a bit before trying again
                 delay = 2**attempts
-                print(f'Waiting {delay} seconds before retrying device usage request.')
                 time.sleep(delay)
             attempts += 1
-            print(f'Attempt {attempts} to get device usage')
             response = self.auth.request('get', url)
             devices: dict[int, VueUsageDevice] = {}
             if response.status_code == 200 and response.text:
@@ -123,9 +121,7 @@ class PyEmVue(object):
                                 success = True
                             else:
                                 # if the usage is None then we have bad data. Retry from the top.
-                                print(f'Bad data for device {populated.device_gid} channel {channel_usage.channel_num} at {timestamp}')
                                 success = False
-                                devices.clear()
                                 break
                         if not success:
                             break
