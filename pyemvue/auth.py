@@ -132,6 +132,7 @@ class Auth:
         hmac_key = jwt.api_jwk.PyJWK(key).key
         return jwt.api_jwt.decode(token, algorithms=["RS256"], key=hmac_key, options={"verify_exp": False, "verify_iat": False, "verify_nbf": False})
 
+
 class SimulatedAuth(Auth):
     def __init__(self, host: str, username: Optional[str] = None, password: Optional[str] = None):
         self.host = host
