@@ -206,7 +206,7 @@ class ChannelUsage(SimulatorBase):
     name: str
     percentage: float
     nestedDevices: list['DeviceUsage']
-    usage: float
+    usage: Optional[float]
     deviceGid: int
     channelNum: str
 

@@ -16,7 +16,7 @@ class SimulatorState(object):
             createdAt=datetime.datetime.utcnow(),
         )
         # Hold the usage for each channel. deviceGid_channelNum : usage
-        self.usage_dict_1min: dict[str, float] = {}
+        self.usage_dict_1min: dict[str, Optional[float]] = {}
         self.devices: list[SimulatorDevice] = []
         self.channel_types: list[ChannelType] = []
         self.outlets: list[SimulatorOutlet] = []
@@ -72,7 +72,11 @@ class SimulatorState(object):
 
     # state.get_devices_usage(deviceGids, instant, scale, energyUnit)
     def get_devices_usage(
-        self, deviceGids: Optional[str], instant: datetime.datetime, scale: str, energyUnit: str
+        self,
+        deviceGids: Optional[str],
+        instant: datetime.datetime,
+        scale: str,
+        energyUnit: str,
     ) -> DeviceUsageResponse:
         if scale != "1MIN" or energyUnit != "KilowattHours":
             raise Exception(
@@ -343,11 +347,14 @@ class SimulatorState(object):
                 return device
         return None
 
-    def set_channel_1min_watts(self, deviceGid: int, channelNum: str, watts: float):
+    def set_channel_1min_watts(self, deviceGid: int, channelNum: str, watts: Optional[float]):
         # convert from watts to kilowatt hours used over a 1 minute period
-        scaler = 60*1000 # 60 minutes/hr * 1000 watts/kilowatt
-        usage = watts / scaler
+        if watts is None:
+            usage = None
+        else:
+            scaler = 60 * 1000  # 60 minutes/hr * 1000 watts/kilowatt
+            usage = watts / scaler
         self.set_channel_1min_usage(deviceGid, channelNum, usage)
 
-    def set_channel_1min_usage(self, deviceGid: int, channelNum: str, usage: float):
+    def set_channel_1min_usage(self, deviceGid: int, channelNum: str, usage: Optional[float]):
         self.usage_dict_1min[f"{deviceGid}_{channelNum}"] = usage
