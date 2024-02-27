@@ -277,7 +277,7 @@ class Vehicle(object):
             'vehicleGid': self.vehicle_gid,
             'vendor': self.vendor,
             'apiId': self.api_id,
-            'displayName': self.displayName,
+            'displayName': self.display_name,
             'loadGid': self.loadGid,
             'make': self.make,
             'model': self.model,
