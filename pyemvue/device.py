@@ -256,7 +256,7 @@ class Vehicle(object):
         self.vendor = vendor
         self.api_id = apiId
         self.display_name = displayName
-        self.loadGid = loadGid
+        self.load_gid = loadGid
         self.make = make
         self.model = model
         self.year = year
@@ -266,7 +266,7 @@ class Vehicle(object):
         if 'vendor' in js: self.vendor = js['vendor']
         if 'apiId' in js: self.api_id = js['apiId']
         if 'displayName' in js: self.display_name = js['displayName']
-        if 'loadGid' in js: self.loadGid = js['loadGid']
+        if 'loadGid' in js: self.load_gid = js['loadGid']
         if 'make' in js: self.make = js['make']
         if 'model' in js: self.model = js['model']
         if 'year' in js: self.year = js['year']
@@ -278,7 +278,7 @@ class Vehicle(object):
             'vendor': self.vendor,
             'apiId': self.api_id,
             'displayName': self.display_name,
-            'loadGid': self.loadGid,
+            'loadGid': self.load_gid,
             'make': self.make,
             'model': self.model,
             'year': self.year
@@ -297,7 +297,7 @@ class VehicleStatus(object):
         self.charge_current_request_max = chargeCurrentRequestMax
 
     def from_json_dictionary(self, js):
-
+        jsv = {}
         if 'settings' in js:
             jsv = js['settings']
 
