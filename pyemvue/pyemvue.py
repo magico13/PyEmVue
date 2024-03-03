@@ -127,6 +127,7 @@ class PyEmVue(object):
         max_retry_attempts = max(max_retry_attempts, 1)
         initial_retry_delay = max(initial_retry_delay, 0.5)
         max_retry_delay = max(max_retry_delay, 0)
+        devices: dict[int, VueUsageDevice] = {}
 
         while attempts < max_retry_attempts and not success:
             if attempts > 0:
@@ -138,7 +139,6 @@ class PyEmVue(object):
                 time.sleep(delay)
             attempts += 1
             response = self.auth.request("get", url)
-            devices: dict[int, VueUsageDevice] = {}
             if response.status_code == 200 and response.text:
                 j = response.json()
                 if "deviceListUsages" in j and "devices" in j["deviceListUsages"]:
@@ -148,15 +148,9 @@ class PyEmVue(object):
                             timestamp=timestamp
                         ).from_json_dictionary(device)
                         devices[populated.device_gid] = populated
-                        for _, channel_usage in populated.channels.items():
-                            if channel_usage.usage is not None:
-                                success = True
-                            else:
-                                # if the usage is None then we have bad data. Retry from the top.
-                                success = False
-                                break
-                        if not success:
-                            break
+                        # data is missing if any usage is None for any channels. In that case we retry the request and merge results.
+                        data_missing = any(channel_usage.usage is None for channel_usage in populated.channels.values())
+                        success = success and not data_missing
                 else:
                     success = False
             else:
