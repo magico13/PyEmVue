@@ -123,13 +123,14 @@ class PyEmVue(object):
             deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit
         )
         attempts = 0
-        success = False
+        update_failed = True
         max_retry_attempts = max(max_retry_attempts, 1)
         initial_retry_delay = max(initial_retry_delay, 0.5)
         max_retry_delay = max(max_retry_delay, 0)
         devices: dict[int, VueUsageDevice] = {}
 
-        while attempts < max_retry_attempts and not success:
+        while attempts < max_retry_attempts and update_failed:
+            update_failed = False # reset the flag, if we fail we'll set it again
             if attempts > 0:
                 # if we're retrying, wait a bit before trying again using an exponential backoff
                 delay = min(
@@ -147,14 +148,16 @@ class PyEmVue(object):
                         populated = VueUsageDevice(
                             timestamp=timestamp
                         ).from_json_dictionary(device)
-                        devices[populated.device_gid] = populated
                         # data is missing if any usage is None for any channels. In that case we retry the request and merge results.
                         data_missing = any(channel_usage.usage is None for channel_usage in populated.channels.values())
-                        success = success and not data_missing
+                        update_failed = update_failed or data_missing
+                        if not data_missing or attempts >= max_retry_attempts:
+                            # only overwrite the device data if we have all the data or we've run out of retries
+                            devices[populated.device_gid] = populated
                 else:
-                    success = False
+                    update_failed = True
             else:
-                success = False
+                update_failed = True
 
         # if we still haven't fully succeeded, return the data we did manage to get
 
