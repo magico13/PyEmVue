@@ -199,26 +199,31 @@ class CreateVueRequest(SimulatorBase):
     parentDeviceGid: Optional[int] = None
     parentChannelNum: Optional[str] = None
 
+
 if TYPE_CHECKING:
     from .models import DeviceUsage  # Avoid circular import
+
 
 class ChannelUsage(SimulatorBase):
     name: str
     percentage: float
-    nestedDevices: list['DeviceUsage']
+    nestedDevices: list["DeviceUsage"]
     usage: Optional[float]
     deviceGid: int
     channelNum: str
 
+
 class DeviceUsage(SimulatorBase):
     deviceGid: int
     channelUsages: list[ChannelUsage]
+
 
 class DeviceListUsage(SimulatorBase):
     devices: list[DeviceUsage]
     energyUnit: str
     instant: datetime.datetime
     scale: str
+
 
 class DeviceUsageResponse(SimulatorBase):
     deviceListUsages: DeviceListUsage

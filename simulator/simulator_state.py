@@ -347,7 +347,9 @@ class SimulatorState(object):
                 return device
         return None
 
-    def set_channel_1min_watts(self, deviceGid: int, channelNum: str, watts: Optional[float]):
+    def set_channel_1min_watts(
+        self, deviceGid: int, channelNum: str, watts: Optional[float]
+    ):
         # convert from watts to kilowatt hours used over a 1 minute period
         if watts is None:
             usage = None
@@ -356,5 +358,7 @@ class SimulatorState(object):
             usage = watts / scaler
         self.set_channel_1min_usage(deviceGid, channelNum, usage)
 
-    def set_channel_1min_usage(self, deviceGid: int, channelNum: str, usage: Optional[float]):
+    def set_channel_1min_usage(
+        self, deviceGid: int, channelNum: str, usage: Optional[float]
+    ):
         self.usage_dict_1min[f"{deviceGid}_{channelNum}"] = usage

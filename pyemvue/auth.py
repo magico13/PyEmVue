@@ -7,8 +7,9 @@ import requests
 # These provide AWS cognito authentication support
 from pycognito import Cognito
 
-CLIENT_ID = '4qte47jbstod8apnfic0bunmrq'
-USER_POOL = 'us-east-2_ghlOXVLi1'
+CLIENT_ID = "4qte47jbstod8apnfic0bunmrq"
+USER_POOL = "us-east-2_ghlOXVLi1"
+
 
 class Auth:
     def __init__(
@@ -18,8 +19,8 @@ class Auth:
         password: Optional[str] = None,
         connect_timeout: float = 6.03,
         read_timeout: float = 10.03,
-        tokens: Optional['dict[str, Any]'] = None,
-        token_updater: Optional[Callable[['dict[str, Any]'], None]] = None,
+        tokens: Optional["dict[str, Any]"] = None,
+        token_updater: Optional[Callable[["dict[str, Any]"], None]] = None,
         max_retry_attempts: int = 5,
         initial_retry_delay: float = 0.5,
         max_retry_delay: float = 30.0,
@@ -29,26 +30,35 @@ class Auth:
         self.read_timeout = read_timeout
         self.token_updater = token_updater
         self.max_retry_attempts = max(max_retry_attempts, 1)
-        self.initial_retry_delay = max(initial_retry_delay, 0)
+        self.initial_retry_delay = max(initial_retry_delay, 0.5)
         self.max_retry_delay = max(max_retry_delay, 0)
         self.pool_wellknown_jwks = None
 
-        if tokens and tokens['access_token'] and tokens['id_token'] and tokens['refresh_token']:
+        if (
+            tokens
+            and tokens["access_token"]
+            and tokens["id_token"]
+            and tokens["refresh_token"]
+        ):
             # use existing tokens
-            self.cognito = Cognito(USER_POOL, CLIENT_ID,
-                user_pool_region='us-east-2', 
-                id_token=tokens['id_token'], 
-                access_token=tokens['access_token'], 
-                refresh_token=tokens['refresh_token'])
+            self.cognito = Cognito(
+                USER_POOL,
+                CLIENT_ID,
+                user_pool_region="us-east-2",
+                id_token=tokens["id_token"],
+                access_token=tokens["access_token"],
+                refresh_token=tokens["refresh_token"],
+            )
         elif username and password:
-            #log in with username and password
-            self.cognito = Cognito(USER_POOL, CLIENT_ID, 
-                user_pool_region='us-east-2', username=username)
+            # log in with username and password
+            self.cognito = Cognito(
+                USER_POOL, CLIENT_ID, user_pool_region="us-east-2", username=username
+            )
             self.cognito.authenticate(password=password)
 
         self.tokens = self.refresh_tokens()
 
-    def refresh_tokens(self) -> 'dict[str, str]':
+    def refresh_tokens(self) -> "dict[str, str]":
         """Refresh and return new tokens."""
         self.cognito.renew_access_token()
         tokens = self._extract_tokens_from_cognito()
@@ -61,11 +71,11 @@ class Auth:
     def get_username(self) -> str:
         """Get the username associated with the logged in user."""
         user = self.cognito.get_user()
-        return user._data['email']
+        return user._data["email"]
 
     def request(self, method: str, path: str, **kwargs) -> requests.Response:
         """Make a request."""
-        dec_access_token = self._decode_token(self.tokens['access_token'])
+        dec_access_token = self._decode_token(self.tokens["access_token"])
 
         attempts = 0
         while attempts < self.max_retry_attempts:
@@ -81,14 +91,13 @@ class Auth:
                 self.tokens = self.refresh_tokens()
                 # then run the request again with updated tokens
                 response = self._do_request(method, path, **kwargs)
-            
+
             if response.status_code >= 500:
                 # if server error, retry with exponential backoff
                 delay = min(
                     self.initial_retry_delay * (2 ** (attempts - 1)),
                     self.max_retry_delay,
                 )
-                print(f"Server error {response.status_code}, retrying in {delay} seconds")
                 time.sleep(delay)
                 continue
 
@@ -97,12 +106,12 @@ class Auth:
 
         return response
 
-    def _extract_tokens_from_cognito(self) -> 'dict[str, Any]':
+    def _extract_tokens_from_cognito(self) -> "dict[str, Any]":
         return {
-            'access_token': self.cognito.access_token,
-            'id_token': self.cognito.id_token, # Emporia uses this token for authentication
-            'refresh_token': self.cognito.refresh_token,
-            'token_type': self.cognito.token_type
+            "access_token": self.cognito.access_token,
+            "id_token": self.cognito.id_token,  # Emporia uses this token for authentication
+            "refresh_token": self.cognito.refresh_token,
+            "token_type": self.cognito.token_type,
         }
 
     def _do_request(self, method: str, path: str, **kwargs) -> requests.Response:
@@ -112,29 +121,40 @@ class Auth:
             headers = {}
         else:
             headers = dict(headers)
-        headers["authtoken"] = self.tokens['id_token']
+        headers["authtoken"] = self.tokens["id_token"]
 
         return requests.request(
-            method, f"{self.host}/{path}", **kwargs, headers=headers,
+            method,
+            f"{self.host}/{path}",
+            **kwargs,
+            headers=headers,
             timeout=(self.connect_timeout, self.read_timeout),
         )
-    
+
     def _decode_token(self, token: str) -> dict:
-        '''Decode a JWT token and return the payload as a dictionary, without a hard dependency on pycognito.'''
+        """Decode a JWT token and return the payload as a dictionary, without a hard dependency on pycognito."""
         if not self.pool_wellknown_jwks:
             self.pool_wellknown_jwks = requests.get(
-                f"https://cognito-idp.us-east-2.amazonaws.com/{USER_POOL}/.well-known/jwks.json", timeout=5
+                f"https://cognito-idp.us-east-2.amazonaws.com/{USER_POOL}/.well-known/jwks.json",
+                timeout=5,
             ).json()
-        
+
         kid = jwt.get_unverified_header(token).get("kid")
         keys = self.pool_wellknown_jwks.get("keys")
         key = list(filter(lambda x: x.get("kid") == kid, keys))[0]
         hmac_key = jwt.api_jwk.PyJWK(key).key
-        return jwt.api_jwt.decode(token, algorithms=["RS256"], key=hmac_key, options={"verify_exp": False, "verify_iat": False, "verify_nbf": False})
+        return jwt.api_jwt.decode(
+            token,
+            algorithms=["RS256"],
+            key=hmac_key,
+            options={"verify_exp": False, "verify_iat": False, "verify_nbf": False},
+        )
 
 
 class SimulatedAuth(Auth):
-    def __init__(self, host: str, username: Optional[str] = None, password: Optional[str] = None):
+    def __init__(
+        self, host: str, username: Optional[str] = None, password: Optional[str] = None
+    ):
         self.host = host
         self.username = username
         self.password = password
@@ -142,9 +162,9 @@ class SimulatedAuth(Auth):
         self.read_timeout = 10.03
 
         self.tokens = self.refresh_tokens()
-    
+
     def refresh_tokens(self) -> dict[str, str]:
-        return {'id_token': 'simulator'}
+        return {"id_token": "simulator"}
 
     def get_username(self) -> str:
         """Get the username associated with the logged in user."""

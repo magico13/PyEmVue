@@ -19,6 +19,11 @@ jobs:
           pip install
           build
           --user
+      - name: Set development version
+        run: >-
+          if [ "${{ github.ref }}" != "refs/heads/master" ]; then
+            sed -i "s/VERSION = \".*\"/VERSION = \"$(cat pyemvue/__version__.py | grep -oP '(?<=VERSION = \").*(?=\")').dev${{ github.run_number }}\"/" pyemvue/__version__.py
+          fi
       - name: Build a binary wheel and a source tarball
         run: python3 -m build
       - name: Store the distribution packages
