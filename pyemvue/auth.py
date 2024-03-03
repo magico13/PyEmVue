@@ -30,7 +30,7 @@ class Auth:
         self.read_timeout = read_timeout
         self.token_updater = token_updater
         self.max_retry_attempts = max(max_retry_attempts, 1)
-        self.initial_retry_delay = max(initial_retry_delay, 0)
+        self.initial_retry_delay = max(initial_retry_delay, 0.5)
         self.max_retry_delay = max(max_retry_delay, 0)
         self.pool_wellknown_jwks = None
 
@@ -97,9 +97,6 @@ class Auth:
                 delay = min(
                     self.initial_retry_delay * (2 ** (attempts - 1)),
                     self.max_retry_delay,
-                )
-                print(
-                    f"Server error {response.status_code}, retrying in {delay} seconds"
                 )
                 time.sleep(delay)
                 continue

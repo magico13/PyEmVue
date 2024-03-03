@@ -108,6 +108,9 @@ class PyEmVue(object):
         instant: Optional[datetime.datetime],
         scale=Scale.SECOND.value,
         unit=Unit.KWH.value,
+        max_retry_attempts: int = 5,
+        initial_retry_delay: float = 2.0,
+        max_retry_delay: float = 30.0,
     ) -> "dict[int, VueUsageDevice]":
         """Returns a nested dictionary of VueUsageDevice and VueDeviceChannelUsage with the total usage of the devices over the specified scale. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if not instant:
@@ -119,14 +122,19 @@ class PyEmVue(object):
         url = API_DEVICES_USAGE.format(
             deviceGids=gids, instant=_format_time(instant), scale=scale, unit=unit
         )
-        max_attempts = 3
         attempts = 0
         success = False
+        max_retry_attempts = max(max_retry_attempts, 1)
+        initial_retry_delay = max(initial_retry_delay, 0.5)
+        max_retry_delay = max(max_retry_delay, 0)
 
-        while attempts < max_attempts and not success:
+        while attempts < max_retry_attempts and not success:
             if attempts > 0:
-                # if we're retrying, wait a bit before trying again
-                delay = 2**attempts
+                # if we're retrying, wait a bit before trying again using an exponential backoff
+                delay = min(
+                    initial_retry_delay * (2 ** (attempts - 1)),
+                    max_retry_delay,
+                )
                 time.sleep(delay)
             attempts += 1
             response = self.auth.request("get", url)
@@ -153,6 +161,9 @@ class PyEmVue(object):
                     success = False
             else:
                 success = False
+
+        # if we still haven't fully succeeded, return the data we did manage to get
+
         if response:
             response.raise_for_status()
         return devices
