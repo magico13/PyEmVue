@@ -24,7 +24,7 @@ jobs:
           if [ "${{ github.ref }}" == "refs/heads/master" ]; then
             # If the branch is master, set to a release candidate version
             sed -i "s/VERSION = \".*\"/VERSION = \"$(cat pyemvue/__version__.py | grep -oP '(?<=VERSION = \").*(?=\")').rc${{ github.run_number }}\"/" pyemvue/__version__.py
-          elif [ "${{ github.ref }}" != "refs/tags/*" ]; then
+          elif [[ ! "${{ github.ref }}" =~ ^refs/tags/.* ]]; then
             # If the branch is not master and not a tag, set to a development version
             sed -i "s/VERSION = \".*\"/VERSION = \"$(cat pyemvue/__version__.py | grep -oP '(?<=VERSION = \").*(?=\")').dev${{ github.run_number }}\"/" pyemvue/__version__.py
           fi
