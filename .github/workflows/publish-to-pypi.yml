@@ -1,10 +1,10 @@
-name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
+name: Publish distribution to PyPI and TestPyPI
 
 on: push
 
 jobs:
     build:
-      name: Build distribution 📦
+      name: Build distribution
       runs-on: ubuntu-latest
   
       steps:
@@ -21,7 +21,11 @@ jobs:
           --user
       - name: Set development version
         run: >-
-          if [ "${{ github.ref }}" != "refs/heads/master" ]; then
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            # If the branch is master, set to a release candidate version
+            sed -i "s/VERSION = \".*\"/VERSION = \"$(cat pyemvue/__version__.py | grep -oP '(?<=VERSION = \").*(?=\")').rc${{ github.run_number }}\"/" pyemvue/__version__.py
+          elif [ "${{ github.ref }}" != "refs/tags/*" ]; then
+            # If the branch is not master and not a tag, set to a development version
             sed -i "s/VERSION = \".*\"/VERSION = \"$(cat pyemvue/__version__.py | grep -oP '(?<=VERSION = \").*(?=\")').dev${{ github.run_number }}\"/" pyemvue/__version__.py
           fi
       - name: Build a binary wheel and a source tarball
@@ -34,7 +38,7 @@ jobs:
 
     publish-to-pypi:
       name: >-
-        Publish Python 🐍 distribution 📦 to PyPI
+        Publish to PyPI
       if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
       needs:
       - build
@@ -51,12 +55,12 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-      - name: Publish distribution 📦 to PyPI
+      - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
     github-release:
       name: >-
-        Sign the Python 🐍 distribution 📦 with Sigstore
+        Sign the distribution with Sigstore
         and upload them to GitHub Release
       needs:
       - publish-to-pypi
@@ -78,14 +82,6 @@ jobs:
           inputs: >-
             ./dist/*.tar.gz
             ./dist/*.whl
-      - name: Create GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create
-          '${{ github.ref_name }}'
-          --repo '${{ github.repository }}'
-          --notes ""
       - name: Upload artifact signatures to GitHub Release
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -98,7 +94,7 @@ jobs:
           --repo '${{ github.repository }}'
   
     publish-to-testpypi:
-      name: Publish Python 🐍 distribution 📦 to TestPyPI
+      name: Publish to TestPyPI
       needs:
       - build
       runs-on: ubuntu-latest
@@ -116,7 +112,7 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-      - name: Publish distribution 📦 to TestPyPI
+      - name: Publish distribution to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
