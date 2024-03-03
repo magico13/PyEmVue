@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyemvue"
-version = "0.18.3"
+dynamic = ["version"]
 authors = [
   { name="magico13", email="magico1313@gmail.com" },
 ]
@@ -27,3 +27,6 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/magico13/PyEmVue"
 Issues = "https://github.com/magico13/PyEmVue/issues"
+
+[tool.hatch.version]
+path = "pyemvue/__version__.py"
