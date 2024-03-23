@@ -20,6 +20,7 @@ from pyemvue.device import (
     Vehicle,
     VehicleStatus,
 )
+from pyemvue.basemodel import ChannelUsageData
 
 API_ROOT = "https://api.emporiaenergy.com"
 API_CHANNELS = "devices/{deviceGid}/channels"
@@ -57,8 +58,14 @@ class PyEmVue(object):
             j = response.json()
             if "msg" in j:
                 return j["msg"]
+            
+    def _get_raw(self, endpoint: str, **kwargs: Any) -> Any:
+        response = self.auth.request("get", endpoint, **kwargs)
+        response.raise_for_status()
+        return response.json()
 
-    def get_devices(self) -> "list[VueDevice]":
+
+    def get_devices(self) -> list[VueDevice]:
         """Get all devices under the current customer account."""
         response = self.auth.request("get", API_CUSTOMER_DEVICES)
         response.raise_for_status()
@@ -98,16 +105,15 @@ class PyEmVue(object):
         response = self.auth.request("get", API_CUSTOMER)
         response.raise_for_status()
         if response.text:
-            j = response.json()
-            return Customer().from_json_dictionary(j)
+            return Customer(**response.json())
         return None
 
     def get_device_list_usage(
         self,
         deviceGids: Union[str, "list[str]"],
         instant: Optional[datetime.datetime],
-        scale=Scale.SECOND.value,
-        unit=Unit.KWH.value,
+        scale=Scale.SECOND,
+        unit=Unit.KWH,
         max_retry_attempts: int = 5,
         initial_retry_delay: float = 2.0,
         max_retry_delay: float = 30.0,
@@ -170,13 +176,13 @@ class PyEmVue(object):
         channel: Union[VueDeviceChannel, VueDeviceChannelUsage],
         start: Optional[datetime.datetime] = None,
         end: Optional[datetime.datetime] = None,
-        scale=Scale.SECOND.value,
-        unit=Unit.KWH.value,
-    ) -> "tuple[list[float], Optional[datetime.datetime]]":
+        scale: Scale = Scale.SECOND,
+        unit: Unit = Unit.KWH,
+    ) -> ChannelUsageData:
         """Gets the usage over a given time period and the start of the measurement period. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if channel.channel_num in ["MainsFromGrid", "MainsToGrid"]:
             # These is not populated for the special Mains data as of right now
-            return [], start
+            return ChannelUsageData(**dict(first_usage_instant=start, usage_list=[]))
         if not start:
             start = datetime.datetime.now(datetime.timezone.utc)
         if not end:
@@ -189,17 +195,7 @@ class PyEmVue(object):
             scale=scale,
             unit=unit,
         )
-        response = self.auth.request("get", url)
-        response.raise_for_status()
-        usage: list[float] = []
-        instant = start
-        if response.text:
-            j = response.json()
-            if "firstUsageInstant" in j:
-                instant = parse(j["firstUsageInstant"])
-            if "usageList" in j:
-                usage = j["usageList"]
-        return usage, instant
+        return ChannelUsageData(**self._get_raw(url))
 
     def get_outlets(self) -> "list[OutletDevice]":
         """Return a list of outlets linked to the account. Deprecated, use get_devices_status instead."""

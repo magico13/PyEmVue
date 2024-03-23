@@ -1,4 +1,5 @@
-.venv
+.env
+.venv*
 .vscode
 __pycache__
 /dist

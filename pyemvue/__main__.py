@@ -101,7 +101,7 @@ def main():
                 )
 
     monthly, start = vue.get_chart_usage(
-        devices[0].channels[0], scale=Scale.MONTH.value
+        devices[0].channels[0], scale=Scale.MONTH
     )
     print(monthly[0], "kwh used since", start.isoformat())
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -114,7 +114,7 @@ def main():
     yesterday = yesterday.replace(tzinfo=None)
     print("Total usage for today in kwh: ")
 
-    use = vue.get_device_list_usage(deviceGids, now, Scale.DAY.value)
+    use = vue.get_device_list_usage(deviceGids, now, Scale.DAY)
     print_recursive(use, deviceInfo)
     print("Total usage for yesterday in kwh: ")
     for gid, device in deviceInfo.items():
@@ -123,20 +123,20 @@ def main():
                 chan,
                 yesterday,
                 yesterday + datetime.timedelta(hours=23, minutes=59),
-                Scale.DAY.value,
+                Scale.DAY,
             )
             if usage and usage[0]:
                 print(f"{chan.device_gid} ({chan.channel_num}): {usage[0][0]} kwh")
     print("Average usage over the last minute in watts: ")
-    use = vue.get_device_list_usage(deviceGids, None, Scale.MINUTE.value)
+    use = vue.get_device_list_usage(deviceGids, None, Scale.MINUTE)
     print_recursive(use, deviceInfo, scaleBy=60000, unit="W")
 
     usage_over_time, start_time = vue.get_chart_usage(
         devices[0].channels[0],
         datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7),
         datetime.datetime.now(datetime.timezone.utc),
-        scale=Scale.DAY.value,
-        unit=Unit.KWH.value,
+        scale=Scale.DAY,
+        unit=Unit.KWH,
     )
 
     print("Usage for the last seven days starting", start_time.isoformat())

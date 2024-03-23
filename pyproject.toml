@@ -21,7 +21,8 @@ dependencies = [
     "pycognito>=2024.2.0",
     "python-dateutil>=2.8.2",
     "requests>=2.26.0",
-    "typing_extensions>=4.0.1"
+    "typing_extensions>=4.0.1",
+    "pydantic>=2.6.4"
 ]
 
 [project.urls]
