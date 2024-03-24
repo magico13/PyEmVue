@@ -1,31 +1,12 @@
-import datetime
+from datetime import datetime
+
+from pyemvue.basemodel import BaseModel
+from pydantic import Field
 
 
-class Customer(object):
-    def __init__(
-        self,
-        gid=0,
-        email="",
-        firstName="",
-        lastName="",
-        createdAt=datetime.datetime(1970, 1, 1),
-    ):
-        self.customer_gid = gid
-        self.email = email
-        self.first_name = firstName
-        self.last_name = lastName
-        self.created_at = createdAt
-
-    def from_json_dictionary(self, js):
-        """Populate customer data from a dictionary extracted from the response json."""
-        if "customerGid" in js:
-            self.customer_gid = js["customerGid"]
-        if "email" in js:
-            self.email = js["email"]
-        if "firstName" in js:
-            self.first_name = js["firstName"]
-        if "lastName" in js:
-            self.last_name = js["lastName"]
-        if "createdAt" in js:
-            self.created_at = js["createdAt"]
-        return self
+class Customer(BaseModel):        
+    customer_gid: int = Field(default=0)
+    email: str = Field(default="")
+    first_name: str = Field(default="")
+    last_name: str = Field(default="")
+    created_at: datetime = Field(default=datetime(1970, 1, 1))
