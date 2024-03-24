@@ -10,9 +10,10 @@ class Scale(str, Enum):
     WEEK = "1W"
     MONTH = "1MON"
     YEAR = "1Y"
-    
+
     def __str__(self) -> str:
         return self.value
+
 
 class Unit(str, Enum):
     KWH = "KilowattHours"

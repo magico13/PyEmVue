@@ -4,8 +4,9 @@ import datetime
 from typing import Any, Optional
 
 import pydantic
-from pydantic import Field
 from humps import camelize
+from pydantic import Field
+
 
 class BaseModel(pydantic.BaseModel):
     class Config:
@@ -31,6 +32,7 @@ class LocationInformation(BaseModel):
     swimming_pool: Optional[str]
     hot_tub: Optional[str]
 
+
 class LocationProperties(BaseModel):
     display_name: Optional[str] = Field(default=None)
     device_gid: Optional[int] = Field(default=None)
@@ -41,7 +43,7 @@ class LocationProperties(BaseModel):
     billing_cycle_start_day: Optional[int] = Field(default=None)
     location_information: Optional[LocationInformation] = Field(default=None)
     peak_demand_dollar_per_kw: Optional[float] = Field(default=None)
-    usageCentPerKwHour: Optional[float] = Field(default = None)
+    usageCentPerKwHour: Optional[float] = Field(default=None)
     zip_code: Optional[str] = Field(default=None)
 
 

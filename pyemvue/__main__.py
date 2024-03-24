@@ -1,5 +1,6 @@
-import sys
 import datetime
+import sys
+
 import dateutil
 
 # Our files
@@ -100,9 +101,7 @@ def main():
                     ),
                 )
 
-    monthly, start = vue.get_chart_usage(
-        devices[0].channels[0], scale=Scale.MONTH
-    )
+    monthly, start = vue.get_chart_usage(devices[0].channels[0], scale=Scale.MONTH)
     print(monthly[0], "kwh used since", start.isoformat())
     now = datetime.datetime.now(datetime.timezone.utc)
     midnight = (
