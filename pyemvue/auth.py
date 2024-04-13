@@ -54,12 +54,14 @@ class Auth:
             self.cognito = Cognito(
                 USER_POOL, CLIENT_ID, user_pool_region="us-east-2", username=username
             )
-            self.cognito.authenticate(password=password)
-
-        self.tokens = self.refresh_tokens()
+            self._password = password
 
     def refresh_tokens(self) -> "dict[str, str]":
         """Refresh and return new tokens."""
+        if self._password:
+            self.cognito.authenticate(password=self._password)
+            self._password = None
+
         self.cognito.renew_access_token()
         tokens = self._extract_tokens_from_cognito()
 
@@ -160,8 +162,6 @@ class SimulatedAuth(Auth):
         self.password = password
         self.connect_timeout = 6.03
         self.read_timeout = 10.03
-
-        self.tokens = self.refresh_tokens()
 
     def refresh_tokens(self) -> dict[str, str]:
         return {"id_token": "simulator"}
