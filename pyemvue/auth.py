@@ -35,7 +35,6 @@ class Auth:
         self.initial_retry_delay = max(initial_retry_delay, 0.5)
         self.max_retry_delay = max(max_retry_delay, 0)
         self.pool_wellknown_jwks = None
-        self.tokens: dict[str, str] = {}
 
         self._password = None
 
