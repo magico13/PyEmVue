@@ -366,6 +366,11 @@ class PyEmVue(object):
             token_updater=self._store_tokens,
         )
 
+        try:
+            self.auth.refresh_tokens()
+        except self.auth.cognito.client.exceptions.NotAuthorizedException as ex:
+            return False
+
         if self.auth.tokens:
             self.username = self.auth.get_username()
             self.customer = self.get_customer_details()
