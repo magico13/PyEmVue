@@ -6,9 +6,11 @@ import requests
 
 # These provide AWS cognito authentication support
 from pycognito import Cognito
+from pycognito.exceptions import TokenVerificationException
 
 CLIENT_ID = "4qte47jbstod8apnfic0bunmrq"
 USER_POOL = "us-east-2_ghlOXVLi1"
+USER_POOL_URL = f"https://cognito-idp.us-east-2.amazonaws.com/{USER_POOL}"
 
 
 class Auth:
@@ -33,6 +35,9 @@ class Auth:
         self.initial_retry_delay = max(initial_retry_delay, 0.5)
         self.max_retry_delay = max(max_retry_delay, 0)
         self.pool_wellknown_jwks = None
+        self.tokens = tokens or {}
+
+        self._password = None
 
         if (
             tokens
@@ -58,12 +63,20 @@ class Auth:
 
     def refresh_tokens(self) -> "dict[str, str]":
         """Refresh and return new tokens."""
-        if self._password:
-            self.cognito.authenticate(password=self._password)
+        try:
+            if self._password:
+                self.cognito.authenticate(password=self._password)
+
+            self.cognito.renew_access_token()
+        except TokenVerificationException as ex:
+            # ignore iat errors (until https://github.com/NabuCasa/pycognito/issues/225 is fixed)
+            if "The token is not yet valid (iat)" not in ex.args[0]:
+                raise
+        finally:
             self._password = None
 
-        self.cognito.renew_access_token()
         tokens = self._extract_tokens_from_cognito()
+        self.tokens = tokens
 
         if self.token_updater is not None:
             self.token_updater(tokens)
@@ -133,11 +146,11 @@ class Auth:
             timeout=(self.connect_timeout, self.read_timeout),
         )
 
-    def _decode_token(self, token: str) -> dict:
+    def _decode_token(self, token: str, verify_exp: bool = False) -> dict:
         """Decode a JWT token and return the payload as a dictionary, without a hard dependency on pycognito."""
         if not self.pool_wellknown_jwks:
             self.pool_wellknown_jwks = requests.get(
-                f"https://cognito-idp.us-east-2.amazonaws.com/{USER_POOL}/.well-known/jwks.json",
+                USER_POOL_URL + "/.well-known/jwks.json",
                 timeout=5,
             ).json()
 
@@ -149,9 +162,9 @@ class Auth:
             token,
             algorithms=["RS256"],
             key=hmac_key,
-            options={"verify_exp": False, "verify_iat": False, "verify_nbf": False},
+            issuer=self.cognito.user_pool_url,
+            options={"verify_exp": verify_exp, "verify_iat": False, "verify_nbf": False},
         )
-
 
 class SimulatedAuth(Auth):
     def __init__(
