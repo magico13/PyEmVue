@@ -50,7 +50,7 @@ def main():
     deviceGids: list[int] = []
     deviceInfo: dict[int, VueDevice] = {}
     for device in devices:
-        if not device.device_gid in deviceGids:
+        if device.device_gid not in deviceGids:
             deviceGids.append(device.device_gid)
             deviceInfo[device.device_gid] = device
             print(

@@ -237,7 +237,7 @@ class PyEmVue(object):
 
         try:
             self.auth.refresh_tokens()
-        except self.auth.cognito.client.exceptions.NotAuthorizedException as ex:
+        except self.auth.cognito.client.exceptions.NotAuthorizedException:
             return False
 
         if self.auth.tokens:
