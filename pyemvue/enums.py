@@ -13,6 +13,7 @@ class Scale(Enum):
 
 
 class Unit(Enum):
+    VOLTS = "Voltage"
     KWH = "KilowattHours"
     USD = "Dollars"
     AMPHOURS = "AmpHours"
