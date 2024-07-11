@@ -24,8 +24,12 @@ state.set_channel_1min_watts(1003, "1,2,3", 10 * 120)
 # plug 1 is pulling 5 amps at 120 volts
 state.set_channel_1min_watts(1001, "1,2,3", 5 * 120)
 
-# the overall house is pulling 95 amps at 240 volts
-state.set_channel_1min_watts(1000, "1,2,3", 95 * 240)
+# channel 2 is generating 10 amps and is bidirectional
+state.set_channel_bidirectionality(1000, "2", True)
+state.set_channel_1min_watts(1000, "2", -10 * 120)
+
+# the overall house is pulling 85 amps at 240 volts
+state.set_channel_1min_watts(1000, "1,2,3", 85 * 240)
 
 # the balance is effectively 40 amps
 state.set_channel_1min_watts(1000, "Balance", 40 * 240)

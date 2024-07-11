@@ -85,6 +85,7 @@ class SimulatorChannel(SimulatorBase):
     channelNum: str
     channelMultiplier: float = 1.0
     channelTypeGid: Optional[int]
+    type: str
 
 
 class SimulatorLatitudeLongitude(SimulatorBase):
@@ -109,6 +110,7 @@ class SimulatorLocationProperties(SimulatorBase):
     latitudeLongitude: SimulatorLatitudeLongitude
     utilityRateGid: Optional[int]
     deviceName: Optional[str]
+    displayName: Optional[str]
     deviceGid: int
     zipCode: str
     billingCycleStartDay: int
@@ -154,6 +156,7 @@ class ChannelType(SimulatorBase):
     channelTypeGid: int
     description: str
     selectable: bool
+    allowsBidirectional: bool
 
 
 class SimulatorLoad(SimulatorBase):

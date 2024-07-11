@@ -21,6 +21,7 @@ class VueDevice(object):
 
         # extra info
         self.device_name = ""
+        self.display_name = ""
         self.zip_code = "00000"
         self.time_zone = ""
         self.usage_cent_per_kw_hour = 0.0
@@ -84,6 +85,8 @@ class VueDevice(object):
         """Adds the values from the get_device_properties method."""
         if "deviceName" in js:
             self.device_name = js["deviceName"]
+        if "displayName" in js:
+            self.display_name = js["displayName"]
         if "zipCode" in js:
             self.zip_code = js["zipCode"]
         if "timeZone" in js:
@@ -138,6 +141,7 @@ class VueDeviceChannel(object):
         self.channel_multiplier = channelMultiplier
         self.channel_type_gid = channelTypeGid
         self.nested_devices = {}
+        self.type = ""
 
     def from_json_dictionary(self, js: "dict[str, Any]") -> Self:
         """Populate device channel data from a dictionary extracted from the response json."""
@@ -151,7 +155,11 @@ class VueDeviceChannel(object):
             self.channel_multiplier = js["channelMultiplier"]
         if "channelTypeGid" in js:
             self.channel_type_gid = js["channelTypeGid"]
+        if "type" in js:
+            self.type = js["type"]
         return self
+    
+    # Known types: Main, FiftyAmp, FiftyAmpBidirectional
 
     def as_dictionary(self) -> "dict[str, Any]":
         """Returns a dictionary of the device channel data."""

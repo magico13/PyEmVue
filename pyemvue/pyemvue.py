@@ -175,7 +175,7 @@ class PyEmVue(object):
     ) -> "tuple[list[float], Optional[datetime.datetime]]":
         """Gets the usage over a given time period and the start of the measurement period. Note that you may need to scale this to get a rate (1MIN in kw = 60*result)"""
         if channel.channel_num in ["MainsFromGrid", "MainsToGrid"]:
-            # These is not populated for the special Mains data as of right now
+            # This is not populated for the special Mains data as of right now
             return [], start
         if not start:
             start = datetime.datetime.now(datetime.timezone.utc)

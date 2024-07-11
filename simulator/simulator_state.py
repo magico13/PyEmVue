@@ -217,6 +217,7 @@ class SimulatorState(object):
 
         outlet_device.locationProperties.deviceGid = gid
         outlet_device.locationProperties.deviceName = name
+        outlet_device.locationProperties.displayName = name
         self.devices.append(outlet_device)
         return outlet
 
@@ -271,6 +272,7 @@ class SimulatorState(object):
 
         charger_device.locationProperties.deviceGid = gid
         charger_device.locationProperties.deviceName = name
+        charger_device.locationProperties.displayName = name
         self.devices.append(charger_device)
         return charger
 
@@ -312,6 +314,7 @@ class SimulatorState(object):
                 channelNum="1,2,3",
                 channelMultiplier=1.0,
                 channelTypeGid=None,
+                type="Main",
             )
         )
         # Create the other channels as children of the "WAT001" device
@@ -332,11 +335,13 @@ class SimulatorState(object):
                         channelNum=str(i),
                         channelMultiplier=1.0,
                         channelTypeGid=18,
+                        type="FiftyAmp"
                     )
                 )
         # Add the device to the list
         vue.locationProperties.deviceGid = gid
         vue.locationProperties.deviceName = name
+        vue.locationProperties.displayName = name
         self.devices.append(vue)
         return vue
 
@@ -362,3 +367,22 @@ class SimulatorState(object):
         self, deviceGid: int, channelNum: str, usage: Optional[float]
     ):
         self.usage_dict_1min[f"{deviceGid}_{channelNum}"] = usage
+
+    def set_channel_bidirectionality(
+            self, deviceGid: int, channelNum: str, bidirectional: bool
+    ):
+        # this should technically check if a channel type is allowed to be bidirectional
+        # but that won't really affect the simulation, even if it results in invalid real states
+        new_type = "FiftyAmpBidirectional" if bidirectional else "FiftyAmp"
+        for device in self.devices:
+            if device.deviceGid == deviceGid:
+                for channel in device.channels:
+                    if channel.channelNum == channelNum:
+                        channel.type = new_type
+                        return
+                for sub_device in device.devices:
+                    for channel in sub_device.channels:
+                        if channel.channelNum == channelNum:
+                            channel.type = new_type
+                            return
+        raise Exception(f"Device {deviceGid} or channel {channelNum} not found")
