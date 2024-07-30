@@ -6,7 +6,6 @@ import requests
 
 # These provide AWS cognito authentication support
 from pycognito import Cognito
-from pycognito.exceptions import TokenVerificationException
 
 CLIENT_ID = "4qte47jbstod8apnfic0bunmrq"
 USER_POOL = "us-east-2_ghlOXVLi1"
@@ -35,6 +34,7 @@ class Auth:
         self.initial_retry_delay = max(initial_retry_delay, 0.5)
         self.max_retry_delay = max(max_retry_delay, 0)
         self.pool_wellknown_jwks = None
+        self.tokens = {}
 
         self._password = None
 
@@ -62,17 +62,11 @@ class Auth:
 
     def refresh_tokens(self) -> "dict[str, str]":
         """Refresh and return new tokens."""
-        try:
-            if self._password:
-                self.cognito.authenticate(password=self._password)
+        if self._password:
+            self.cognito.authenticate(password=self._password)
 
-            self.cognito.renew_access_token()
-        except TokenVerificationException as ex:
-            # ignore iat errors (until https://github.com/NabuCasa/pycognito/issues/225 is fixed)
-            if "The token is not yet valid (iat)" not in ex.args[0]:
-                raise
-        finally:
-            self._password = None
+        self.cognito.renew_access_token()
+        self._password = None
 
         tokens = self._extract_tokens_from_cognito()
         self.tokens = tokens
@@ -89,6 +83,9 @@ class Auth:
 
     def request(self, method: str, path: str, **kwargs) -> requests.Response:
         """Make a request."""
+        if not self.tokens or not self.tokens["access_token"]:
+            raise ValueError("Not authenticated. Incorrect username or password?")
+
         dec_access_token = self._decode_token(self.tokens["access_token"])
 
         attempts = 0

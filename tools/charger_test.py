@@ -13,10 +13,14 @@ if not os.path.exists('keys.json'):
     password = getpass.getpass("Enter your password: ")
 
     # Log in to PyEmVue
-    vue.login(username=email, password=password, token_storage_file='keys.json')
+    logged_in = vue.login(username=email, password=password, token_storage_file='keys.json')
 else:
     # If keys.json exists, log in using the keys in the file
-    vue.login(token_storage_file='keys.json')
+    logged_in = vue.login(token_storage_file='keys.json')
+
+print("Logged in?", logged_in)
+if not logged_in:
+    raise Exception("Login failed")
 
 # Get the list of chargers
 chargers = vue.get_chargers()
