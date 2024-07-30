@@ -1,9 +1,12 @@
 from pyemvue.pyemvue import PyEmVue
 
 vue = PyEmVue()
-vue.login(token_storage_file='keys.json')
-print('Logged in.')
+logged_in = vue.login(token_storage_file='keys.json')
+print('Logged in?', logged_in)
 print()
+
+if not logged_in:
+    raise Exception('Login failed')
 
 devices = vue.get_devices()
 outlets, chargers = vue.get_devices_status()
