@@ -371,6 +371,9 @@ class SimulatorState(object):
     ):
         self.usage_dict_1min[f"{deviceGid}_{channelNum}"] = usage
 
+    def get_channel_1min_usage(self, deviceGid: int, channelNum: str) -> Optional[float]:
+        return self.usage_dict_1min.get(f"{deviceGid}_{channelNum}", 0.0)
+
     def set_channel_bidirectionality(
             self, deviceGid: int, channelNum: str, bidirectional: bool
     ):

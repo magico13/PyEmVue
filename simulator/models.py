@@ -202,6 +202,10 @@ class CreateVueRequest(SimulatorBase):
     parentDeviceGid: Optional[int] = None
     parentChannelNum: Optional[str] = None
 
+class UpdateUsageRequest(SimulatorBase):
+    watts: Optional[float] = None
+    usage: Optional[float] = None
+    scale: Optional[str] = "1MIN"
 
 if TYPE_CHECKING:
     from .models import DeviceUsage  # Avoid circular import

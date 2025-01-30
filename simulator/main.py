@@ -31,8 +31,9 @@ state.set_channel_1min_watts(1000, "2", -10 * 120)
 # the overall house is pulling 85 amps at 240 volts
 state.set_channel_1min_watts(1000, "1,2,3", 85 * 240)
 
-# the balance is effectively 40 amps
-state.set_channel_1min_watts(1000, "Balance", 40 * 240)
+# the balance is effectively 42.5 amps
+# TODO: this should be calculated based on the actual usage
+state.set_channel_1min_watts(1000, "Balance", 42.5 * 240)
 
 
 app = FastAPI()
@@ -187,17 +188,16 @@ def delete_device(deviceGid: int, response: Response) -> SimulatorDevice:
 
 @app.put("/simulator/device/{deviceGid}/channel/{channelNum}/usage")
 def put_channel_usage(
-    deviceGid: int,
-    channelNum: str,
-    watts: Optional[float] = None,
-    usage: Optional[float] = None,
-    scale: Optional[str] = "1MIN",
-) -> None:
-    if scale == "1MIN":
-        if usage is not None:  # usage takes precedence
-            state.set_channel_1min_usage(deviceGid, channelNum, usage)
+    deviceGid: int, channelNum: str, updateUsage: UpdateUsageRequest
+) -> float | None:
+    if updateUsage.scale == "1MIN":
+        if updateUsage.usage is not None:  # usage takes precedence
+            state.set_channel_1min_usage(deviceGid, channelNum, updateUsage.usage)
+        elif updateUsage.watts is not None:
+            state.set_channel_1min_watts(deviceGid, channelNum, updateUsage.watts)
         else:
-            state.set_channel_1min_watts(deviceGid, channelNum, watts)
+            # return a 400 if neither usage nor watts is provided
+            raise ValueError("Either usage or watts must be provided")
         # probably should return the state of the channel here
-        return None
+        return state.get_channel_1min_usage(deviceGid, channelNum)
     # other scales are not supported yet
