@@ -28,6 +28,7 @@ class SimulatorState(object):
             ),
             utilityRateGid=None,
             deviceName=None,
+            displayName=None,
             deviceGid=1234,
             zipCode="10001",
             billingCycleStartDay=1,
@@ -211,6 +212,7 @@ class SimulatorState(object):
                     channelNum="1,2,3",
                     channelMultiplier=1.0,
                     channelTypeGid=23,
+                    type="FiftyAmp"
                 )
             ],
         )
@@ -266,6 +268,7 @@ class SimulatorState(object):
                     channelNum="1,2,3",
                     channelMultiplier=1.0,
                     channelTypeGid=25,
+                    type="FiftyAmp"
                 )
             ],
         )

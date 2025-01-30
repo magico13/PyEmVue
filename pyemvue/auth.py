@@ -171,6 +171,7 @@ class SimulatedAuth(Auth):
         self.password = password
         self.connect_timeout = 6.03
         self.read_timeout = 10.03
+        self.tokens = self.refresh_tokens()
 
     def refresh_tokens(self) -> dict[str, str]:
         return {"id_token": "simulator"}
