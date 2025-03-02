@@ -169,6 +169,7 @@ class VueDeviceChannel(object):
             "channelNum": self.channel_num,
             "channelMultiplier": self.channel_multiplier,
             "channelTypeGid": self.channel_type_gid,
+            "type": self.type
         }
 
 
