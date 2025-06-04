@@ -142,6 +142,7 @@ class VueDeviceChannel(object):
         self.channel_type_gid = channelTypeGid
         self.nested_devices = {}
         self.type = ""
+        self.parent_channel_num = ""
 
     def from_json_dictionary(self, js: "dict[str, Any]") -> Self:
         """Populate device channel data from a dictionary extracted from the response json."""
@@ -157,6 +158,8 @@ class VueDeviceChannel(object):
             self.channel_type_gid = js["channelTypeGid"]
         if "type" in js:
             self.type = js["type"]
+        if "parentChannelNum" in js:
+            self.parent_channel_num = js["parentChannelNum"]
         return self
     
     # Known types: Main, FiftyAmp, FiftyAmpBidirectional
@@ -169,7 +172,8 @@ class VueDeviceChannel(object):
             "channelNum": self.channel_num,
             "channelMultiplier": self.channel_multiplier,
             "channelTypeGid": self.channel_type_gid,
-            "type": self.type
+            "type": self.type,
+            "parentChannelNum": self.parent_channel_num
         }
 
 
