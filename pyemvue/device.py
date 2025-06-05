@@ -142,7 +142,7 @@ class VueDeviceChannel(object):
         self.channel_type_gid = channelTypeGid
         self.nested_devices = {}
         self.type = ""
-        self.parent_channel_num = ""
+        self.parent_channel_num = None
 
     def from_json_dictionary(self, js: "dict[str, Any]") -> Self:
         """Populate device channel data from a dictionary extracted from the response json."""

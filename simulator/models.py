@@ -86,7 +86,7 @@ class SimulatorChannel(SimulatorBase):
     channelMultiplier: float = 1.0
     channelTypeGid: Optional[int]
     type: str
-    parentChannelNum: str = ""
+    parentChannelNum: Optional[str] = None
 
 
 class SimulatorLatitudeLongitude(SimulatorBase):
