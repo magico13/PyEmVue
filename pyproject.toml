@@ -24,9 +24,40 @@ dependencies = [
     "typing_extensions>=4.0.1"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
 [project.urls]
 Homepage = "https://github.com/magico13/PyEmVue"
 Issues = "https://github.com/magico13/PyEmVue/issues"
 
 [tool.hatch.version]
 path = "pyemvue/__version__.py"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",  # Line too long
+    "E722",  # Do not use bare `except` (legacy pyemvue)
+    "E713",  # Test for membership should be `not in` (legacy pyemvue)
+    "F841",  # Unused variable (legacy pyemvue)
+    "W291",  # Trailing whitespace
+    "W292",  # No newline at end of file
+    "W293",  # Blank line contains whitespace
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
