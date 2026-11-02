@@ -1,0 +1,50 @@
+{
+  "monitors_response": {
+    "monitors": [
+      {
+        "device_id": "A2237A0000000000000001",
+        "enabled": false
+      },
+      {
+        "device_id": "F2410A0000000000000002",
+        "enabled": true
+      }
+    ],
+    "unavailable_monitors": [
+      "A2304A0000000000000004"
+    ]
+  },
+  "energy_monitor_without_window": {
+    "device_id": "F2410A0000000000000002",
+    "loads": [
+      {
+        "load_gid": 138878,
+        "enabled": true
+      }
+    ],
+    "solar_window": null,
+    "sunrise": "2026-11-01T14:29:49Z",
+    "sunset": "2026-11-02T00:10:38Z"
+  },
+  "energy_monitor_with_window": {
+    "device_id": "F2410A0000000000000002",
+    "loads": [
+      {
+        "load_gid": 138878,
+        "enabled": true
+      }
+    ],
+    "solar_window": {
+      "start": {
+        "anchor": "SUNRISE",
+        "offset_seconds": 3600
+      },
+      "end": {
+        "anchor": "SUNSET",
+        "offset_seconds": -3600
+      }
+    },
+    "sunrise": "2026-11-01T14:29:49Z",
+    "sunset": "2026-11-02T00:10:38Z"
+  }
+}

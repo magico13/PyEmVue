@@ -46,6 +46,11 @@ pythonpath = ["."]
 [tool.ruff]
 target-version = "py39"
 line-length = 88
+extend-exclude = [
+    "pyemvue/__init__.py",
+    "pyemvue/__main__.py",
+    "pyemvue/auth.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W"]
