@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 from typing import Any, Optional, Union
 import requests
@@ -10,8 +12,10 @@ from pyemvue.auth import Auth, SimulatedAuth
 from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
 from pyemvue.device import (
+    ChannelDevice,
     ChargerDevice,
     VueDevice,
+    VueSite,
     OutletDevice,
     VueDeviceChannel,
     VueDeviceChannelUsage,
@@ -35,6 +39,12 @@ API_OUTLET = "devices/outlet"
 API_VEHICLES = "customers/vehicles"
 API_VEHICLE_STATUS = "vehicles/v2/settings?vehicleGid={vehicleGid}"
 
+# V1 API endpoints
+API_ROOT_V1 = "https://api.emporiaenergy.com/v1"
+API_DEVICES_V1 = "customers/devices"
+API_CHANNELS_V1 = "customers/devices/channels"
+API_SITES_V1 = "customers/sites"
+
 API_MAINTENANCE = (
     "https://s3.amazonaws.com/com.emporiaenergy.manual.ota/maintenance/maintenance.json"
 )
@@ -45,6 +55,8 @@ class PyEmVue(object):
         self.username = None
         self.token_storage_file = None
         self.customer = None
+        self.auth: Optional[Auth] = None
+        self.auth_v1: Optional[Auth] = None
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout
 
@@ -72,6 +84,111 @@ class PyEmVue(object):
                         for subdev in dev["devices"]:
                             devices.append(VueDevice().from_json_dictionary(subdev))
         return devices
+
+    def get_devices_v1(self, include_channels: bool = True) -> list[VueDevice]:
+        """Get all devices under the current customer account using the V1 endpoint."""
+        auth = self.auth_v1 or self.auth
+        response = auth.request("get", API_DEVICES_V1)
+        response.raise_for_status()
+        devices: list[VueDevice] = []
+        if response.text:
+            j = response.json()
+            raw_devices = j.get("devices", []) if isinstance(j, dict) else j
+            for dev in raw_devices:
+                devices.append(VueDevice().from_json_dictionary(dev))
+
+        # Post-parse tree linking pass:
+        # Resolve parent_device_id -> parent_device_gid, parent_device_gid -> parent_device_id, and parent.children
+        devices_by_id: dict[str, VueDevice] = {
+            d.device_id: d for d in devices if d.device_id
+        }
+        devices_by_gid: dict[int, VueDevice] = {
+            d.device_gid: d for d in devices if d.device_gid
+        }
+
+        for d in devices:
+            parent = None
+            if d.parent_device_id and d.parent_device_id in devices_by_id:
+                parent = devices_by_id[d.parent_device_id]
+                if not d.parent_device_gid:
+                    d.parent_device_gid = parent.device_gid
+            elif d.parent_device_gid and d.parent_device_gid in devices_by_gid:
+                parent = devices_by_gid[d.parent_device_gid]
+                if not d.parent_device_id:
+                    d.parent_device_id = parent.device_id
+
+            if parent:
+                # Map parent_channel_id -> parent_channel_num if channel number is missing
+                if d.parent_channel_id and not d.parent_channel_num:
+                    if parent.channels:
+                        for ch in parent.channels:
+                            if (
+                                ch.channel_id
+                                and ch.channel_id.lower() == d.parent_channel_id.lower()
+                            ):
+                                d.parent_channel_num = ch.channel_num
+                                break
+                            if (
+                                ch.channel_num
+                                and ch.channel_num.lower()
+                                == d.parent_channel_id.lower()
+                            ):
+                                d.parent_channel_num = ch.channel_num
+                                break
+                    if not d.parent_channel_num:
+                        if d.parent_channel_id == "Mains":
+                            d.parent_channel_num = "1,2,3"
+                        elif d.parent_channel_id.startswith("Branch_"):
+                            d.parent_channel_num = d.parent_channel_id.split("_")[1]
+                        else:
+                            d.parent_channel_num = d.parent_channel_id
+
+                # Map parent_channel_num -> parent_channel_id if channel id is missing
+                elif (
+                    d.parent_channel_num and not d.parent_channel_id and parent.channels
+                ):
+                    for ch in parent.channels:
+                        if (
+                            ch.channel_num
+                            and ch.channel_num.lower() == d.parent_channel_num.lower()
+                        ):
+                            d.parent_channel_id = ch.channel_id
+                            break
+
+                if d not in parent.children:
+                    parent.children.append(d)
+
+        if not include_channels:
+            for d in devices:
+                d.channels = []
+
+        return devices
+
+    def get_sites(self) -> list[VueSite]:
+        """Get all configured sites for the customer."""
+        auth = self.auth_v1 or self.auth
+        response = auth.request("get", API_SITES_V1)
+        response.raise_for_status()
+        sites: list[VueSite] = []
+        if response.text:
+            j = response.json()
+            raw_sites = j.get("sites", []) if isinstance(j, dict) else j
+            for s in raw_sites:
+                sites.append(VueSite().from_json_dictionary(s))
+        return sites
+
+    def get_channels(self) -> list[ChannelDevice]:
+        """Get all channels under the current customer account using the V1 endpoint."""
+        auth = self.auth_v1 or self.auth
+        response = auth.request("get", API_CHANNELS_V1)
+        response.raise_for_status()
+        channels: list[ChannelDevice] = []
+        if response.text:
+            j = response.json()
+            if isinstance(j, list):
+                for channel in j:
+                    channels.append(ChannelDevice().from_json_dictionary(channel))
+        return channels
 
     def populate_device_properties(self, device: VueDevice) -> VueDevice:
         """Get details about a specific device"""
@@ -130,7 +247,7 @@ class PyEmVue(object):
         devices: dict[int, VueUsageDevice] = {}
 
         while attempts < max_retry_attempts and update_failed:
-            update_failed = False # reset the flag, if we fail we'll set it again
+            update_failed = False  # reset the flag, if we fail we'll set it again
             if attempts > 0:
                 # if we're retrying, wait a bit before trying again using an exponential backoff
                 delay = min(
@@ -149,7 +266,10 @@ class PyEmVue(object):
                             timestamp=timestamp
                         ).from_json_dictionary(device)
                         # data is missing if any usage is None for any channels. In that case we retry the request and merge results.
-                        data_missing = any(channel_usage.usage is None for channel_usage in populated.channels.values())
+                        data_missing = any(
+                            channel_usage.usage is None
+                            for channel_usage in populated.channels.values()
+                        )
                         update_failed = update_failed or data_missing
                         if not data_missing or attempts >= max_retry_attempts:
                             # only overwrite the device data if we have all the data or we've run out of retries
@@ -373,6 +493,21 @@ class PyEmVue(object):
 
         if self.auth.tokens:
             self.username = self.auth.get_username()
+            # Setup V1 auth for newer API calls
+            self.auth_v1 = Auth(
+                host=API_ROOT_V1,
+                username=self.username,
+                connect_timeout=self.connect_timeout,
+                read_timeout=self.read_timeout,
+                tokens=self.auth.tokens,
+                token_updater=self._store_tokens,
+                as_bearer=True,
+            )
+            try:
+                self.auth_v1.refresh_tokens()
+            except self.auth_v1.cognito.client.exceptions.NotAuthorizedException:
+                return False
+
             self.customer = self.get_customer_details()
             self._store_tokens(self.auth.tokens)
         return self.customer is not None
@@ -382,10 +517,20 @@ class PyEmVue(object):
     ) -> bool:
         self.username = username.lower() if username else None
         self.auth = SimulatedAuth(host=host, username=self.username, password=password)
+        self.auth_v1 = SimulatedAuth(
+            host=f"{host}/v1" if not host.endswith("/v1") else host,
+            username=self.username,
+            password=password,
+            as_bearer=True,
+        )
         self.customer = self.get_customer_details()
         return self.customer is not None
 
     def _store_tokens(self, tokens: "dict[str, Any]"):
+        if self.auth:
+            self.auth.tokens = tokens
+        if self.auth_v1:
+            self.auth_v1.tokens = tokens
         if not self.token_storage_file:
             return
         if self.username:

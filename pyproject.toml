@@ -39,7 +39,7 @@ path = "pyemvue/__version__.py"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "-ra -q"
+addopts = "-ra -q -p no:homeassistant"
 testpaths = ["tests"]
 pythonpath = ["."]
 
