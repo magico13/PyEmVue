@@ -1,0 +1,15 @@
+{
+  "success": [
+    {
+      "device_id": "D2301A0000000000000003",
+      "category": "EVSE",
+      "name": "Garage EVSE",
+      "connected": true,
+      "charger_on": true,
+      "charging_rate": 40,
+      "max_charging_rate": 48,
+      "charge_rate_amps": 40,
+      "max_charge_rate_amps": 48
+    }
+  ]
+}
