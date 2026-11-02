@@ -44,6 +44,7 @@ API_ROOT_V1 = "https://api.emporiaenergy.com/v1"
 API_DEVICES_V1 = "customers/devices"
 API_CHANNELS_V1 = "customers/devices/channels"
 API_SITES_V1 = "customers/sites"
+API_DEVICES_USAGE_V1 = "customers/devices/usages"
 
 API_MAINTENANCE = (
     "https://s3.amazonaws.com/com.emporiaenergy.manual.ota/maintenance/maintenance.json"
@@ -283,6 +284,70 @@ class PyEmVue(object):
 
         if response:
             response.raise_for_status()
+        return devices
+
+    def get_device_list_usage_v1(
+        self,
+        device_gids: list[Union[int, str]],
+        instant: Optional[datetime.datetime] = None,
+        scale: str = "SECOND",
+        energy_unit: str = "KILOWATT_HOURS",
+    ) -> dict[int, VueUsageDevice]:
+        """Returns a dictionary of VueUsageDevice with the usage of the devices over the specified scale from the V1 API."""
+        auth = self.auth_v1 or self.auth
+        if not auth:
+            raise ValueError(
+                "Not authenticated. Call login() or login_with_tokens() first."
+            )
+
+        if not instant:
+            instant = datetime.datetime.now(datetime.timezone.utc)
+
+        if hasattr(scale, "name"):
+            scale_val = scale.name
+        else:
+            scale_val = str(scale)
+
+        if hasattr(energy_unit, "name"):
+            if energy_unit == Unit.VOLTS:
+                unit_val = "VOLTAGE"
+            elif energy_unit == Unit.KWH:
+                unit_val = "KILOWATT_HOURS"
+            else:
+                unit_val = energy_unit.name
+        else:
+            unit_val = str(energy_unit)
+
+        if isinstance(device_gids, (str, int)):
+            gids_str = str(device_gids)
+        else:
+            gids_str = ",".join(map(str, device_gids))
+
+        params = {
+            "device_gids": gids_str,
+            "instant": _format_time(instant),
+            "scale": scale_val,
+            "energy_unit": unit_val,
+        }
+
+        response = auth.request("get", API_DEVICES_USAGE_V1, params=params)
+        response.raise_for_status()
+
+        devices: dict[int, VueUsageDevice] = {}
+        if response.text:
+            j = response.json()
+            timestamp = (
+                parse(j["instant"])
+                if isinstance(j, dict) and "instant" in j and j["instant"]
+                else instant
+            )
+            raw_usages = j.get("device_usages", []) if isinstance(j, dict) else j
+            for dev in raw_usages:
+                populated = VueUsageDevice(timestamp=timestamp).from_json_dictionary(
+                    dev
+                )
+                devices[populated.device_gid] = populated
+
         return devices
 
     def get_chart_usage(
