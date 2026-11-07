@@ -1,10 +1,12 @@
-from typing import TYPE_CHECKING, Optional
-from pydantic import BaseModel
+from __future__ import annotations
+
 import datetime
+from typing import TYPE_CHECKING, Any, Optional
+from pydantic import BaseModel
 
 
 def _format_time(time: datetime.datetime) -> str:
-    """Convert time to utc, then format"""
+    """Convert time to utc, then format."""
     # check if aware
     if time.tzinfo and time.tzinfo.utcoffset(time) is not None:
         # aware, convert to utc
@@ -15,7 +17,9 @@ def _format_time(time: datetime.datetime) -> str:
     time = time.replace(tzinfo=None)  # make it unaware
     iso_formatted = time.isoformat()
     # drop the milliseconds
-    return iso_formatted[: iso_formatted.rfind(".")] + "Z"
+    if "." in iso_formatted:
+        return iso_formatted[: iso_formatted.rfind(".")] + "Z"
+    return iso_formatted + "Z"
 
 
 class SimulatorBase(BaseModel):
@@ -138,7 +142,7 @@ class SimulatorDevice(SimulatorBase):
     locationProperties: SimulatorLocationProperties
     outlet: Optional[SimulatorOutlet]
     evCharger: Optional[SimulatorCharger]
-    battery: Optional[dict]
+    battery: Optional[dict[str, Any]]
     deviceConnected: SimulatorDeviceConnected
     devices: list[SimulatorSubDevice]
     channels: list[SimulatorChannel]
@@ -175,7 +179,7 @@ class StatusResponse(SimulatorBase):
     devicesConnected: list[SimulatorDeviceConnected]
     evChargers: list[SimulatorCharger]
     loads: list[SimulatorLoad]
-    batteries: list[dict]
+    batteries: list[dict[str, Any]]
     outlets: list[SimulatorOutlet]
 
 
@@ -203,10 +207,12 @@ class CreateVueRequest(SimulatorBase):
     parentDeviceGid: Optional[int] = None
     parentChannelNum: Optional[str] = None
 
+
 class UpdateUsageRequest(SimulatorBase):
     watts: Optional[float] = None
     usage: Optional[float] = None
     scale: Optional[str] = "1MIN"
+
 
 if TYPE_CHECKING:
     from .models import DeviceUsage  # Avoid circular import
@@ -235,3 +241,28 @@ class DeviceListUsage(SimulatorBase):
 
 class DeviceUsageResponse(SimulatorBase):
     deviceListUsages: DeviceListUsage
+
+
+# V1 Request & Response Models
+
+
+class EvseControlCommandRequest(SimulatorBase):
+    device_id: str
+    command: str
+
+
+class EvseSettingItem(SimulatorBase):
+    device_id: str
+    charge_rate_amps: int
+
+
+class EvseSettingsRequest(SimulatorBase):
+    settings: list[EvseSettingItem]
+
+
+class ExcessGenerationConfigRequest(SimulatorBase):
+    device_id: str
+    loads: list[dict[str, Any]]
+    solar_window: Optional[dict[str, Any]] = None
+    sunrise: Optional[str] = None
+    sunset: Optional[str] = None
