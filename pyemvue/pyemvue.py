@@ -14,7 +14,10 @@ from pyemvue.customer import Customer
 from pyemvue.device import (
     ChannelDevice,
     ChargerDevice,
+    EnergyMonitorExcessGeneration,
     EvseControlStatus,
+    ExcessGenerationLoad,
+    ExcessGenerationMonitors,
     VueDevice,
     VueSite,
     OutletDevice,
@@ -49,6 +52,8 @@ API_DEVICES_USAGE_V1 = "customers/devices/usages"
 API_GET_EVSES = "devices/evses?device_ids={deviceIds}"
 API_EVSE_CONTROL = "customers/evse/control"
 API_EVSE_SETTINGS = "devices/evses/settings"
+API_EXCESS_GENERATION = "customers/excess-generation"
+API_ENERGY_MONITOR_EXCESS_GENERATION = "customers/energy-monitor/excess-generation"
 
 VALID_EVSE_CONTROL_COMMANDS: tuple[str, ...] = (
     "TURN_ON",
@@ -572,6 +577,55 @@ class PyEmVue(object):
                     status.device_id = device_id
                 return status
         return None
+
+    def get_excess_generation_monitors(self) -> Optional[ExcessGenerationMonitors]:
+        """Gets the list of excess generation eligible monitors and unavailable monitors."""
+        response = (self.auth_v1 or self.auth).request("get", API_EXCESS_GENERATION)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            if j:
+                return ExcessGenerationMonitors().from_json_dictionary(j)
+        return None
+
+    def get_excess_generation(
+        self, device_id: str
+    ) -> Optional[EnergyMonitorExcessGeneration]:
+        """Gets excess generation configuration for an energy monitor."""
+        url = f"{API_ENERGY_MONITOR_EXCESS_GENERATION}?device_id={device_id}"
+        response = (self.auth_v1 or self.auth).request("get", url)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            if j:
+                return EnergyMonitorExcessGeneration().from_json_dictionary(j)
+        return None
+
+    def set_excess_generation(
+        self,
+        device_id: str,
+        loads: list[dict[str, Any] | ExcessGenerationLoad],
+        solar_window: Optional[dict[str, Any]] = None,
+        sunrise: Optional[str] = None,
+        sunset: Optional[str] = None,
+    ) -> bool:
+        """Sets excess generation configuration for an energy monitor."""
+        serialized_loads = [
+            load.as_dictionary() if hasattr(load, "as_dictionary") else load
+            for load in loads
+        ]
+        payload = {
+            "device_id": device_id,
+            "loads": serialized_loads,
+            "solar_window": solar_window,
+            "sunrise": sunrise,
+            "sunset": sunset,
+        }
+        response = (self.auth_v1 or self.auth).request(
+            "post", API_ENERGY_MONITOR_EXCESS_GENERATION, json=payload
+        )
+        response.raise_for_status()
+        return True
 
     def get_channel_types(self) -> "list[ChannelType]":
         """Gets the list of channel types"""

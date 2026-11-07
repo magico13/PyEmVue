@@ -1360,3 +1360,127 @@ class Channel(object):
                 populated = ChannelDevice().from_json_dictionary(dev)
                 self.nested_devices.append(populated)
         return self
+
+
+class ExcessGenerationMonitor(object):
+    """Represents an energy monitor with excess generation capabilities."""
+
+    def __init__(
+        self,
+        device_id: str = "",
+        enabled: bool = False,
+    ) -> None:
+        self.device_id: str = device_id
+        self.enabled: bool = enabled
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        self.device_id = str(js.get("device_id") or js.get("deviceId") or "")
+        self.enabled = bool(js.get("enabled", False))
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "device_id": self.device_id,
+            "enabled": self.enabled,
+        }
+
+
+class ExcessGenerationMonitors(object):
+    """Collection of excess generation eligible monitors and unavailable monitors."""
+
+    def __init__(
+        self,
+        monitors: Optional[list[ExcessGenerationMonitor]] = None,
+        unavailable_monitors: Optional[list[str]] = None,
+    ) -> None:
+        self.monitors: list[ExcessGenerationMonitor] = (
+            monitors if monitors is not None else []
+        )
+        self.unavailable_monitors: list[str] = (
+            unavailable_monitors if unavailable_monitors is not None else []
+        )
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        self.monitors = []
+        for mon in js.get("monitors", []):
+            if isinstance(mon, dict):
+                self.monitors.append(
+                    ExcessGenerationMonitor().from_json_dictionary(mon)
+                )
+        self.unavailable_monitors = [
+            str(m)
+            for m in (
+                js.get("unavailable_monitors") or js.get("unavailableMonitors") or []
+            )
+        ]
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "monitors": [m.as_dictionary() for m in self.monitors],
+            "unavailable_monitors": list(self.unavailable_monitors),
+        }
+
+
+class ExcessGenerationLoad(object):
+    """Represents a controllable load assigned to excess solar charging."""
+
+    def __init__(
+        self,
+        load_gid: int = 0,
+        enabled: bool = False,
+    ) -> None:
+        self.load_gid: int = load_gid
+        self.enabled: bool = enabled
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        gid = js.get("load_gid") if "load_gid" in js else js.get("loadGid", 0)
+        self.load_gid = int(gid or 0)
+        self.enabled = bool(js.get("enabled", False))
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "load_gid": self.load_gid,
+            "enabled": self.enabled,
+        }
+
+
+class EnergyMonitorExcessGeneration(object):
+    """Configuration of excess generation loads and solar window for a specific monitor."""
+
+    def __init__(
+        self,
+        device_id: str = "",
+        loads: Optional[list[ExcessGenerationLoad]] = None,
+        solar_window: Optional[dict[str, Any]] = None,
+        sunrise: Optional[str] = None,
+        sunset: Optional[str] = None,
+    ) -> None:
+        self.device_id: str = device_id
+        self.loads: list[ExcessGenerationLoad] = loads if loads is not None else []
+        self.solar_window: Optional[dict[str, Any]] = solar_window
+        self.sunrise: Optional[str] = sunrise
+        self.sunset: Optional[str] = sunset
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        self.device_id = str(js.get("device_id") or js.get("deviceId") or "")
+        self.loads = []
+        for load in js.get("loads", []):
+            if isinstance(load, dict):
+                self.loads.append(ExcessGenerationLoad().from_json_dictionary(load))
+        self.solar_window = (
+            js.get("solar_window") if "solar_window" in js else js.get("solarWindow")
+        )
+        self.sunrise = js.get("sunrise")
+        self.sunset = js.get("sunset")
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "device_id": self.device_id,
+            "loads": [ld.as_dictionary() for ld in self.loads],
+            "solar_window": self.solar_window,
+            "sunrise": self.sunrise,
+            "sunset": self.sunset,
+        }

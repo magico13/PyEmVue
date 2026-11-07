@@ -315,6 +315,35 @@ for charger in chargers:
 
 The `get_chargers` call returns a list of chargers directly, but it is also possible to get a full `VueDevice` for the charger through the `get_devices` or `get_devices_v1` call and access a `ChargerDevice` through the `ev_charger` attribute off of the `VueDevice` (ie `device.ev_charger`).
 
+### Excess Solar Energy Management
+
+Manage Emporia's native surplus solar EV charging:
+
+```python
+# Discover monitors with solar CTs eligible for excess generation control
+eg_monitors = vue.get_excess_generation_monitors()
+print('Eligible monitors:', [m.device_id for m in eg_monitors.monitors])
+print('Non-solar monitors:', eg_monitors.unavailable_monitors)
+
+# Query current excess solar configuration for a monitor
+config = vue.get_excess_generation(device_id='<monitor_id>')
+print('Active loads:', config.loads)
+print('Solar window:', config.solar_window)
+print('Sunrise / Sunset:', config.sunrise, config.sunset)
+
+# Configure controllable loads under excess solar
+vue.set_excess_generation(
+    device_id='<monitor_id>',
+    loads=[{'load_gid': 1001, 'enabled': True}],
+    solar_window=None
+)
+
+# Immediately override solar or scheduled throttling to charge at full power
+vue.post_evse_control(device_id='<evse_id>', command='CHARGE_AT_FULL_POWER')
+```
+
+Queries `GET /v1/customers/excess-generation` and `GET`/`POST /v1/customers/energy-monitor/excess-generation` to inspect eligible solar monitors, toggle surplus charging on assigned loads, and dispatch immediate `CHARGE_AT_FULL_POWER` overrides.
+
 ### Get Vehicles and Status (including battery charge level).
 Note: this call may take an extended amount of time depending on the vehicle, and may "wake" the vehicle to check status - be mindful of call volume, and aware of 10 second timeout that will hit if the vehicle doesn't reply in time (future may want to increase that).
 
