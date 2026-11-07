@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from typing_extensions import Self
 from dateutil.parser import parse
+from dateutil import tz
 
 
 class VueDevice(object):
@@ -546,9 +547,367 @@ class OutletDevice(object):
         return d
 
 
+class EvseControlStatus(object):
+    """Live charging session telemetry and control status for an EVSE."""
+
+    def __init__(
+        self,
+        device_id: str = "",
+        session_active: bool = False,
+        energy_delivered: Optional[float] = None,
+        cost: Optional[float] = None,
+        active_charging_minutes: Optional[int] = None,
+        charging_rate_kw: Optional[float] = None,
+        charging_rate_amps: Optional[float] = None,
+        offered_amps: Optional[float] = None,
+        plug_in: Optional[datetime.datetime] = None,
+        fault_code: Optional[Union[int, str]] = None,
+        charger_status: Optional[str] = None,
+        button_action: Optional[str] = None,
+        subtext_type: Optional[str] = None,
+        subtext_parameters: Optional[list[str]] = None,
+        button_behavior: Optional[str] = None,
+        charging_rate_controller: Optional[str] = None,
+        charging_rate_controller_warning: Optional[str] = None,
+        charge_rate_controller_type: Optional[str] = None,
+        charge_rate_controller_status: Optional[str] = None,
+        charge_rate_controller_offline_device_name: Optional[str] = None,
+        charge_rate_controller_additional_amps: Optional[float] = None,
+        charge_rate_controller_guaranteed_amps: Optional[float] = None,
+        next_event_type: Optional[str] = None,
+        next_event_time: Optional[datetime.datetime] = None,
+        next_event_actor: Optional[str] = None,
+        next_event_subtext_parameters: Optional[list[str]] = None,
+    ) -> None:
+        self.device_id = device_id
+        self.session_active = session_active
+        self.energy_delivered = energy_delivered
+        self.cost = cost
+        self.active_charging_minutes = active_charging_minutes
+        self.charging_rate_kw = charging_rate_kw
+        self.charging_rate_amps = charging_rate_amps
+        self.offered_amps = offered_amps
+        self.plug_in = plug_in
+        self.fault_code = fault_code
+        self.charger_status = charger_status
+        self.button_action = button_action
+        self.subtext_type = subtext_type
+        self.subtext_parameters: list[str] = (
+            list(subtext_parameters) if subtext_parameters is not None else []
+        )
+        self.button_behavior = button_behavior
+        self.charging_rate_controller = charging_rate_controller
+        self.charging_rate_controller_warning = charging_rate_controller_warning
+        self.charge_rate_controller_type = charge_rate_controller_type
+        self.charge_rate_controller_status = charge_rate_controller_status
+        self.charge_rate_controller_offline_device_name = (
+            charge_rate_controller_offline_device_name
+        )
+        self.charge_rate_controller_additional_amps = (
+            charge_rate_controller_additional_amps
+        )
+        self.charge_rate_controller_guaranteed_amps = (
+            charge_rate_controller_guaranteed_amps
+        )
+        self.next_event_type = next_event_type
+        self.next_event_time = next_event_time
+        self.next_event_actor = next_event_actor
+        self.next_event_subtext_parameters: list[str] = (
+            list(next_event_subtext_parameters)
+            if next_event_subtext_parameters is not None
+            else []
+        )
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        if "device_id" in js:
+            self.device_id = str(js["device_id"])
+        elif "deviceId" in js:
+            self.device_id = str(js["deviceId"])
+
+        if "session_active" in js:
+            self.session_active = bool(js["session_active"])
+        elif "sessionActive" in js:
+            self.session_active = bool(js["sessionActive"])
+
+        if "energy_delivered" in js and js["energy_delivered"] is not None:
+            self.energy_delivered = float(js["energy_delivered"])
+        elif "energyDelivered" in js and js["energyDelivered"] is not None:
+            self.energy_delivered = float(js["energyDelivered"])
+
+        if "cost" in js and js["cost"] is not None:
+            self.cost = float(js["cost"])
+        elif "estimated_cost" in js and js["estimated_cost"] is not None:
+            self.cost = float(js["estimated_cost"])
+        elif "estimatedCost" in js and js["estimatedCost"] is not None:
+            self.cost = float(js["estimatedCost"])
+
+        if (
+            "active_charging_minutes" in js
+            and js["active_charging_minutes"] is not None
+        ):
+            self.active_charging_minutes = int(js["active_charging_minutes"])
+        elif "activeChargingMinutes" in js and js["activeChargingMinutes"] is not None:
+            self.active_charging_minutes = int(js["activeChargingMinutes"])
+
+        if "charging_rate_kw" in js and js["charging_rate_kw"] is not None:
+            self.charging_rate_kw = float(js["charging_rate_kw"])
+        elif "chargingRateKw" in js and js["chargingRateKw"] is not None:
+            self.charging_rate_kw = float(js["chargingRateKw"])
+
+        if "charging_rate_amps" in js and js["charging_rate_amps"] is not None:
+            self.charging_rate_amps = float(js["charging_rate_amps"])
+        elif "chargingRateAmps" in js and js["chargingRateAmps"] is not None:
+            self.charging_rate_amps = float(js["chargingRateAmps"])
+
+        if "offered_amps" in js and js["offered_amps"] is not None:
+            self.offered_amps = float(js["offered_amps"])
+        elif "offeredAmps" in js and js["offeredAmps"] is not None:
+            self.offered_amps = float(js["offeredAmps"])
+
+        plug_in_val = js.get("plug_in") if "plug_in" in js else js.get("plugIn")
+        if plug_in_val:
+            if isinstance(plug_in_val, datetime.datetime):
+                self.plug_in = plug_in_val
+            else:
+                try:
+                    self.plug_in = parse(plug_in_val)
+                except Exception:
+                    self.plug_in = None
+        else:
+            self.plug_in = None
+
+        fault_code_val = (
+            js.get("fault_code") if "fault_code" in js else js.get("faultCode")
+        )
+        if isinstance(fault_code_val, int) or (
+            isinstance(fault_code_val, str) and fault_code_val.strip()
+        ):
+            self.fault_code = fault_code_val
+        else:
+            self.fault_code = None
+
+        status_obj = js.get("status")
+        if isinstance(status_obj, dict):
+            self.charger_status = status_obj.get("charger_status") or status_obj.get(
+                "chargerStatus"
+            )
+            self.subtext_type = status_obj.get("subtext_type") or status_obj.get(
+                "subtextType"
+            )
+            raw_params = status_obj.get("subtext_parameters") or status_obj.get(
+                "subtextParameters"
+            )
+            if isinstance(raw_params, list):
+                self.subtext_parameters = [str(x) for x in raw_params if x is not None]
+        else:
+            if "charger_status" in js or "chargerStatus" in js:
+                self.charger_status = js.get("charger_status") or js.get(
+                    "chargerStatus"
+                )
+            if "subtext_type" in js or "subtextType" in js:
+                self.subtext_type = js.get("subtext_type") or js.get("subtextType")
+            raw_params = js.get("subtext_parameters") or js.get("subtextParameters")
+            if isinstance(raw_params, list):
+                self.subtext_parameters = [str(x) for x in raw_params if x is not None]
+
+        btn_obj = js.get("button_info") or js.get("buttonInfo")
+        if isinstance(btn_obj, dict):
+            self.button_action = btn_obj.get("text")
+            self.button_behavior = btn_obj.get("behavior")
+        else:
+            if "button_action" in js or "buttonAction" in js:
+                self.button_action = js.get("button_action") or js.get("buttonAction")
+            if "button_behavior" in js or "buttonBehavior" in js:
+                self.button_behavior = js.get("button_behavior") or js.get(
+                    "buttonBehavior"
+                )
+
+        if "charging_rate_controller" in js:
+            self.charging_rate_controller = js["charging_rate_controller"]
+        elif "chargingRateController" in js:
+            self.charging_rate_controller = js["chargingRateController"]
+
+        if "charging_rate_controller_warning" in js:
+            self.charging_rate_controller_warning = js[
+                "charging_rate_controller_warning"
+            ]
+        elif "chargingRateControllerWarning" in js:
+            self.charging_rate_controller_warning = js["chargingRateControllerWarning"]
+
+        crc_obj = js.get("charge_rate_controller") or js.get("chargeRateController")
+        if isinstance(crc_obj, dict):
+            self.charge_rate_controller_type = crc_obj.get(
+                "controller_type"
+            ) or crc_obj.get("controllerType")
+            self.charge_rate_controller_status = crc_obj.get("status")
+            self.charge_rate_controller_offline_device_name = crc_obj.get(
+                "offline_device_name"
+            ) or crc_obj.get("offlineDeviceName")
+            if crc_obj.get("additional_amps") is not None:
+                self.charge_rate_controller_additional_amps = float(
+                    crc_obj["additional_amps"]
+                )
+            elif crc_obj.get("additionalAmps") is not None:
+                self.charge_rate_controller_additional_amps = float(
+                    crc_obj["additionalAmps"]
+                )
+            if crc_obj.get("guaranteed_amps") is not None:
+                self.charge_rate_controller_guaranteed_amps = float(
+                    crc_obj["guaranteed_amps"]
+                )
+            elif crc_obj.get("guaranteedAmps") is not None:
+                self.charge_rate_controller_guaranteed_amps = float(
+                    crc_obj["guaranteedAmps"]
+                )
+        else:
+            if "charge_rate_controller_type" in js:
+                self.charge_rate_controller_type = js["charge_rate_controller_type"]
+            elif "chargeRateControllerType" in js:
+                self.charge_rate_controller_type = js["chargeRateControllerType"]
+            if "charge_rate_controller_status" in js:
+                self.charge_rate_controller_status = js["charge_rate_controller_status"]
+            elif "chargeRateControllerStatus" in js:
+                self.charge_rate_controller_status = js["chargeRateControllerStatus"]
+            if "charge_rate_controller_offline_device_name" in js:
+                self.charge_rate_controller_offline_device_name = js[
+                    "charge_rate_controller_offline_device_name"
+                ]
+            elif "chargeRateControllerOfflineDeviceName" in js:
+                self.charge_rate_controller_offline_device_name = js[
+                    "chargeRateControllerOfflineDeviceName"
+                ]
+            if js.get("charge_rate_controller_additional_amps") is not None:
+                self.charge_rate_controller_additional_amps = float(
+                    js["charge_rate_controller_additional_amps"]
+                )
+            elif js.get("chargeRateControllerAdditionalAmps") is not None:
+                self.charge_rate_controller_additional_amps = float(
+                    js["chargeRateControllerAdditionalAmps"]
+                )
+            if js.get("charge_rate_controller_guaranteed_amps") is not None:
+                self.charge_rate_controller_guaranteed_amps = float(
+                    js["charge_rate_controller_guaranteed_amps"]
+                )
+            elif js.get("chargeRateControllerGuaranteedAmps") is not None:
+                self.charge_rate_controller_guaranteed_amps = float(
+                    js["chargeRateControllerGuaranteedAmps"]
+                )
+
+        ne_obj = js.get("next_event") or js.get("nextEvent")
+        if isinstance(ne_obj, dict):
+            self.next_event_type = ne_obj.get("event_type") or ne_obj.get("eventType")
+            time_val = ne_obj.get("event_time") or ne_obj.get("eventTime")
+            if time_val:
+                if isinstance(time_val, datetime.datetime):
+                    self.next_event_time = time_val
+                else:
+                    try:
+                        self.next_event_time = parse(time_val)
+                    except Exception:
+                        self.next_event_time = None
+            self.next_event_actor = ne_obj.get("event_actor") or ne_obj.get(
+                "eventActor"
+            )
+            raw_ne_params = ne_obj.get("subtext_parameters") or ne_obj.get(
+                "subtextParameters"
+            )
+            if isinstance(raw_ne_params, list):
+                self.next_event_subtext_parameters = [
+                    str(x) for x in raw_ne_params if x is not None
+                ]
+        else:
+            if "next_event_type" in js:
+                self.next_event_type = js["next_event_type"]
+            elif "nextEventType" in js:
+                self.next_event_type = js["nextEventType"]
+            time_val = js.get("next_event_time") or js.get("nextEventTime")
+            if time_val:
+                if isinstance(time_val, datetime.datetime):
+                    self.next_event_time = time_val
+                else:
+                    try:
+                        self.next_event_time = parse(time_val)
+                    except Exception:
+                        self.next_event_time = None
+            if "next_event_actor" in js:
+                self.next_event_actor = js["next_event_actor"]
+            elif "nextEventActor" in js:
+                self.next_event_actor = js["nextEventActor"]
+            raw_ne_params = js.get("next_event_subtext_parameters") or js.get(
+                "nextEventSubtextParameters"
+            )
+            if isinstance(raw_ne_params, list):
+                self.next_event_subtext_parameters = [
+                    str(x) for x in raw_ne_params if x is not None
+                ]
+
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "device_id": self.device_id,
+            "session_active": self.session_active,
+            "energy_delivered": self.energy_delivered,
+            "cost": self.cost,
+            "active_charging_minutes": self.active_charging_minutes,
+            "charging_rate_kw": self.charging_rate_kw,
+            "charging_rate_amps": self.charging_rate_amps,
+            "offered_amps": self.offered_amps,
+            "plug_in": self.plug_in.isoformat() if self.plug_in else None,
+            "fault_code": self.fault_code,
+            "charger_status": self.charger_status,
+            "subtext_type": self.subtext_type,
+            "subtext_parameters": self.subtext_parameters,
+            "button_action": self.button_action,
+            "button_behavior": self.button_behavior,
+            "charging_rate_controller": self.charging_rate_controller,
+            "charging_rate_controller_warning": self.charging_rate_controller_warning,
+            "charge_rate_controller_type": self.charge_rate_controller_type,
+            "charge_rate_controller_status": self.charge_rate_controller_status,
+            "charge_rate_controller_offline_device_name": (
+                self.charge_rate_controller_offline_device_name
+            ),
+            "charge_rate_controller_additional_amps": (
+                self.charge_rate_controller_additional_amps
+            ),
+            "charge_rate_controller_guaranteed_amps": (
+                self.charge_rate_controller_guaranteed_amps
+            ),
+            "next_event_type": self.next_event_type,
+            "next_event_time": (
+                self.next_event_time.isoformat() if self.next_event_time else None
+            ),
+            "next_event_actor": self.next_event_actor,
+            "next_event_subtext_parameters": self.next_event_subtext_parameters,
+        }
+
+
+class EvseStatus(object):
+    def __init__(self, id: str = "", gid: int = 0, load_gid: int = 0, status: str = ""):
+        self.device_id = id
+        self.device_gid = gid
+        self.load_gid = load_gid
+        self.charger_status = status
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        self.device_id = js.get("device_id") or js.get("deviceId", "")
+        self.device_gid = js.get("device_gid") or js.get("deviceGid", 0)
+        self.load_gid = js.get("load_gid") or js.get("loadGid", 0)
+        self.charger_status = js.get("charger_status") or js.get("status", "")
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "device_id": self.device_id,
+            "device_gid": self.device_gid,
+            "load_gid": self.load_gid,
+            "charger_status": self.charger_status,
+        }
+
+
 class ChargerDevice(object):
-    def __init__(self, gid: int = 0, on: bool = False):
-        self.device_id: str = ""
+    def __init__(self, gid: int = 0, on: bool = False, id: str = ""):
+        self.device_id: str = id
         self.device_gid = gid
         self.charger_on = on
         self.message = ""
@@ -565,6 +924,33 @@ class ChargerDevice(object):
         self.debug_code = ""
         self.pro_control_code = ""
         self.breaker_pin = ""
+        # V1 attributes
+        self.category = ""
+        self.name = ""
+        self.device_description = ""
+        self.connected = False
+        self.connected_changed_time: Optional[datetime.datetime] = None
+        self.time_zone = datetime.timezone.utc
+        self.time_zone_string = "UTC"
+        self.billing_cycle_start_day = 0
+        self.firmware = ""
+        self.latitude = 0.0
+        self.longitude = 0.0
+        self.excess_solar_configured = False
+        self.peak_demand_configured = False
+        self.energy_management_active = "NONE"
+        self.energy_managements_configured: list[str] = []
+        self.energy_managements_active: list[str] = []
+        self.evse_product = ""
+        self.evse_model = ""
+        self.evse_branding = ""
+        self.evse_power_source = ""
+        self.evse_color = ""
+        self.evse_gun_type = ""
+        self.power_smart_configuration: Optional[dict[str, Any]] = None
+        self.vehicle_connected = False
+        self.vehicle_charging = False
+        self.partner_schedule_status = ""
 
     def from_json_dictionary(self, js: "dict[str, Any]") -> Self:
         if "device_id" in js:
@@ -590,7 +976,30 @@ class ChargerDevice(object):
         elif "charger_on" in js and js["charger_on"] is not None:
             self.charger_on = bool(js["charger_on"])
         elif self.status:
-            self.charger_on = self.status.upper() in ["CHARGING", "STANDBY", "READY"]
+            status_upper = self.status.strip().upper()
+            if status_upper in (
+                "CHARGING",
+                "CONNECTED_ON",
+                "DISCONNECTED_ON",
+                "STANDBY",
+                "READY",
+            ):
+                self.charger_on = True
+            elif status_upper in (
+                "CONNECTED_OFF",
+                "DISCONNECTED_OFF",
+                "FAULTING",
+                "OFFLINE",
+                "DEVICENOTCONNECTED",
+                "UNKNOWN_VALUE",
+            ):
+                self.charger_on = False
+            elif status_upper.endswith("_ON"):
+                self.charger_on = True
+            elif status_upper.endswith("_OFF"):
+                self.charger_on = False
+            else:
+                self.charger_on = True
         else:
             self.charger_on = True
         if "message" in js:
@@ -625,12 +1034,78 @@ class ChargerDevice(object):
             self.off_peak_schedules_enabled = js["off_peak_schedules_enabled"]
         if "debugCode" in js:
             self.debug_code = js["debugCode"]
-        if "proControlCode" in js:
-            self.pro_control_code = js["proControlCode"]
+        if "proControlCode" in js and js["proControlCode"] is not None:
+            self.pro_control_code = str(js["proControlCode"])
+        elif "pro_control_code" in js and js["pro_control_code"] is not None:
+            self.pro_control_code = str(js["pro_control_code"])
         if "breakerPIN" in js:
             self.breaker_pin = js["breakerPIN"]
         elif "breaker_pin" in js:
             self.breaker_pin = js["breaker_pin"]
+
+        # V1 fields
+        if "category" in js:
+            self.category = js["category"]
+        if "name" in js:
+            self.name = js["name"]
+        if "device_description" in js:
+            self.device_description = js["device_description"]
+        if "connected" in js:
+            self.connected = js["connected"]
+        if "connected_changed_time" in js and js["connected_changed_time"]:
+            try:
+                self.connected_changed_time = parse(js["connected_changed_time"])
+            except Exception:
+                self.connected_changed_time = None
+        timezone_string = js.get("time_zone")
+        if timezone_string:
+            self.time_zone_string = timezone_string
+            try:
+                self.time_zone = tz.gettz(timezone_string) or datetime.timezone.utc
+            except Exception:
+                pass
+        if (
+            "billing_cycle_start_day" in js
+            and js["billing_cycle_start_day"] is not None
+        ):
+            self.billing_cycle_start_day = js["billing_cycle_start_day"]
+        if "firmware" in js:
+            self.firmware = js["firmware"]
+        if "latitude" in js and js["latitude"] is not None:
+            self.latitude = float(js["latitude"])
+        if "longitude" in js and js["longitude"] is not None:
+            self.longitude = float(js["longitude"])
+        if "excess_solar_configured" in js:
+            self.excess_solar_configured = js["excess_solar_configured"]
+        if "peak_demand_configured" in js:
+            self.peak_demand_configured = js["peak_demand_configured"]
+        if "energy_management_active" in js:
+            self.energy_management_active = js["energy_management_active"]
+        if "energy_managements_configured" in js:
+            self.energy_managements_configured = js["energy_managements_configured"]
+        if "energy_managements_active" in js:
+            self.energy_managements_active = js["energy_managements_active"]
+        if "evse_product" in js:
+            self.evse_product = js["evse_product"]
+        if "evse_model" in js:
+            self.evse_model = js["evse_model"]
+        if "evse_branding" in js:
+            self.evse_branding = js["evse_branding"]
+        if "evse_power_source" in js:
+            self.evse_power_source = js["evse_power_source"]
+        if "evse_color" in js:
+            self.evse_color = js["evse_color"]
+        if "evse_gun_type" in js:
+            self.evse_gun_type = js["evse_gun_type"]
+        if "power_smart_configuration" in js:
+            self.power_smart_configuration = js["power_smart_configuration"]
+        if "vehicle_connected" in js:
+            self.vehicle_connected = js["vehicle_connected"]
+        if "vehicle_charging" in js:
+            self.vehicle_charging = js["vehicle_charging"]
+        if "partner_schedule_status" in js:
+            self.partner_schedule_status = js["partner_schedule_status"]
+
         # don't have support for schedules yet
         return self
 
@@ -644,9 +1119,16 @@ class ChargerDevice(object):
         }
         if self.device_id:
             d["deviceId"] = self.device_id
+            d["device_id"] = self.device_id
         if self.breaker_pin:
             d["breakerPIN"] = self.breaker_pin
+        if self.pro_control_code:
+            d["proControlCode"] = self.pro_control_code
+            d["pro_control_code"] = self.pro_control_code
         return d
+
+
+EVSEDevice = ChargerDevice
 
 
 class ChannelType(object):

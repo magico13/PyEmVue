@@ -1,0 +1,66 @@
+{
+  "active": {
+    "device_id": "D2301A0000000000000003",
+    "status": {
+      "charger_status": "CHARGING",
+      "subtext_type": "EXCESS_SOLAR_PAUSED",
+      "subtext_parameters": ["2026-11-01T20:00:00Z"]
+    },
+    "next_event": {
+      "event_type": "START",
+      "event_time": "2026-11-02T14:00:00Z",
+      "event_actor": "SOLAR_WINDOW",
+      "subtext_parameters": ["UtilityPartner"]
+    },
+    "fault_code": null,
+    "button_info": {
+      "text": "MANAGE",
+      "behavior": "OVERRIDE_EXCESS_SOLAR"
+    },
+    "session_active": true,
+    "active_charging_minutes": 42,
+    "cost": 1.48,
+    "energy_delivered": 12.35,
+    "charging_rate_kw": 7.68,
+    "charging_rate_controller": "EXCESS_SOLAR",
+    "charging_rate_controller_warning": "CONTROLLER_WARN",
+    "charge_rate_controller": {
+      "controller_type": "EXCESS_SOLAR",
+      "status": "WORKING_CORRECTLY",
+      "offline_device_name": "Garage Monitor",
+      "additional_amps": 6.0,
+      "guaranteed_amps": 12.0
+    },
+    "charging_rate_amps": 32.0,
+    "offered_amps": 40.0,
+    "plug_in": "2026-11-01T18:30:00Z"
+  },
+  "disconnected": {
+    "device_id": "D2301A0000000000000003",
+    "status": {
+      "charger_status": "DISCONNECTED_OFF",
+      "subtext_parameters": [],
+      "subtext_type": null
+    },
+    "next_event": null,
+    "fault_code": null,
+    "button_info": {
+      "text": "TURN_ON",
+      "behavior": null
+    },
+    "session_active": false,
+    "active_charging_minutes": null,
+    "cost": null,
+    "energy_delivered": null,
+    "charging_rate_kw": null,
+    "charging_rate_controller": null,
+    "charging_rate_controller_warning": null,
+    "charge_rate_controller": {
+      "controller_type": "EXCESS_SOLAR",
+      "status": "WORKING_CORRECTLY"
+    },
+    "charging_rate_amps": null,
+    "offered_amps": null,
+    "plug_in": null
+  }
+}

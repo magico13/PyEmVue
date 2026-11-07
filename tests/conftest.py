@@ -52,3 +52,15 @@ def devices_legacy_json() -> dict[str, Any]:
 def usages_v1_json() -> dict[str, Any]:
     """Return raw parsed V1 usages payload."""
     return load_fixture("usages_v1.json")
+
+
+@pytest.fixture
+def evse_control_v1_json() -> dict[str, Any]:
+    """Return raw parsed V1 EVSE control payload."""
+    return load_fixture("evse_control_v1.json")
+
+
+@pytest.fixture
+def evses_v1_json() -> dict[str, Any]:
+    """Return raw parsed V1 EVSEs list payload."""
+    return load_fixture("evses_v1.json")

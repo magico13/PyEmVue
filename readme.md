@@ -279,25 +279,41 @@ for outlet in outlets:
 
 The `get_outlets` call returns a list of outlets directly but it is also possible to get a full `VueDevice` for the outlet first through the `get_devices` call and access an `OutletDevice` through the `outlet` attribute off of the `VueDevice` (ie `device.outlet`).
 
-### Toggle EV Charger (EVSE)
+### Control EV Charger (EVSE)
+
+Emporia EV Chargers can be controlled via modern V1 endpoints:
 
 ```python
 vue = PyEmVue()
-vue.login(id_token='id_token',
-    access_token='access_token',
-    refresh_token='refresh_token')
+vue.login(username='you@email.com', password='password')
 
-chargers = vue.get_chargers()
-for charger in chargers:
-    vue.update_charger(outlet, on=(not charger.charger_on), charge_rate=charger.max_charging_rate)
-    # alternatively you can update the charger object first
-    charger.charger_on = not charger.charger_on
-    charger.charging_rate = 6
-    charger.max_charging_rate = 16
-    charger = vue.update_charger(charger)
+# Query live charging session telemetry
+status = vue.get_evse_control(device_id='<evse_id>')
+if status:
+    print(f'Status: {status.charger_status}, Active: {status.session_active}')
+    print(f'Energy Delivered: {status.energy_delivered} kWh, Cost: ${status.cost}')
+    print(f'Active Minutes: {status.active_charging_minutes}, Pilot Limit: {status.offered_amps} A')
+
+# Turn charger on/off via V1 control endpoint
+vue.set_evse_state(device_id='<evse_id>', enabled=True)
+
+# Set charging current limit in amps
+vue.set_evse_settings(device_id='<evse_id>', charge_rate_amps=32)
 ```
 
-The `get_chargers` call returns a list of chargers directly but it is also possible to get a full `VueDevice` for the charger first through the `get_devices` call and access a `ChargerDevice` through the `ev_charger` attribute off of the `VueDevice` (ie `device.ev_charger`).
+`get_evse_control()` queries `GET /v1/customers/evse/control` for live session metrics (accumulated kWh, session duration, utility billing cost, and pilot offered current). `set_evse_state()` and `set_evse_settings()` dispatch to `/v1/customers/evse/control` and `/v1/devices/evses/settings`.
+
+Legacy methods `update_charger()` and `get_chargers()` remain fully supported for backward compatibility:
+
+```python
+chargers = vue.get_chargers()
+for charger in chargers:
+    charger.charger_on = not charger.charger_on
+    charger.charging_rate = 16
+    vue.update_charger(charger)
+```
+
+The `get_chargers` call returns a list of chargers directly, but it is also possible to get a full `VueDevice` for the charger through the `get_devices` or `get_devices_v1` call and access a `ChargerDevice` through the `ev_charger` attribute off of the `VueDevice` (ie `device.ev_charger`).
 
 ### Get Vehicles and Status (including battery charge level).
 Note: this call may take an extended amount of time depending on the vehicle, and may "wake" the vehicle to check status - be mindful of call volume, and aware of 10 second timeout that will hit if the vehicle doesn't reply in time (future may want to increase that).
