@@ -1,0 +1,62 @@
+{
+  "sites": [
+    {
+      "latitude": 39.7392,
+      "longitude": -104.9903,
+      "service_address": {
+        "address": "123 Energy Way",
+        "address2": null,
+        "city": "Denver",
+        "state": "CO",
+        "postal": "80202",
+        "country_code": "USA"
+      },
+      "timezone": "America/Denver",
+      "utility_provider": null,
+      "utility_rate_gid": null,
+      "utility_rate_mods": null,
+      "usage_cents_per_kwh": 0.12,
+      "buyback_rate_cents_per_kwh": null,
+      "net_metering": null,
+      "billing_cycle_start_day": 1,
+      "display_name": "Primary Residence",
+      "device_ids": [
+        "D2301A0000000000000003",
+        "A2237A0000000000000002",
+        "F2410A0000000000000001"
+      ],
+      "customer_emails": [
+        "test@example.com"
+      ],
+      "site_gid": 5001
+    },
+    {
+      "latitude": 39.75,
+      "longitude": -104.98,
+      "service_address": {
+        "address": "456 Solar Blvd",
+        "address2": null,
+        "city": "Denver",
+        "state": "CO",
+        "postal": "80202",
+        "country_code": "USA"
+      },
+      "timezone": "America/Denver",
+      "utility_provider": null,
+      "utility_rate_gid": null,
+      "utility_rate_mods": null,
+      "usage_cents_per_kwh": 0.2,
+      "buyback_rate_cents_per_kwh": null,
+      "net_metering": null,
+      "billing_cycle_start_day": 1,
+      "display_name": "Secondary Property",
+      "device_ids": [
+        "A2304A0000000000000004"
+      ],
+      "customer_emails": [
+        "test@example.com"
+      ],
+      "site_gid": 5002
+    }
+  ]
+}

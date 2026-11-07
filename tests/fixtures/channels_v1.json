@@ -1,0 +1,328 @@
+[
+  {
+    "device_gid": 1004,
+    "device_id": "A2304A0000000000000004",
+    "channels": [
+      {
+        "display_name": "Main",
+        "channel_id": "Mains",
+        "parent_channel_id": null,
+        "channel_num": "1,2,3",
+        "sub_type": null,
+        "nested_devices": []
+      },
+      {
+        "display_name": "Main_A",
+        "channel_id": "Mains_A",
+        "parent_channel_id": "Mains",
+        "channel_num": "Mains_A",
+        "sub_type": null,
+        "nested_devices": []
+      },
+      {
+        "display_name": "Main_B",
+        "channel_id": "Mains_B",
+        "parent_channel_id": "Mains",
+        "channel_num": "Mains_B",
+        "sub_type": null,
+        "nested_devices": []
+      },
+      {
+        "display_name": "Main floor red",
+        "channel_id": "Branch_1",
+        "parent_channel_id": "Merged_100",
+        "channel_num": "1",
+        "sub_type": "Sub Panel",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Main floor black",
+        "channel_id": "Branch_2",
+        "parent_channel_id": "Merged_100",
+        "channel_num": "2",
+        "sub_type": "Sub Panel",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Basement heat",
+        "channel_id": "Branch_3",
+        "parent_channel_id": null,
+        "channel_num": "3",
+        "sub_type": "Other",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Basement hot water",
+        "channel_id": "Branch_4",
+        "parent_channel_id": null,
+        "channel_num": "4",
+        "sub_type": "Water Heater",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Basement Hot Water Booster",
+        "channel_id": "Branch_5",
+        "parent_channel_id": null,
+        "channel_num": "5",
+        "sub_type": "Water Heater",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Main floor",
+        "channel_id": "Merged_100",
+        "parent_channel_id": null,
+        "channel_num": "97",
+        "sub_type": "Sub Panel",
+        "nested_devices": []
+      }
+    ],
+    "linked_devices": []
+  },
+  {
+    "device_gid": 1001,
+    "device_id": "F2410A0000000000000001",
+    "channels": [
+      {
+        "display_name": "Main",
+        "channel_id": "Mains",
+        "parent_channel_id": null,
+        "channel_num": "1,2,3",
+        "sub_type": null,
+        "nested_devices": [
+          {
+            "device_gid": 270955,
+            "device_id": "A2237A05B5349454FAA9B0",
+            "channels": [
+              {
+                "display_name": "Garage",
+                "channel_id": "Mains",
+                "parent_channel_id": null,
+                "channel_num": "1,2,3",
+                "sub_type": null,
+                "nested_devices": [
+                  {
+                    "device_gid": 242715,
+                    "device_id": "D2301A00090CB8152E3B78",
+                    "channels": [
+                      {
+                        "display_name": "EV Charger",
+                        "channel_id": "Mains",
+                        "parent_channel_id": null,
+                        "channel_num": "1,2,3",
+                        "sub_type": "EV Charger",
+                        "nested_devices": []
+                      }
+                    ],
+                    "linked_devices": []
+                  }
+                ]
+              },
+              {
+                "display_name": "Garage_A",
+                "channel_id": "Mains_A",
+                "parent_channel_id": "Mains",
+                "channel_num": "Mains_A",
+                "sub_type": null,
+                "nested_devices": []
+              },
+              {
+                "display_name": "Garage_B",
+                "channel_id": "Mains_B",
+                "parent_channel_id": "Mains",
+                "channel_num": "Mains_B",
+                "sub_type": null,
+                "nested_devices": []
+              },
+              {
+                "display_name": "Garage 3",
+                "channel_id": "Branch_10",
+                "parent_channel_id": null,
+                "channel_num": "10",
+                "sub_type": "Garage/Shop/Barn/Shed",
+                "nested_devices": []
+              },
+              {
+                "display_name": "Garage 2",
+                "channel_id": "Branch_11",
+                "parent_channel_id": null,
+                "channel_num": "11",
+                "sub_type": "Garage/Shop/Barn/Shed",
+                "nested_devices": []
+              },
+              {
+                "display_name": "Garage 1",
+                "channel_id": "Branch_12",
+                "parent_channel_id": null,
+                "channel_num": "12",
+                "sub_type": "Garage/Shop/Barn/Shed",
+                "nested_devices": []
+              },
+              {
+                "display_name": "Solar garage 1",
+                "channel_id": "Branch_15",
+                "parent_channel_id": null,
+                "channel_num": "15",
+                "sub_type": "Solar/Generation",
+                "nested_devices": []
+              },
+              {
+                "display_name": "Solar garage 2",
+                "channel_id": "Branch_16",
+                "parent_channel_id": null,
+                "channel_num": "16",
+                "sub_type": "Solar/Generation",
+                "nested_devices": []
+              }
+            ],
+            "linked_devices": []
+          }
+        ]
+      },
+      {
+        "display_name": "Main_A",
+        "channel_id": "Mains_A",
+        "parent_channel_id": "Mains",
+        "channel_num": "Mains_A",
+        "sub_type": null,
+        "nested_devices": []
+      },
+      {
+        "display_name": "Main_B",
+        "channel_id": "Mains_B",
+        "parent_channel_id": "Mains",
+        "channel_num": "Mains_B",
+        "sub_type": null,
+        "nested_devices": []
+      },
+      {
+        "display_name": "Solar main 1",
+        "channel_id": "Branch_1",
+        "parent_channel_id": null,
+        "channel_num": "1",
+        "sub_type": "Solar/Generation",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Solar main 2",
+        "channel_id": "Branch_2",
+        "parent_channel_id": null,
+        "channel_num": "2",
+        "sub_type": "Solar/Generation",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Heat pump upper",
+        "channel_id": "Branch_3",
+        "parent_channel_id": null,
+        "channel_num": "3",
+        "sub_type": "Heat Pump",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Heat pump lower",
+        "channel_id": "Branch_4",
+        "parent_channel_id": null,
+        "channel_num": "4",
+        "sub_type": "Heat Pump",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Heat pump basement",
+        "channel_id": "Branch_5",
+        "parent_channel_id": null,
+        "channel_num": "5",
+        "sub_type": "Heat Pump",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Furnace upper",
+        "channel_id": "Branch_6",
+        "parent_channel_id": null,
+        "channel_num": "6",
+        "sub_type": "Furnace",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Furnace lower",
+        "channel_id": "Branch_7",
+        "parent_channel_id": null,
+        "channel_num": "7",
+        "sub_type": "Furnace",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Hot water tank",
+        "channel_id": "Branch_8",
+        "parent_channel_id": null,
+        "channel_num": "8",
+        "sub_type": "Water Heater",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Kitchen counter",
+        "channel_id": "Branch_9",
+        "parent_channel_id": null,
+        "channel_num": "9",
+        "sub_type": "Kitchen",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Microwave & USB",
+        "channel_id": "Branch_10",
+        "parent_channel_id": null,
+        "channel_num": "10",
+        "sub_type": "Microwave",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Refrigerator ",
+        "channel_id": "Branch_11",
+        "parent_channel_id": null,
+        "channel_num": "11",
+        "sub_type": "Fridge/Freezer",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Freezer",
+        "channel_id": "Branch_12",
+        "parent_channel_id": null,
+        "channel_num": "12",
+        "sub_type": "Fridge/Freezer",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Dishwasher",
+        "channel_id": "Branch_13",
+        "parent_channel_id": null,
+        "channel_num": "13",
+        "sub_type": "Dishwasher",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Oven",
+        "channel_id": "Branch_14",
+        "parent_channel_id": null,
+        "channel_num": "14",
+        "sub_type": "Cooktop/Range/Oven/Stove",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Dryer",
+        "channel_id": "Branch_15",
+        "parent_channel_id": null,
+        "channel_num": "15",
+        "sub_type": "Clothes Dryer",
+        "nested_devices": []
+      },
+      {
+        "display_name": "Server rack",
+        "channel_id": "Branch_16",
+        "parent_channel_id": null,
+        "channel_num": "16",
+        "sub_type": "Computer/Network",
+        "nested_devices": []
+      }
+    ],
+    "linked_devices": []
+  }
+]
