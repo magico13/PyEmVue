@@ -135,6 +135,36 @@ vue.get_devices()
 
 Returns a list of VueDevices with device information, including device_gid and list of VueDeviceChannels associated with the device. VueDeviceChannels are passed to other methods to get information for the specific channel.
 
+### Get devices (V1 API)
+
+```python
+vue = PyEmVue()
+vue.login(username='you@email.com', password='password')
+
+# Returns modern VueDevice tree with physical hierarchy and active channel status
+devices = vue.get_devices_v1()
+for device in devices:
+    print(f'{device.device_gid}: {device.device_name} (Model: {device.model})')
+    for channel in device.channels:
+        # has_data indicates if a physical CT is connected or actively reporting
+        if channel.has_data:
+            print(f'  Channel {channel.channel_num}: {channel.name}')
+    for child in device.children:
+        print(f'  Nested Device: {child.device_gid} ({child.device_name})')
+```
+
+Returns a list of `VueDevice` objects directly from Emporia's `/v1/customers/devices` API. `get_devices_v1()` automatically resolves the physical electrical hierarchy (linking nested sub-panels and chargers via `device.children` and `device.parent_device_id`), populates device names, and sets `channel.has_data` to easily distinguish active CTs from unpopulated ports.
+
+### Get sites (locations)
+
+```python
+sites = vue.get_sites()
+for site in sites:
+    print(f'Site {site.site_gid}: {site.display_name} ({site.time_zone}) - Rate: ${site.usage_cents_per_kwh}/kWh')
+```
+
+Returns a list of `VueSite` objects from `/v1/customers/sites`, representing configured customer locations, timezone, utility rate schedules, and associated device IDs.
+
 ### Get additional device properties
 
 ```python

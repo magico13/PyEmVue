@@ -21,7 +21,7 @@ def print_recursive(
             if name == "Main":
                 name = info[gid].device_name
             usage = channel.usage or 0
-            print("-" * depth, f"{gid} {channelnum} {name} {usage*scaleBy} {unit}")
+            print("-" * depth, f"{gid} {channelnum} {name} {usage * scaleBy} {unit}")
             if channel.nested_devices:
                 print_recursive(
                     channel.nested_devices,

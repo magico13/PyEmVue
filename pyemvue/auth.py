@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 import time
 from typing import Any, Optional, Callable
@@ -25,11 +27,13 @@ class Auth:
         max_retry_attempts: int = 5,
         initial_retry_delay: float = 0.5,
         max_retry_delay: float = 30.0,
+        as_bearer: bool = False,
     ):
         self.host = host
         self.connect_timeout = connect_timeout
         self.read_timeout = read_timeout
         self.token_updater = token_updater
+        self.as_bearer = as_bearer
         self.max_retry_attempts = max(max_retry_attempts, 1)
         self.initial_retry_delay = max(initial_retry_delay, 0.5)
         self.max_retry_delay = max(max_retry_delay, 0)
@@ -53,6 +57,7 @@ class Auth:
                 access_token=tokens["access_token"],
                 refresh_token=tokens["refresh_token"],
             )
+            self.tokens = tokens
         elif username and password:
             # log in with username and password
             self.cognito = Cognito(
@@ -132,7 +137,11 @@ class Auth:
             headers = {}
         else:
             headers = dict(headers)
-        headers["authtoken"] = self.tokens["id_token"]
+        if self.as_bearer:
+            # The newer API uses standard Bearer token authorization
+            headers["Authorization"] = f"Bearer {self.tokens['id_token']}"
+        else:
+            headers["authtoken"] = self.tokens["id_token"]
 
         return requests.request(
             method,
@@ -159,16 +168,26 @@ class Auth:
             algorithms=["RS256"],
             key=hmac_key,
             issuer=self.cognito.user_pool_url,
-            options={"verify_exp": verify_exp, "verify_iat": False, "verify_nbf": False},
+            options={
+                "verify_exp": verify_exp,
+                "verify_iat": False,
+                "verify_nbf": False,
+            },
         )
+
 
 class SimulatedAuth(Auth):
     def __init__(
-        self, host: str, username: Optional[str] = None, password: Optional[str] = None
+        self,
+        host: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        as_bearer: bool = False,
     ):
         self.host = host
         self.username = username
         self.password = password
+        self.as_bearer = as_bearer
         self.connect_timeout = 6.03
         self.read_timeout = 10.03
         self.tokens = self.refresh_tokens()
