@@ -46,3 +46,9 @@ def sites_v1_json() -> dict[str, Any]:
 def devices_legacy_json() -> dict[str, Any]:
     """Return raw parsed legacy devices payload."""
     return load_fixture("devices_legacy.json")
+
+
+@pytest.fixture
+def usages_v1_json() -> dict[str, Any]:
+    """Return raw parsed V1 usages payload."""
+    return load_fixture("usages_v1.json")

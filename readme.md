@@ -198,6 +198,42 @@ Gets the usage for the given devices (specified by device_gid) over the provided
 - **scale**: The time scale to check the usage over.
 - **unit**: The unit of measurement.
 
+### Get usages for devices (V1 multi-device batch)
+
+```python
+# Query instantaneous power across multiple monitors in a single batch call
+usages = vue.get_device_list_usage_v1(
+    device_gids=[1234, 2345],
+    instant=None,
+    scale='SECOND',
+    energy_unit='KILOWATT_HOURS'
+)
+
+for gid, device_usage in usages.items():
+    mains = device_usage.channels_by_id.get('Mains')
+    print(f'Device {gid} Mains: {mains.usage} kWh (Raw: {mains.raw_usage})')
+```
+
+Queries `GET /v1/customers/devices/usages` to retrieve power or energy for multiple devices in a single HTTP request. Channels can be indexed by channel number (`device_usage.channels['1']`) or by channel ID (`device_usage.channels_by_id['Branch_1']`).
+
+### Get split-phase voltage
+
+```python
+# Query instantaneous line voltage for split-phase services
+voltages = vue.get_device_list_usage(
+    deviceGids=[1234],
+    instant=None,
+    scale=Scale.SECOND.value,
+    unit=Unit.VOLTS.value
+)
+
+device = voltages[1234]
+print(f"Mains A: {device.channels['Mains_A'].usage} V")
+print(f"Mains B: {device.channels['Mains_B'].usage} V")
+```
+
+Returns instantaneous voltage readings using `Unit.VOLTS = "Voltage"`. On North American split-phase panels, `Mains_A` and `Mains_B` provide individual leg voltages (~120V) and combined line-to-line 240V circuits. On 3-phase installations (e.g. European/Australian 230V/400V wye or commercial delta), `Mains_A`, `Mains_B`, and `Mains_C` provide individual phase voltages.
+
 ### Get usage over time
 
 ```python

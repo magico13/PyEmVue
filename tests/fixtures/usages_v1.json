@@ -1,0 +1,491 @@
+{
+  "instant": "2026-11-01T20:10:20.657Z",
+  "scale": "SECOND",
+  "energy_unit": "KILOWATT_HOURS",
+  "device_usages": [
+    {
+      "device_gid": 1001,
+      "channel_usages": [
+        {
+          "device_gid": 1001,
+          "channel_id": "Mains",
+          "usage": 0.0020296568,
+          "percentage": 100.0,
+          "raw_usage": 2.0296568,
+          "included_in_total_usage": null,
+          "nested_devices": [
+            {
+              "device_gid": 1002,
+              "channel_usages": [
+                {
+                  "device_gid": 1002,
+                  "channel_id": "Mains",
+                  "usage": 0.000591986,
+                  "percentage": 29.17,
+                  "raw_usage": 0.591986,
+                  "included_in_total_usage": null,
+                  "nested_devices": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Mains_A",
+          "usage": 0.001015,
+          "percentage": 50.01,
+          "raw_usage": 1.015,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Mains_B",
+          "usage": 0.0010146568,
+          "percentage": 49.99,
+          "raw_usage": 1.0146568,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Mains_C",
+          "usage": 0.0,
+          "percentage": 0.0,
+          "raw_usage": 0.0,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_1",
+          "usage": 0.00025,
+          "percentage": 12.32,
+          "raw_usage": 0.25,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_2",
+          "usage": 0.00015,
+          "percentage": 7.39,
+          "raw_usage": 0.15,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_3",
+          "usage": 0.0001,
+          "percentage": 4.93,
+          "raw_usage": 0.1,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_4",
+          "usage": 0.00008,
+          "percentage": 3.94,
+          "raw_usage": 0.08,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_5",
+          "usage": 0.00012,
+          "percentage": 5.91,
+          "raw_usage": 0.12,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_6",
+          "usage": 0.00005,
+          "percentage": 2.46,
+          "raw_usage": 0.05,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_7",
+          "usage": 0.00006,
+          "percentage": 2.96,
+          "raw_usage": 0.06,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_8",
+          "usage": 0.00007,
+          "percentage": 3.45,
+          "raw_usage": 0.07,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_9",
+          "usage": 0.00004,
+          "percentage": 1.97,
+          "raw_usage": 0.04,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_10",
+          "usage": 0.00005,
+          "percentage": 2.46,
+          "raw_usage": 0.05,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_11",
+          "usage": 0.00003,
+          "percentage": 1.48,
+          "raw_usage": 0.03,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_12",
+          "usage": 0.00002,
+          "percentage": 0.99,
+          "raw_usage": 0.02,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_13",
+          "usage": 0.00001,
+          "percentage": 0.49,
+          "raw_usage": 0.01,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_14",
+          "usage": 0.00002,
+          "percentage": 0.99,
+          "raw_usage": 0.02,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_15",
+          "usage": 0.00003,
+          "percentage": 1.48,
+          "raw_usage": 0.03,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Branch_16",
+          "usage": 0.00005,
+          "percentage": 2.46,
+          "raw_usage": 0.05,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "Balance",
+          "usage": 0.0008996568,
+          "percentage": 44.33,
+          "raw_usage": 0.8996568,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1001,
+          "channel_id": "TotalUsage",
+          "usage": 0.0020296568,
+          "percentage": 100.0,
+          "raw_usage": 2.0296568,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        }
+      ]
+    },
+    {
+      "device_gid": 1002,
+      "channel_usages": [
+        {
+          "device_gid": 1002,
+          "channel_id": "Mains",
+          "usage": 0.000591986,
+          "percentage": 100.0,
+          "raw_usage": 0.591986,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1002,
+          "channel_id": "Mains_A",
+          "usage": 0.000295993,
+          "percentage": 50.0,
+          "raw_usage": 0.295993,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1002,
+          "channel_id": "Mains_B",
+          "usage": 0.000295993,
+          "percentage": 50.0,
+          "raw_usage": 0.295993,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1002,
+          "channel_id": "Branch_1",
+          "usage": 0.0001,
+          "percentage": 16.89,
+          "raw_usage": 0.1,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1002,
+          "channel_id": "Branch_2",
+          "usage": 0.00008,
+          "percentage": 13.51,
+          "raw_usage": 0.08,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1002,
+          "channel_id": "Balance",
+          "usage": 0.000411986,
+          "percentage": 69.6,
+          "raw_usage": 0.411986,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        }
+      ]
+    },
+    {
+      "device_gid": 1004,
+      "channel_usages": [
+        {
+          "device_gid": 1004,
+          "channel_id": "Mains",
+          "usage": 0.0015,
+          "percentage": 100.0,
+          "raw_usage": 1.5,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Mains_A",
+          "usage": 0.00076,
+          "percentage": 50.67,
+          "raw_usage": 0.76,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Mains_B",
+          "usage": 0.00074,
+          "percentage": 49.33,
+          "raw_usage": 0.74,
+          "included_in_total_usage": null,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Branch_1",
+          "usage": 0.0002,
+          "percentage": 13.33,
+          "raw_usage": 0.2,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Branch_2",
+          "usage": 0.00018,
+          "percentage": 12.0,
+          "raw_usage": 0.18,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Branch_3",
+          "usage": 0.00012,
+          "percentage": 8.0,
+          "raw_usage": 0.12,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Branch_4",
+          "usage": 0.0001,
+          "percentage": 6.67,
+          "raw_usage": 0.1,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Branch_5",
+          "usage": 0.00008,
+          "percentage": 5.33,
+          "raw_usage": 0.08,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Merged_100",
+          "usage": 0.0003,
+          "percentage": 20.0,
+          "raw_usage": 0.3,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        },
+        {
+          "device_gid": 1004,
+          "channel_id": "Balance",
+          "usage": 0.00052,
+          "percentage": 34.67,
+          "raw_usage": 0.52,
+          "included_in_total_usage": true,
+          "nested_devices": []
+        }
+      ]
+    }
+  ],
+  "voltage": {
+    "instant": "2026-11-01T20:10:20.657Z",
+    "scale": "SECOND",
+    "energy_unit": "VOLTAGE",
+    "device_usages": [
+      {
+        "device_gid": 1001,
+        "channel_usages": [
+          {
+            "device_gid": 1001,
+            "channel_id": "Mains",
+            "usage": 120.75,
+            "percentage": 100.0,
+            "raw_usage": 120.75,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          },
+          {
+            "device_gid": 1001,
+            "channel_id": "Mains_A",
+            "usage": 120.4,
+            "percentage": null,
+            "raw_usage": 120.4,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          },
+          {
+            "device_gid": 1001,
+            "channel_id": "Mains_B",
+            "usage": 121.1,
+            "percentage": null,
+            "raw_usage": 121.1,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          },
+          {
+            "device_gid": 1001,
+            "channel_id": "Mains_C",
+            "usage": 0.0,
+            "percentage": null,
+            "raw_usage": 0.0,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          }
+        ]
+      },
+      {
+        "device_gid": 1002,
+        "channel_usages": [
+          {
+            "device_gid": 1002,
+            "channel_id": "Mains",
+            "usage": 120.5,
+            "percentage": 100.0,
+            "raw_usage": 120.5,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          },
+          {
+            "device_gid": 1002,
+            "channel_id": "Mains_A",
+            "usage": 120.2,
+            "percentage": null,
+            "raw_usage": 120.2,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          },
+          {
+            "device_gid": 1002,
+            "channel_id": "Mains_B",
+            "usage": 120.8,
+            "percentage": null,
+            "raw_usage": 120.8,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          }
+        ]
+      },
+      {
+        "device_gid": 1004,
+        "channel_usages": [
+          {
+            "device_gid": 1004,
+            "channel_id": "Mains",
+            "usage": 121.2,
+            "percentage": 100.0,
+            "raw_usage": 121.2,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          },
+          {
+            "device_gid": 1004,
+            "channel_id": "Mains_A",
+            "usage": 120.9,
+            "percentage": null,
+            "raw_usage": 120.9,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          },
+          {
+            "device_gid": 1004,
+            "channel_id": "Mains_B",
+            "usage": 121.5,
+            "percentage": null,
+            "raw_usage": 121.5,
+            "included_in_total_usage": null,
+            "nested_devices": []
+          }
+        ]
+      }
+    ]
+  }
+}

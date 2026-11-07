@@ -31,12 +31,13 @@ def test_fixtures_directory_exists() -> None:
     """Verify fixture directory exists and contains expected files."""
     assert FIXTURES_DIR.is_dir()
     fixture_files = list(FIXTURES_DIR.glob("*.json"))
-    assert len(fixture_files) >= 4
+    assert len(fixture_files) >= 5
     file_names = {f.name for f in fixture_files}
     assert "devices_v1.json" in file_names
     assert "channels_v1.json" in file_names
     assert "sites_v1.json" in file_names
     assert "devices_legacy.json" in file_names
+    assert "usages_v1.json" in file_names
 
 
 def test_fixtures_valid_json() -> None:

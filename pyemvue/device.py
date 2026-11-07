@@ -381,18 +381,26 @@ class VueUsageDevice(VueDevice):
         self.timestamp = timestamp
         self.channels: dict[str, VueDeviceChannelUsage] = {}
 
+    @property
+    def channels_by_id(self) -> dict[str, VueDeviceChannelUsage]:
+        """Return channel usages indexed by channel_id."""
+        return {ch.channel_id: ch for ch in self.channels.values() if ch.channel_id}
+
     def from_json_dictionary(self, js: "dict[str, Any]") -> Self:
         if not js:
             return self
         if "deviceGid" in js:
             self.device_gid = js["deviceGid"]
-        if "channelUsages" in js and js["channelUsages"]:
-            for channel in js["channelUsages"]:
-                if channel:
-                    populated_channel = VueDeviceChannelUsage(
-                        timestamp=self.timestamp
-                    ).from_json_dictionary(channel)
-                    self.channels[populated_channel.channel_num] = populated_channel
+        elif "device_gid" in js:
+            self.device_gid = js["device_gid"]
+
+        channel_usages = js.get("channelUsages") or js.get("channel_usages") or []
+        for channel in channel_usages:
+            if channel:
+                populated_channel = VueDeviceChannelUsage(
+                    timestamp=self.timestamp
+                ).from_json_dictionary(channel)
+                self.channels[populated_channel.channel_num] = populated_channel
         return self
 
 
@@ -404,15 +412,23 @@ class VueDeviceChannelUsage(VueDeviceChannel):
         channelNum="1,2,3",
         name="",
         timestamp: Optional[datetime.datetime] = None,
+        channel_id: str = "",
+        raw_usage: Optional[float] = None,
+        percentage: Optional[float] = 0.0,
+        included_in_total_usage: Optional[bool] = None,
+        **kwargs: Any,
     ):
         super().__init__(gid=gid, name=name, channelNum=channelNum)
         self.name = name
         self.device_gid: int = gid
         self.usage: float = usage
         self.channel_num = channelNum
-        self.percentage = 0.0
+        self.channel_id: str = channel_id or kwargs.get("channelId", "")
+        self.raw_usage: Optional[float] = raw_usage
+        self.percentage: Optional[float] = percentage
+        self.included_in_total_usage: Optional[bool] = included_in_total_usage
         self.timestamp = timestamp
-        self.nested_devices = {}
+        self.nested_devices: dict[int, VueUsageDevice] = {}
 
     def from_json_dictionary(self, js: "dict[str, Any]") -> Self:
         """Populate device channel usage data from a dictionary extracted from the response json."""
@@ -422,25 +438,73 @@ class VueDeviceChannelUsage(VueDeviceChannel):
             js = js[
                 "channelUsages"
             ]  # were given "device" level and we want to work off "channel" level
+        elif "channel_usages" in js:
+            js = js["channel_usages"]
+
         if "name" in js:
             self.name = js["name"]
+        elif "display_name" in js:
+            self.name = js["display_name"]
+
         if "deviceGid" in js:
             self.device_gid = js["deviceGid"]
-        if "channelNum" in js:
-            self.channel_num = js["channelNum"]
+        elif "device_gid" in js:
+            self.device_gid = js["device_gid"]
+
+        if "channel_id" in js:
+            self.channel_id = js["channel_id"]
+        elif "channelId" in js:
+            self.channel_id = js["channelId"]
+
+        if "channelNum" in js and js["channelNum"] is not None:
+            self.channel_num = str(js["channelNum"])
+        elif "channel_num" in js and js["channel_num"] is not None:
+            self.channel_num = str(js["channel_num"])
+        elif self.channel_id:
+            if self.channel_id == "Mains":
+                self.channel_num = "1,2,3"
+            elif self.channel_id.startswith("Branch_"):
+                self.channel_num = self.channel_id.split("_")[1]
+            else:
+                self.channel_num = self.channel_id
+
         if "usage" in js:
             self.usage = js["usage"]
+
+        if "raw_usage" in js:
+            self.raw_usage = js["raw_usage"]
+        elif "rawUsage" in js:
+            self.raw_usage = js["rawUsage"]
+
         if "percentage" in js:
             self.percentage = js["percentage"]
+
+        if "included_in_total_usage" in js:
+            self.included_in_total_usage = js["included_in_total_usage"]
+        elif "includedInTotalUsage" in js:
+            self.included_in_total_usage = js["includedInTotalUsage"]
+
         # Nested device handling
-        if "nestedDevices" in js and js["nestedDevices"]:
-            for device in js["nestedDevices"]:
+        nested = js.get("nestedDevices") or js.get("nested_devices")
+        if nested:
+            for device in nested:
                 if device:
                     populated = VueUsageDevice(
                         timestamp=self.timestamp
                     ).from_json_dictionary(device)
                     self.nested_devices[populated.device_gid] = populated
         return self
+
+    def as_dictionary(self) -> "dict[str, Any]":
+        """Returns a dictionary of the device channel usage data."""
+        d = super().as_dictionary()
+        d["usage"] = self.usage
+        d["percentage"] = self.percentage
+        if self.raw_usage is not None:
+            d["raw_usage"] = self.raw_usage
+        if self.included_in_total_usage is not None:
+            d["included_in_total_usage"] = self.included_in_total_usage
+        return d
 
 
 class OutletDevice(object):
