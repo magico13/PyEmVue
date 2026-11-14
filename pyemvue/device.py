@@ -1438,7 +1438,11 @@ class ExcessGenerationLoad(object):
         self.enabled: bool = enabled
 
     def from_json_dictionary(self, js: dict[str, Any]) -> Self:
-        gid = js.get("load_gid") if "load_gid" in js else js.get("loadGid", 0)
+        gid = (
+            js.get("load_gid")
+            if js.get("load_gid") is not None
+            else js.get("loadGid", 0)
+        )
         self.load_gid = int(gid or 0)
         self.enabled = bool(js.get("enabled", False))
         return self
@@ -1487,4 +1491,159 @@ class EnergyMonitorExcessGeneration(object):
             "solar_window": self.solar_window,
             "sunrise": self.sunrise,
             "sunset": self.sunset,
+        }
+
+
+class MonthlyPeakDemand(object):
+    """Represents the current month's measured 15-minute peak demand for a monitor."""
+
+    def __init__(
+        self,
+        device_gid: int = 0,
+        peak_demand_kw: Optional[float] = None,
+        peak_timestamp: Optional[datetime.datetime] = None,
+    ) -> None:
+        self.device_gid: int = device_gid
+        self.peak_demand_kw: Optional[float] = peak_demand_kw
+        self.peak_timestamp: Optional[datetime.datetime] = peak_timestamp
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        gid = (
+            js.get("device_gid")
+            if js.get("device_gid") is not None
+            else js.get("deviceGid")
+        )
+        if gid is not None:
+            self.device_gid = int(gid)
+
+        peak_obj = (
+            js.get("peakDemand")
+            if isinstance(js.get("peakDemand"), dict)
+            else js.get("peak_demand")
+            if isinstance(js.get("peak_demand"), dict)
+            else js
+        )
+
+        raw_value = None
+        for key in ("value", "peak_demand_kw"):
+            if key in peak_obj and peak_obj[key] is not None:
+                raw_value = peak_obj[key]
+                break
+        self.peak_demand_kw = float(raw_value) if raw_value is not None else None
+
+        raw_ts = None
+        for key in ("instant", "timestamp", "peak_timestamp"):
+            if key in peak_obj and peak_obj[key]:
+                raw_ts = peak_obj[key]
+                break
+        if isinstance(raw_ts, datetime.datetime):
+            self.peak_timestamp = raw_ts
+        elif isinstance(raw_ts, dict):
+            epoch_val = (
+                raw_ts.get("epochSecond")
+                if raw_ts.get("epochSecond") is not None
+                else raw_ts.get("epoch_second")
+            )
+            if epoch_val is not None:
+                try:
+                    self.peak_timestamp = datetime.datetime.fromtimestamp(
+                        float(epoch_val), tz=datetime.timezone.utc
+                    )
+                except Exception:
+                    self.peak_timestamp = None
+            else:
+                self.peak_timestamp = None
+        elif isinstance(raw_ts, (int, float)) and not isinstance(raw_ts, bool):
+            try:
+                self.peak_timestamp = datetime.datetime.fromtimestamp(
+                    float(raw_ts), tz=datetime.timezone.utc
+                )
+            except Exception:
+                self.peak_timestamp = None
+        elif isinstance(raw_ts, str):
+            try:
+                self.peak_timestamp = parse(raw_ts)
+            except Exception:
+                self.peak_timestamp = None
+        else:
+            self.peak_timestamp = None
+
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "device_gid": self.device_gid,
+            "peak_demand_kw": self.peak_demand_kw,
+            "peak_timestamp": (
+                self.peak_timestamp.isoformat()
+                if self.peak_timestamp is not None
+                else None
+            ),
+        }
+
+
+class PeakDemandLoad(object):
+    """Represents a controllable load participating in peak demand management."""
+
+    def __init__(
+        self,
+        load_gid: int = 0,
+        enabled: bool = False,
+    ) -> None:
+        self.load_gid: int = load_gid
+        self.enabled: bool = enabled
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        gid = (
+            js.get("load_gid")
+            if js.get("load_gid") is not None
+            else js.get("loadGid", 0)
+        )
+        self.load_gid = int(gid or 0)
+        self.enabled = bool(js.get("enabled", False))
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "load_gid": self.load_gid,
+            "enabled": self.enabled,
+        }
+
+
+class EnergyMonitorPeakDemand(object):
+    """Peak demand target and load-shedding configuration for an energy monitor."""
+
+    def __init__(
+        self,
+        device_id: str = "",
+        enabled: bool = False,
+        demand_goal_kwatts: Optional[float] = None,
+        loads: Optional[list[PeakDemandLoad]] = None,
+    ) -> None:
+        self.device_id: str = device_id
+        self.enabled: bool = enabled
+        self.demand_goal_kwatts: Optional[float] = demand_goal_kwatts
+        self.loads: list[PeakDemandLoad] = loads if loads is not None else []
+
+    def from_json_dictionary(self, js: dict[str, Any]) -> Self:
+        self.device_id = str(js.get("device_id") or js.get("deviceId") or "")
+        self.enabled = bool(js.get("enabled", False))
+        raw_goal = None
+        for key in ("demand_goal_kwatts", "demandGoalKwatts"):
+            if key in js and js[key] is not None:
+                raw_goal = js[key]
+                break
+        self.demand_goal_kwatts = float(raw_goal) if raw_goal is not None else None
+        self.loads = []
+        for load in js.get("loads", []):
+            if isinstance(load, dict):
+                self.loads.append(PeakDemandLoad().from_json_dictionary(load))
+        return self
+
+    def as_dictionary(self) -> dict[str, Any]:
+        return {
+            "device_id": self.device_id,
+            "enabled": self.enabled,
+            "demand_goal_kwatts": self.demand_goal_kwatts,
+            "loads": [ld.as_dictionary() for ld in self.loads],
         }

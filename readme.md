@@ -344,6 +344,37 @@ vue.post_evse_control(device_id='<evse_id>', command='CHARGE_AT_FULL_POWER')
 
 Queries `GET /v1/customers/excess-generation` and `GET`/`POST /v1/customers/energy-monitor/excess-generation` to inspect eligible solar monitors, toggle surplus charging on assigned loads, and dispatch immediate `CHARGE_AT_FULL_POWER` overrides.
 
+### Peak Demand Management
+
+Query current-month measured peak demand and configure automated peak demand targets:
+
+```python
+from pyemvue import PyEmVue
+
+vue = PyEmVue()
+vue.login(username='you@email.com', password='password')
+
+# Query current billing/calendar month 15-minute peak demand (kW)
+peak = vue.get_current_month_peak_demand(device_gid=1234)
+if peak:
+    print(f'Monthly Peak: {peak.peak_demand_kw} kW at {peak.peak_timestamp}')
+
+# Query current peak demand configuration for a monitor
+pd_config = vue.get_peak_demand_config(device_id='<monitor_id>')
+if pd_config:
+    print(f'Enabled: {pd_config.enabled}, Goal: {pd_config.demand_goal_kwatts} kW')
+
+# Update peak demand goal and managed loads
+vue.set_peak_demand_config(
+    device_id='<monitor_id>',
+    enabled=True,
+    demand_goal_kwatts=10.5,
+    loads=[{'load_gid': 1001, 'enabled': True}],
+)
+```
+
+Queries `GET /AppAPI?apiMethod=getCurrentMonthPeakDemand`, `GET /v1/customers/peak-demand`, and `GET`/`POST /v1/customers/energy-monitor/peak-demand`.
+
 ### Get Vehicles and Status (including battery charge level).
 Note: this call may take an extended amount of time depending on the vehicle, and may "wake" the vehicle to check status - be mindful of call volume, and aware of 10 second timeout that will hit if the vehicle doesn't reply in time (future may want to increase that).
 
