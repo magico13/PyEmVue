@@ -359,6 +359,57 @@ for vehicle in vehicles:
     print(f'\t{vehicleStatus.vehicle_gid} {vehicleStatus.vehicle_state} - Charging: {vehicleStatus.charging_state} Battery level: {vehicleStatus.battery_level}')
 ```
 
+## Migration Guide (`v0.18.x` / `v0.19.x`)
+
+This section documents breaking API changes introduced in `v0.18.x` and `v0.19.x` to help downstream scripts and integrations migrate cleanly.
+
+### 1. Removal of `Unit.WATTS` in Favor of `Unit.KWH`
+
+Emporia's usage endpoints return **energy** (`kWh`) accumulated over the requested `Scale` interval rather than instantaneous power (`Watts`). `Unit.WATTS` was removed from `pyemvue.enums.Unit` to reflect the underlying API semantics; passing `Unit.KWH.value` (`"KilowattHours"`) is now required.
+
+To convert `Unit.KWH` usage to average power (`kW` or `Watts`), multiply by the interval factor for the requested `Scale`:
+
+| `Scale` | Interval | `kWh` → `kW` Factor | `kWh` → `Watts` Factor |
+| :--- | :--- | :--- | :--- |
+| `Scale.SECOND` | 1 second | `usage * 3600` | `usage * 3600 * 1000` |
+| `Scale.MINUTE` | 1 minute | `usage * 60` | `usage * 60 * 1000` |
+| `Scale.MINUTES_15` | 15 minutes | `usage * 4` | `usage * 4 * 1000` |
+| `Scale.HOUR` | 1 hour | `usage * 1` | `usage * 1000` |
+
+```python
+from pyemvue import PyEmVue
+from pyemvue.enums import Scale, Unit
+
+vue = PyEmVue()
+vue.login(username='you@email.com', password='password', token_storage_file='keys.json')
+
+devices = vue.get_devices()
+device_gids = [d.device_gid for d in devices]
+
+usages = vue.get_device_list_usage(
+    deviceGids=device_gids,
+    instant=None,
+    scale=Scale.MINUTE.value,
+    unit=Unit.KWH.value,
+)
+
+for gid, usage_device in usages.items():
+    for channel_num, channel in usage_device.channels.items():
+        if channel.usage is not None:
+            watts = channel.usage * 60 * 1000  # Scale.MINUTE -> average Watts
+            print(f'{gid} [{channel_num}] {channel.name}: {watts:.1f} W')
+```
+
+For instantaneous line voltage, use `Unit.VOLTS.value` (`"Voltage"`).
+
+### 2. `VueUsageDevice` & `VueDeviceChannelUsage` Return Structures
+
+`get_device_list_usage()` and `get_device_list_usage_v1()` return `dict[int, VueUsageDevice]` keyed by `device_gid`:
+- **`VueUsageDevice.channels`** is a `dict[str, VueDeviceChannelUsage]` keyed by `channel_num` (e.g. `"1,2,3"`, `"1"`, `"Mains_A"`), **not** a `list`.
+- **`VueUsageDevice.channels_by_id`** provides a `dict[str, VueDeviceChannelUsage]` keyed by V1 `channel_id` (e.g. `"Mains"`, `"Branch_1"`).
+- **`VueDeviceChannelUsage.nested_devices`** is a `dict[int, VueUsageDevice]` containing any sub-panels or smart plugs nested under that channel.
+- **`VueDeviceChannelUsage.usage`** may be `None` when a device or channel did not report data for the requested interval; always guard with `if channel.usage is not None:` before performing arithmetic.
+
 ### Disclaimer
 
 This project is not affiliated with or endorsed by Emporia Energy.
