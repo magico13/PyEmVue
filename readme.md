@@ -2,7 +2,7 @@
 
 A Python Library for reading data from the Emporia Vue energy monitoring system.
 
-The library can be invoked directly to pull back some basic info but requires your email and password to be added to a keys.json file, which is then replaced with the access tokens.
+The library can be invoked directly to pull back some basic info. On first login with `token_storage_file='keys.json'`, your access tokens are saved to `keys.json` and automatically refreshed on subsequent runs (or you can pre-populate `keys.json` with your email and password):
 
 The backing API documentation can be [accessed here](https://github.com/magico13/PyEmVue/blob/master/api_docs.md)
 
@@ -90,6 +90,8 @@ device_gid channel_num name usage unit
 ### Log in with username/password
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(username='you@email.com', password='password', token_storage_file='keys.json')
 ```
@@ -99,6 +101,9 @@ vue.login(username='you@email.com', password='password', token_storage_file='key
 ### Log in with access tokens
 
 ```python
+import json
+from pyemvue import PyEmVue
+
 with open('keys.json') as f:
     data = json.load(f)
 
@@ -112,6 +117,8 @@ vue.login(id_token=data['id_token'],
 ### Get customer details
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -125,12 +132,14 @@ Returns a Customer object with email address, name, customer_gid, and creation d
 ### Get devices
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
     refresh_token='refresh_token')
 
-vue.get_devices()
+devices = vue.get_devices()
 ```
 
 Returns a list of VueDevices with device information, including device_gid and list of VueDeviceChannels associated with the device. VueDeviceChannels are passed to other methods to get information for the specific channel.
@@ -138,6 +147,8 @@ Returns a list of VueDevices with device information, including device_gid and l
 ### Get devices (V1 API)
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(username='you@email.com', password='password')
 
@@ -158,6 +169,11 @@ Returns a list of `VueDevice` objects directly from Emporia's `/v1/customers/dev
 ### Get sites (locations)
 
 ```python
+from pyemvue import PyEmVue
+
+vue = PyEmVue()
+vue.login(username='you@email.com', password='password')
+
 sites = vue.get_sites()
 for site in sites:
     print(f'Site {site.site_gid}: {site.display_name} ({site.time_zone}) - Rate: ${site.usage_cents_per_kwh}/kWh')
@@ -168,6 +184,8 @@ Returns a list of `VueSite` objects from `/v1/customers/sites`, representing con
 ### Get additional device properties
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -201,6 +219,11 @@ Gets the usage for the given devices (specified by device_gid) over the provided
 ### Get usages for devices (V1 multi-device batch)
 
 ```python
+from pyemvue import PyEmVue
+
+vue = PyEmVue()
+vue.login(username='you@email.com', password='password')
+
 # Query instantaneous power across multiple monitors in a single batch call
 usages = vue.get_device_list_usage_v1(
     device_gids=[1234, 2345],
@@ -219,6 +242,12 @@ Queries `GET /v1/customers/devices/usages` to retrieve power or energy for multi
 ### Get split-phase voltage
 
 ```python
+from pyemvue import PyEmVue
+from pyemvue.enums import Scale, Unit
+
+vue = PyEmVue()
+vue.login(username='you@email.com', password='password')
+
 # Query instantaneous line voltage for split-phase services
 voltages = vue.get_device_list_usage(
     deviceGids=[1234],
@@ -237,6 +266,10 @@ Returns instantaneous voltage readings using `Unit.VOLTS = "Voltage"`. On North 
 ### Get usage over time
 
 ```python
+import datetime
+from pyemvue import PyEmVue
+from pyemvue.enums import Scale, Unit
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -264,6 +297,8 @@ Gets the usage in the scale and unit provided over the given time range. Returns
 ### Toggle outlets
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(id_token='id_token',
     access_token='access_token',
@@ -284,6 +319,8 @@ The `get_outlets` call returns a list of outlets directly but it is also possibl
 Emporia EV Chargers can be controlled via modern V1 endpoints:
 
 ```python
+from pyemvue import PyEmVue
+
 vue = PyEmVue()
 vue.login(username='you@email.com', password='password')
 
@@ -320,6 +357,11 @@ The `get_chargers` call returns a list of chargers directly, but it is also poss
 Manage Emporia's native surplus solar EV charging:
 
 ```python
+from pyemvue import PyEmVue
+
+vue = PyEmVue()
+vue.login(username='you@email.com', password='password')
+
 # Discover monitors with solar CTs eligible for excess generation control
 eg_monitors = vue.get_excess_generation_monitors()
 print('Eligible monitors:', [m.device_id for m in eg_monitors.monitors])
@@ -348,6 +390,11 @@ Queries `GET /v1/customers/excess-generation` and `GET`/`POST /v1/customers/ener
 Note: this call may take an extended amount of time depending on the vehicle, and may "wake" the vehicle to check status - be mindful of call volume, and aware of 10 second timeout that will hit if the vehicle doesn't reply in time (future may want to increase that).
 
 ```python
+from pyemvue import PyEmVue
+
+vue = PyEmVue()
+vue.login(username='you@email.com', password='password')
+
 vehicles = vue.get_vehicles()
 print('List of Vehicles')
 for vehicle in vehicles:
