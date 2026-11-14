@@ -240,6 +240,7 @@ def test_get_evses(evses_v1_json: dict[str, Any]) -> None:
     )
     assert len(evses) == 1
     evse = evses[0]
+    assert isinstance(evse, EVSEDevice)
     assert isinstance(evse, ChargerDevice)
     assert evse.device_id == "D2301A0000000000000003"
     assert evse.charging_rate == 40
@@ -295,6 +296,7 @@ def test_get_devices_status_v1_dual_schema() -> None:
     assert outlets[0].outlet_on is True
 
     assert len(chargers) == 1
+    assert isinstance(chargers[0], EVSEDevice)
     assert isinstance(chargers[0], ChargerDevice)
     assert chargers[0].device_id == "D2301A0000000000000003"
     assert chargers[0].status == "CHARGING"
@@ -533,3 +535,83 @@ def test_charger_device_v1_status_derivation_and_pro_control_code() -> None:
         {"status": "CHARGING", "chargerOn": False}
     )
     assert override_off.charger_on is False
+
+
+def test_evse_device_canonical_and_legacy_alias_parity() -> None:
+    """Validate EVSEDevice is canonical, ChargerDevice is an exact alias, and VueDevice.evse aliases ev_charger."""
+    assert EVSEDevice.__name__ == "EVSEDevice"
+    assert ChargerDevice is EVSEDevice
+
+    evse_inst = EVSEDevice(gid=3001, on=True, id="D2301A0000000000000003")
+    charger_inst = ChargerDevice(gid=3001, on=True, id="D2301A0000000000000003")
+    assert isinstance(evse_inst, ChargerDevice)
+    assert isinstance(charger_inst, EVSEDevice)
+
+    # VueDevice.evse <-> VueDevice.ev_charger property parity
+    vue_dev = VueDevice().from_json_dictionary(
+        {
+            "device_id": "D2301A0000000000000003",
+            "device_gid": 3001,
+            "category": "EVSE",
+            "status": "CHARGING",
+            "charging_rate_amps": 32,
+        }
+    )
+    assert vue_dev.evse is not None
+    assert vue_dev.ev_charger is not None
+    assert vue_dev.evse is vue_dev.ev_charger
+    assert isinstance(vue_dev.evse, EVSEDevice)
+    assert vue_dev.evse.charging_rate == 32
+
+    # Mutating via .evse setter updates .ev_charger
+    replacement = EVSEDevice(gid=3002, on=False, id="D2301A0000000000000004")
+    vue_dev.evse = replacement
+    assert vue_dev.ev_charger is replacement
+
+    # Non-EVSE device with explicit "evCharger": None must keep evse / ev_charger as None
+    non_evse = VueDevice().from_json_dictionary(
+        {"deviceGid": 100, "model": "Vue2", "evCharger": None}
+    )
+    assert non_evse.evse is None
+    assert non_evse.ev_charger is None
+
+
+def test_legacy_charger_methods_emit_deprecation_warning() -> None:
+    """Validate get_chargers() and update_charger() emit DeprecationWarning while remaining functional."""
+    vue = PyEmVue()
+    mock_auth = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = '{"evChargers": [{"deviceGid": 3001, "chargerOn": true, "chargingRate": 40, "maxChargingRate": 48}]}'
+    mock_response.json.return_value = {
+        "evChargers": [
+            {
+                "deviceGid": 3001,
+                "chargerOn": True,
+                "chargingRate": 40,
+                "maxChargingRate": 48,
+            }
+        ]
+    }
+    mock_auth.request.return_value = mock_response
+    vue.auth = mock_auth
+    vue.auth_v1 = None
+
+    with pytest.deprecated_call(match=r"get_chargers\(\) is deprecated"):
+        chargers = vue.get_chargers()
+    assert len(chargers) == 1
+    assert isinstance(chargers[0], EVSEDevice)
+    assert chargers[0].device_gid == 3001
+
+    mock_put_resp = MagicMock()
+    mock_put_resp.json.return_value = {
+        "deviceGid": 3001,
+        "chargerOn": False,
+        "chargingRate": 32,
+        "maxChargingRate": 48,
+    }
+    mock_auth.request.return_value = mock_put_resp
+
+    with pytest.deprecated_call(match=r"update_charger\(\) is deprecated"):
+        updated = vue.update_charger(chargers[0], on=False, charge_rate=32)
+    assert updated.charger_on is False
+    assert updated.charging_rate == 32

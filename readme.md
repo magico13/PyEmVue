@@ -303,7 +303,7 @@ vue.set_evse_settings(device_id='<evse_id>', charge_rate_amps=32)
 
 `get_evse_control()` queries `GET /v1/customers/evse/control` for live session metrics (accumulated kWh, session duration, utility billing cost, and pilot offered current). `set_evse_state()` and `set_evse_settings()` dispatch to `/v1/customers/evse/control` and `/v1/devices/evses/settings`.
 
-Legacy methods `update_charger()` and `get_chargers()` remain fully supported for backward compatibility:
+Legacy methods `update_charger()` and `get_chargers()` remain functional for backward compatibility but are **deprecated** (emitting `DeprecationWarning`); prefer `get_evses()`, `get_devices_status()`, `set_evse_state()`, and `set_evse_settings()` for new code:
 
 ```python
 chargers = vue.get_chargers()
@@ -313,7 +313,7 @@ for charger in chargers:
     vue.update_charger(charger)
 ```
 
-The `get_chargers` call returns a list of chargers directly, but it is also possible to get a full `VueDevice` for the charger through the `get_devices` or `get_devices_v1` call and access a `ChargerDevice` through the `ev_charger` attribute off of the `VueDevice` (ie `device.ev_charger`).
+When using `get_devices()` or `get_devices_v1()`, the canonical `EVSEDevice` model is exposed on `device.evse` (with `ChargerDevice` and `device.ev_charger` preserved as backward-compatible aliases).
 
 ### Excess Solar Energy Management
 
