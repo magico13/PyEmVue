@@ -30,7 +30,7 @@ class VueDevice(object):
         self.children: list[VueDevice] = []
         self.channels: list[VueDeviceChannel] = []
         self.outlet: Optional[OutletDevice] = None
-        self.ev_charger: Optional[ChargerDevice] = None
+        self.ev_charger: Optional[EVSEDevice] = None
 
         self.connected: bool = False
         self.offline_since = datetime.datetime.min
@@ -55,6 +55,15 @@ class VueDevice(object):
         self.latitude = 0
         self.longitude = 0
         self.utility_rate_gid = None
+
+    @property
+    def evse(self) -> Optional[EVSEDevice]:
+        """Canonical EVSE device accessor (aliases ev_charger)."""
+        return self.ev_charger
+
+    @evse.setter
+    def evse(self, value: Optional[EVSEDevice]) -> None:
+        self.ev_charger = value
 
     def from_json_dictionary(self, js: "dict[str, Any]") -> Self:
         """Populate device data from a dictionary extracted from the response json."""
@@ -181,15 +190,10 @@ class VueDevice(object):
         if "outlet" in js and js["outlet"]:
             self.outlet = OutletDevice().from_json_dictionary(js["outlet"])
         # EVSEs are also special
-        if (
-            "evCharger" in js
-            or js.get("category") == "EVSE"
-            or js.get("model") == "VVDN01"
-        ):
-            if "evCharger" in js and js["evCharger"]:
-                self.ev_charger = ChargerDevice().from_json_dictionary(js["evCharger"])
-            else:
-                self.ev_charger = ChargerDevice().from_json_dictionary(js)
+        if js.get("evCharger"):
+            self.ev_charger = EVSEDevice().from_json_dictionary(js["evCharger"])
+        elif js.get("category") == "EVSE" or js.get("model") == "VVDN01":
+            self.ev_charger = EVSEDevice().from_json_dictionary(js)
 
         # Fallback naming: if not self.device_name, use display_name or 'EV Charger'
         if not self.device_name:
@@ -905,7 +909,7 @@ class EvseStatus(object):
         }
 
 
-class ChargerDevice(object):
+class EVSEDevice(object):
     def __init__(self, gid: int = 0, on: bool = False, id: str = ""):
         self.device_id: str = id
         self.device_gid = gid
@@ -1128,7 +1132,7 @@ class ChargerDevice(object):
         return d
 
 
-EVSEDevice = ChargerDevice
+ChargerDevice = EVSEDevice
 
 
 class ChannelType(object):
