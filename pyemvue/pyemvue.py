@@ -61,6 +61,26 @@ VALID_EVSE_CONTROL_COMMANDS: tuple[str, ...] = (
     "CHARGE_AT_FULL_POWER",
 )
 
+# Maps legacy Unit enum members, enum names, and legacy values to V1 /v1/customers/devices/usages energy_unit query strings.
+_V1_ENERGY_UNIT_MAP: dict[Union[Unit, str], str] = {
+    Unit.VOLTS: "VOLTAGE",
+    "VOLTS": "VOLTAGE",
+    "Voltage": "VOLTAGE",
+    "VOLTAGE": "VOLTAGE",
+    Unit.KWH: "KILOWATT_HOURS",
+    "KWH": "KILOWATT_HOURS",
+    "KilowattHours": "KILOWATT_HOURS",
+    "KILOWATT_HOURS": "KILOWATT_HOURS",
+    Unit.AMPHOURS: "AMP_HOURS",
+    "AMPHOURS": "AMP_HOURS",
+    "AmpHours": "AMP_HOURS",
+    "AMP_HOURS": "AMP_HOURS",
+    Unit.USD: "DOLLARS",
+    "USD": "DOLLARS",
+    "Dollars": "DOLLARS",
+    "DOLLARS": "DOLLARS",
+}
+
 API_MAINTENANCE = (
     "https://s3.amazonaws.com/com.emporiaenergy.manual.ota/maintenance/maintenance.json"
 )
@@ -305,8 +325,8 @@ class PyEmVue(object):
         self,
         device_gids: list[Union[int, str]],
         instant: Optional[datetime.datetime] = None,
-        scale: str = "SECOND",
-        energy_unit: str = "KILOWATT_HOURS",
+        scale: Union[Scale, str] = "SECOND",
+        energy_unit: Union[Unit, str] = "KILOWATT_HOURS",
     ) -> dict[int, VueUsageDevice]:
         """Returns a dictionary of VueUsageDevice with the usage of the devices over the specified scale from the V1 API."""
         auth = self.auth_v1 or self.auth
@@ -323,15 +343,11 @@ class PyEmVue(object):
         else:
             scale_val = str(scale)
 
-        if hasattr(energy_unit, "name"):
-            if energy_unit == Unit.VOLTS:
-                unit_val = "VOLTAGE"
-            elif energy_unit == Unit.KWH:
-                unit_val = "KILOWATT_HOURS"
-            else:
-                unit_val = energy_unit.name
-        else:
-            unit_val = str(energy_unit)
+        unit_val = _V1_ENERGY_UNIT_MAP.get(energy_unit)
+        if unit_val is None:
+            unit_val = (
+                energy_unit.name if hasattr(energy_unit, "name") else str(energy_unit)
+            )
 
         if isinstance(device_gids, (str, int)):
             gids_str = str(device_gids)
