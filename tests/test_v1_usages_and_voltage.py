@@ -310,3 +310,112 @@ def test_get_device_list_usage_v1_scale_and_energy_unit_variants() -> None:
     assert params["scale"] == "MINUTE"
     assert params["energy_unit"] == "VOLTAGE"
     assert params["device_gids"] == "1004"
+
+
+@pytest.mark.parametrize(
+    ("input_unit", "expected_v1_unit"),
+    [
+        (Unit.KWH, "KILOWATT_HOURS"),
+        ("KWH", "KILOWATT_HOURS"),
+        ("KilowattHours", "KILOWATT_HOURS"),
+        ("KILOWATT_HOURS", "KILOWATT_HOURS"),
+        (Unit.VOLTS, "VOLTAGE"),
+        ("VOLTS", "VOLTAGE"),
+        ("Voltage", "VOLTAGE"),
+        ("VOLTAGE", "VOLTAGE"),
+        (Unit.AMPHOURS, "AMP_HOURS"),
+        ("AMPHOURS", "AMP_HOURS"),
+        ("AmpHours", "AMP_HOURS"),
+        ("AMP_HOURS", "AMP_HOURS"),
+        (Unit.USD, "DOLLARS"),
+        ("USD", "DOLLARS"),
+        ("Dollars", "DOLLARS"),
+        ("DOLLARS", "DOLLARS"),
+        (Unit.TREES, "TREES"),
+        ("CUSTOM_UNIT", "CUSTOM_UNIT"),
+    ],
+)
+def test_get_device_list_usage_v1_energy_unit_normalization(
+    input_unit: Any, expected_v1_unit: str
+) -> None:
+    """Validate that Unit enums, names, values, and raw strings are normalized to valid V1 query params."""
+    vue = PyEmVue()
+    mock_auth = MagicMock()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.text = '{"instant": "2026-11-01T20:10:20Z", "device_usages": []}'
+    mock_response.json.return_value = {
+        "instant": "2026-11-01T20:10:20Z",
+        "device_usages": [],
+    }
+    mock_auth.request.return_value = mock_response
+    vue.auth_v1 = mock_auth
+
+    vue.get_device_list_usage_v1(
+        device_gids=[1001],
+        scale=Scale.MINUTE,
+        energy_unit=input_unit,
+    )
+    params = mock_auth.request.call_args[1]["params"]
+    assert params["energy_unit"] == expected_v1_unit
+    assert params["scale"] == "MINUTE"
+
+
+@pytest.mark.parametrize(
+    "energy_unit",
+    [Unit.AMPHOURS, "AmpHours", "AMPHOURS", "AMP_HOURS"],
+)
+def test_get_device_list_usage_v1_amp_hours(energy_unit: Any) -> None:
+    """Validate Unit.AMPHOURS and string variants translate to AMP_HOURS and parse signed per-phase values."""
+    payload = {
+        "instant": "2026-11-01T20:10:20Z",
+        "device_usages": [
+            {
+                "device_gid": 1001,
+                "channel_usages": [
+                    {
+                        "channel_id": "Mains",
+                        "display_name": "Main Panel",
+                        "usage": None,
+                        "percentage": None,
+                    },
+                    {
+                        "channel_id": "Mains_A",
+                        "display_name": "Phase A",
+                        "usage": 0.042,
+                        "percentage": None,
+                    },
+                    {
+                        "channel_id": "Mains_B",
+                        "display_name": "Phase B",
+                        "usage": -0.015,
+                        "percentage": None,
+                    },
+                ],
+            }
+        ],
+    }
+
+    vue = PyEmVue()
+    mock_auth = MagicMock()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.text = "{}"
+    mock_response.json.return_value = payload
+    mock_auth.request.return_value = mock_response
+    vue.auth_v1 = mock_auth
+
+    usages = vue.get_device_list_usage_v1(
+        device_gids=[1001],
+        scale=Scale.SECOND,
+        energy_unit=energy_unit,
+    )
+
+    params = mock_auth.request.call_args[1]["params"]
+    assert params["energy_unit"] == "AMP_HOURS"
+    assert params["scale"] == "SECOND"
+
+    device = usages[1001]
+    assert device.channels["1,2,3"].usage is None
+    assert device.channels["Mains_A"].usage == 0.042
+    assert device.channels["Mains_B"].usage == -0.015
