@@ -676,7 +676,11 @@ class PyEmVue(object):
         Tokens stored in the file are updated when they expire.
         """
         # try to pull data out of the token storage file if present
-        self.username = username.lower() if username else None
+        self.username = (
+            username.strip().lower()
+            if isinstance(username, str) and username.strip()
+            else None
+        )
         if token_storage_file:
             self.token_storage_file = token_storage_file
         if not password and not id_token and token_storage_file:
@@ -707,9 +711,14 @@ class PyEmVue(object):
             token_updater=self._store_tokens,
         )
 
+        not_authorized_exc = (
+            (self.auth.cognito.client.exceptions.NotAuthorizedException,)
+            if self.auth.cognito is not None
+            else ()
+        )
         try:
             self.auth.refresh_tokens()
-        except self.auth.cognito.client.exceptions.NotAuthorizedException as ex:
+        except not_authorized_exc:
             return False
 
         if self.auth.tokens:
@@ -724,9 +733,14 @@ class PyEmVue(object):
                 token_updater=self._store_tokens,
                 as_bearer=True,
             )
+            not_authorized_exc_v1 = (
+                (self.auth_v1.cognito.client.exceptions.NotAuthorizedException,)
+                if self.auth_v1.cognito is not None
+                else ()
+            )
             try:
                 self.auth_v1.refresh_tokens()
-            except self.auth_v1.cognito.client.exceptions.NotAuthorizedException:
+            except not_authorized_exc_v1:
                 return False
 
             self.customer = self.get_customer_details()

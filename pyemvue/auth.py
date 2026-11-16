@@ -41,13 +41,26 @@ class Auth:
         self.tokens = {}
 
         self._password = None
+        self.cognito: Optional[Cognito] = None
 
-        if (
+        has_tokens = bool(
             tokens
-            and tokens["access_token"]
-            and tokens["id_token"]
-            and tokens["refresh_token"]
-        ):
+            and isinstance(tokens.get("access_token"), str)
+            and tokens["access_token"].strip()
+            and isinstance(tokens.get("id_token"), str)
+            and tokens["id_token"].strip()
+            and isinstance(tokens.get("refresh_token"), str)
+            and tokens["refresh_token"].strip()
+        )
+        has_credentials = bool(
+            isinstance(username, str)
+            and username.strip()
+            and isinstance(password, str)
+            and password.strip()
+        )
+
+        if has_tokens:
+            assert tokens is not None
             # use existing tokens
             self.cognito = Cognito(
                 USER_POOL,
@@ -58,15 +71,24 @@ class Auth:
                 refresh_token=tokens["refresh_token"],
             )
             self.tokens = tokens
-        elif username and password:
+        elif has_credentials:
+            assert username is not None and password is not None
             # log in with username and password
             self.cognito = Cognito(
-                USER_POOL, CLIENT_ID, user_pool_region="us-east-2", username=username
+                USER_POOL,
+                CLIENT_ID,
+                user_pool_region="us-east-2",
+                username=username.strip(),
             )
             self._password = password
 
     def refresh_tokens(self) -> "dict[str, str]":
         """Refresh and return new tokens."""
+        if self.cognito is None:
+            raise ValueError(
+                "Either valid tokens (access_token, id_token, refresh_token) "
+                "or non-empty username and password must be provided."
+            )
         if self._password:
             self.cognito.authenticate(password=self._password)
 
