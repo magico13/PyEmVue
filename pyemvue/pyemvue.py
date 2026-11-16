@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+import warnings
 from typing import Any, Optional, Union
 import requests
 import datetime
@@ -13,11 +14,15 @@ from pyemvue.enums import Scale, Unit
 from pyemvue.customer import Customer
 from pyemvue.device import (
     ChannelDevice,
-    ChargerDevice,
+    ChargerDevice,  # noqa: F401 - re-exported for backward compatibility
     EnergyMonitorExcessGeneration,
+    EnergyMonitorPeakDemand,
+    EVSEDevice,
     EvseControlStatus,
     ExcessGenerationLoad,
     ExcessGenerationMonitors,
+    MonthlyPeakDemand,
+    PeakDemandLoad,
     VueDevice,
     VueSite,
     OutletDevice,
@@ -34,6 +39,9 @@ API_CHANNELS = "devices/{deviceGid}/channels"
 API_CHANNEL_TYPES = "devices/channels/channeltypes"
 API_CHARGER = "devices/evcharger"
 API_CHART_USAGE = "AppAPI?apiMethod=getChartUsage&deviceGid={deviceGid}&channel={channel}&start={start}&end={end}&scale={scale}&energyUnit={unit}"
+API_CURRENT_MONTH_PEAK_DEMAND = (
+    "AppAPI?apiMethod=getCurrentMonthPeakDemand&deviceGid={deviceGid}"
+)
 API_CUSTOMER = "customers"
 API_CUSTOMER_DEVICES = "customers/devices"
 API_DEVICES_USAGE = "AppAPI?apiMethod=getDeviceListUsages&deviceGids={deviceGids}&instant={instant}&scale={scale}&energyUnit={unit}"
@@ -54,6 +62,8 @@ API_EVSE_CONTROL = "customers/evse/control"
 API_EVSE_SETTINGS = "devices/evses/settings"
 API_EXCESS_GENERATION = "customers/excess-generation"
 API_ENERGY_MONITOR_EXCESS_GENERATION = "customers/energy-monitor/excess-generation"
+API_PEAK_DEMAND = "customers/peak-demand"
+API_ENERGY_MONITOR_PEAK_DEMAND = "customers/energy-monitor/peak-demand"
 
 VALID_EVSE_CONTROL_COMMANDS: tuple[str, ...] = (
     "TURN_ON",
@@ -426,8 +436,13 @@ class PyEmVue(object):
         outlet.from_json_dictionary(response.json())
         return outlet
 
-    def get_chargers(self) -> "list[ChargerDevice]":
-        """Return a list of EVSEs/chargers linked to the account. Deprecated, use get_devices_status instead."""
+    def get_chargers(self) -> "list[EVSEDevice]":
+        """Return a list of EVSEs/chargers linked to the account. Deprecated, use get_evses or get_devices_status instead."""
+        warnings.warn(
+            "get_chargers() is deprecated and will be removed in a future release; use get_evses() or get_devices_status() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         response = (self.auth_v1 or self.auth).request("get", API_GET_STATUS)
         response.raise_for_status()
         chargers = []
@@ -436,16 +451,21 @@ class PyEmVue(object):
             if j:
                 evses_raw = j.get("evses") or j.get("evChargers") or []
                 for raw_charger in evses_raw:
-                    chargers.append(ChargerDevice().from_json_dictionary(raw_charger))
+                    chargers.append(EVSEDevice().from_json_dictionary(raw_charger))
         return chargers
 
     def update_charger(
         self,
-        charger: ChargerDevice,
+        charger: EVSEDevice,
         on: Optional[bool] = None,
         charge_rate: Optional[int] = None,
-    ) -> ChargerDevice:
+    ) -> EVSEDevice:
         """Primarily to enable/disable an evse/charger. The on and charge_rate parameters override the values in the object if provided"""
+        warnings.warn(
+            "update_charger() is deprecated and will be removed in a future release; use set_evse_state() or set_evse_settings() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if on is not None:
             charger.charger_on = on
         if charge_rate:
@@ -458,11 +478,11 @@ class PyEmVue(object):
 
     def get_devices_status(
         self, device_list: Optional["list[VueDevice]"] = None
-    ) -> "tuple[list[OutletDevice], list[ChargerDevice]]":
+    ) -> "tuple[list[OutletDevice], list[EVSEDevice]]":
         """Gets the list of outlets and chargers. If device list is provided, updates the connected status on each device."""
         response = (self.auth_v1 or self.auth).request("get", API_GET_STATUS)
         response.raise_for_status()
-        chargers: list[ChargerDevice] = []
+        chargers: list[EVSEDevice] = []
         outlets: list[OutletDevice] = []
         if response.text:
             j = response.json()
@@ -470,7 +490,7 @@ class PyEmVue(object):
                 return (outlets, chargers)
             evses_raw = j.get("evses") or j.get("evChargers") or []
             for raw_charger in evses_raw:
-                chargers.append(ChargerDevice().from_json_dictionary(raw_charger))
+                chargers.append(EVSEDevice().from_json_dictionary(raw_charger))
             outlets_raw = j.get("outlets") or []
             for raw_outlet in outlets_raw:
                 outlets.append(OutletDevice().from_json_dictionary(raw_outlet))
@@ -501,7 +521,7 @@ class PyEmVue(object):
 
         return (outlets, chargers)
 
-    def get_evses(self, device_ids: list[str]) -> list[ChargerDevice]:
+    def get_evses(self, device_ids: list[str]) -> list[EVSEDevice]:
         """Gets the details for the specified EVSEs."""
         device_ids_str = ""
         if device_ids:
@@ -509,14 +529,14 @@ class PyEmVue(object):
         url = API_GET_EVSES.format(deviceIds=device_ids_str)
         response = (self.auth_v1 or self.auth).request("get", url)
         response.raise_for_status()
-        chargers: list[ChargerDevice] = []
+        chargers: list[EVSEDevice] = []
         if response.text:
             j = response.json()
             if not j:
                 return chargers
             raw_evses = j.get("success") or j.get("evses") or []
             for raw_charger in raw_evses:
-                chargers.append(ChargerDevice().from_json_dictionary(raw_charger))
+                chargers.append(EVSEDevice().from_json_dictionary(raw_charger))
         return chargers
 
     def post_evse_control(self, device_id: str, command: str) -> bool:
@@ -623,6 +643,74 @@ class PyEmVue(object):
         }
         response = (self.auth_v1 or self.auth).request(
             "post", API_ENERGY_MONITOR_EXCESS_GENERATION, json=payload
+        )
+        response.raise_for_status()
+        return True
+
+    def get_current_month_peak_demand(
+        self, device_gid: int
+    ) -> Optional[MonthlyPeakDemand]:
+        """Gets the current month's measured 15-minute peak demand (kW) for a device."""
+        url = API_CURRENT_MONTH_PEAK_DEMAND.format(deviceGid=device_gid)
+        response = self.auth.request("get", url)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            if j:
+                peak = MonthlyPeakDemand(device_gid=device_gid).from_json_dictionary(j)
+                if not peak.device_gid:
+                    peak.device_gid = device_gid
+                return peak
+        return None
+
+    def get_peak_demand_monitors(self) -> Optional[dict[str, Any]]:
+        """Gets customer-level peak demand monitor eligibility and status."""
+        response = (self.auth_v1 or self.auth).request("get", API_PEAK_DEMAND)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            if j:
+                return j
+        return None
+
+    def get_peak_demand_config(
+        self, device_id: str
+    ) -> Optional[EnergyMonitorPeakDemand]:
+        """Gets peak demand target kW and load-shedding configuration for an energy monitor."""
+        url = f"{API_ENERGY_MONITOR_PEAK_DEMAND}?device_id={device_id}"
+        response = (self.auth_v1 or self.auth).request("get", url)
+        response.raise_for_status()
+        if response.text:
+            j = response.json()
+            if j:
+                config = EnergyMonitorPeakDemand(
+                    device_id=device_id
+                ).from_json_dictionary(j)
+                if not config.device_id:
+                    config.device_id = device_id
+                return config
+        return None
+
+    def set_peak_demand_config(
+        self,
+        device_id: str,
+        enabled: bool,
+        demand_goal_kwatts: float,
+        loads: Optional[list[dict[str, Any] | PeakDemandLoad]] = None,
+    ) -> bool:
+        """Sets peak demand management enablement, target kW goal, and managed loads."""
+        serialized_loads = [
+            load.as_dictionary() if hasattr(load, "as_dictionary") else load
+            for load in (loads or [])
+        ]
+        payload = {
+            "device_id": device_id,
+            "enabled": bool(enabled),
+            "demand_goal_kwatts": float(demand_goal_kwatts),
+            "loads": serialized_loads,
+        }
+        response = (self.auth_v1 or self.auth).request(
+            "post", API_ENERGY_MONITOR_PEAK_DEMAND, json=payload
         )
         response.raise_for_status()
         return True
